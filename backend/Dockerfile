@@ -1,7 +1,27 @@
 # Multi-stage Dockerfile for SpecSrv Backend
 # Optimized for production deployment with minimal image size
 
-# Stage 1: Composer dependencies
+# Stage 1: Frontend Assets Build
+FROM node:20-alpine as frontend
+
+WORKDIR /app
+
+# Copy package files for dependency resolution
+COPY package.json package-lock.json ./
+
+# Install Node.js dependencies (including dev dependencies for build tools)
+RUN npm ci
+
+# Copy source files needed for build
+COPY assets/ ./assets/
+COPY webpack.config.js ./
+COPY postcss.config.js ./
+COPY tailwind.config.js ./
+
+# Build production assets
+RUN npm run build
+
+# Stage 2: Composer dependencies
 FROM composer:2.7 as composer
 
 WORKDIR /app
@@ -23,7 +43,7 @@ COPY . .
 # Generate optimized autoloader
 RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 
-# Stage 2: PHP Runtime with Nginx
+# Stage 3: PHP Runtime with Nginx
 FROM php:8.2-fpm-alpine as runtime
 
 # Install system dependencies and PHP extensions
@@ -62,6 +82,9 @@ WORKDIR /app
 # Copy application from composer stage
 COPY --from=composer --chown=app:app /app .
 
+# Copy built frontend assets from frontend stage
+COPY --from=frontend --chown=app:app /app/public/build ./public/build
+
 # Create required directories with proper permissions
 RUN mkdir -p \
     var/cache \
@@ -86,7 +109,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Use supervisor to manage processes
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
-# Stage 3: Development image (extends runtime)
+# Stage 4: Development image (extends runtime)
 FROM runtime as development
 
 # Switch back to root for installations
@@ -116,7 +139,7 @@ USER app
 ENV APP_ENV=dev
 ENV APP_DEBUG=1
 
-# Stage 4: Testing image (extends development)
+# Stage 5: Testing image (extends development)
 FROM development as testing
 
 # Switch to root for test setup

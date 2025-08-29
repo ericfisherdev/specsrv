@@ -13,18 +13,18 @@ class SecurityController extends AbstractController
     #[Route(path: '/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-        // if ($this->getUser()) {
-        //     return $this->redirectToRoute('target_path');
-        // }
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_dashboard');
+        }
 
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        return $this->json([
+        return $this->render('auth/login.html.twig', [
             'last_username' => $lastUsername,
-            'error' => $error?->getMessageKey(),
+            'error' => $error,
         ]);
     }
 
@@ -32,6 +32,24 @@ class SecurityController extends AbstractController
     public function logout(): void
     {
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
+    }
+
+    #[Route(path: '/register', name: 'app_register')]
+    public function register(): Response
+    {
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_dashboard');
+        }
+
+        return $this->render('auth/register.html.twig');
+    }
+
+    #[Route(path: '/profile', name: 'app_profile')]
+    public function profile(): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        return $this->render('auth/profile.html.twig');
     }
 
     #[Route(path: '/api/login', name: 'api_login', methods: ['POST'])]
