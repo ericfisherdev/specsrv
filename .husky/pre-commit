@@ -2,6 +2,7 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 ./scripts/bump-version.sh && \
-cd backend && composer lint && \
-composer rector && \
-cd .. && actionlint .github/workflows/*.yml 2>/dev/null || true
+cd backend && npm run sync-version && \
+composer lint && \
+cd .. && composer rector && \
+actionlint .github/workflows/*.yml 2>/dev/null || true
