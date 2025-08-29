@@ -18,3 +18,24 @@
 /phpunit.xml
 /.phpunit.cache/
 ###< phpunit/phpunit ###
+
+# Additional ignore patterns
+.DS_Store
+.env.*.local
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Backup files
+*~
+*.bak
+*.orig
+
+# Testing artifacts
+/coverage/
+*.coverage
+
+# Development files
+.php-cs-fixer.cache
