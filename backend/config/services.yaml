@@ -4,6 +4,9 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    app.uploads_directory: '%kernel.project_dir%/var/uploads'
+    app.max_upload_size: 10485760  # 10MB in bytes
+    app.allowed_file_types: ['txt', 'md', 'json', 'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx']
 
 services:
     # default configuration for services in *this* file
@@ -22,3 +25,9 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    
+    App\Service\FileUploadService:
+        arguments:
+            $uploadsDirectory: '%app.uploads_directory%'
+            $maxUploadSize: '%app.max_upload_size%'
+            $allowedFileTypes: '%app.allowed_file_types%'
