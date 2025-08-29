@@ -31,11 +31,11 @@ class FileApiController extends BaseApiController
         $customName = $request->request->get('name');
 
         if (!$uploadedFile) {
-            return $this->jsonError('No file provided', 400);
+            return $this->errorResponse('No file provided', 400);
         }
 
         if (!$entityType || !$entityId) {
-            return $this->jsonError('entity_type and entity_id are required', 400);
+            return $this->errorResponse('entity_type and entity_id are required', 400);
         }
 
         try {
@@ -46,7 +46,7 @@ class FileApiController extends BaseApiController
                 $customName
             );
 
-            return $this->jsonSuccess([
+            return $this->successResponse([
                 'file' => [
                     'id' => $file->getId(),
                     'filename' => $file->getFilename(),
@@ -59,7 +59,7 @@ class FileApiController extends BaseApiController
                 ]
             ], 201);
         } catch (\Exception $e) {
-            return $this->jsonError($e->getMessage(), 400);
+            return $this->errorResponse($e->getMessage(), 400);
         }
     }
 
@@ -69,10 +69,10 @@ class FileApiController extends BaseApiController
         $file = $this->fileRepository->find($id);
 
         if (!$file) {
-            return $this->jsonError('File not found', 404);
+            return $this->errorResponse('File not found', 404);
         }
 
-        return $this->jsonSuccess([
+        return $this->successResponse([
             'file' => [
                 'id' => $file->getId(),
                 'filename' => $file->getFilename(),
@@ -94,7 +94,7 @@ class FileApiController extends BaseApiController
         $file = $this->fileRepository->find($id);
 
         if (!$file || !$this->fileUploadService->fileExists($file)) {
-            return $this->jsonError('File not found', 404);
+            return $this->errorResponse('File not found', 404);
         }
 
         try {
@@ -108,7 +108,7 @@ class FileApiController extends BaseApiController
             
             return $response;
         } catch (\Exception $e) {
-            return $this->jsonError('Error reading file: ' . $e->getMessage(), 500);
+            return $this->errorResponse('Error reading file: ' . $e->getMessage(), 500);
         }
     }
 
@@ -118,21 +118,21 @@ class FileApiController extends BaseApiController
         $file = $this->fileRepository->find($id);
 
         if (!$file) {
-            return $this->jsonError('File not found', 404);
+            return $this->errorResponse('File not found', 404);
         }
 
         try {
             $this->fileUploadService->deleteFile($file);
-            return $this->jsonSuccess(['message' => 'File deleted successfully']);
+            return $this->successResponse(['message' => 'File deleted successfully']);
         } catch (\Exception $e) {
-            return $this->jsonError('Error deleting file: ' . $e->getMessage(), 500);
+            return $this->errorResponse('Error deleting file: ' . $e->getMessage(), 500);
         }
     }
 
     #[Route('/limits', name: 'limits', methods: ['GET'])]
     public function limits(): JsonResponse
     {
-        return $this->jsonSuccess([
+        return $this->successResponse([
             'limits' => $this->fileUploadService->getUploadLimits()
         ]);
     }
@@ -160,7 +160,7 @@ class FileApiController extends BaseApiController
             ];
         }, $files);
 
-        return $this->jsonSuccess([
+        return $this->successResponse([
             'files' => $filesData,
             'total' => count($filesData)
         ]);
