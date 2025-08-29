@@ -1,0 +1,96 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineMigrations;
+
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+
+/**
+ * Auto-generated Migration: Please modify to your needs!
+ */
+final class Version20250829000001 extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return 'Create core entities: users, projects, tasks, files, git_links';
+    }
+
+    public function up(Schema $schema): void
+    {
+        // Users table
+        $this->addSql('CREATE TABLE users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+            email VARCHAR(180) NOT NULL UNIQUE, 
+            roles TEXT NOT NULL DEFAULT \'[]\', 
+            password VARCHAR(255) NOT NULL, 
+            created_at DATETIME NOT NULL, 
+            updated_at DATETIME NOT NULL
+        )');
+
+        // Projects table
+        $this->addSql('CREATE TABLE projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+            user_id INTEGER NOT NULL, 
+            title VARCHAR(255) NOT NULL, 
+            description TEXT DEFAULT NULL, 
+            github_repo VARCHAR(255) DEFAULT NULL, 
+            created_at DATETIME NOT NULL, 
+            updated_at DATETIME NOT NULL,
+            CONSTRAINT FK_5C93B3A4A76ED395 FOREIGN KEY (user_id) REFERENCES users (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+        )');
+
+        // Tasks table
+        $this->addSql('CREATE TABLE tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+            project_id INTEGER NOT NULL, 
+            title VARCHAR(255) NOT NULL, 
+            description TEXT DEFAULT NULL, 
+            status VARCHAR(20) NOT NULL DEFAULT \'todo\', 
+            created_at DATETIME NOT NULL, 
+            updated_at DATETIME NOT NULL,
+            CONSTRAINT FK_50586597166D1F9C FOREIGN KEY (project_id) REFERENCES projects (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+        )');
+
+        // Files table
+        $this->addSql('CREATE TABLE files (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+            task_id INTEGER DEFAULT NULL, 
+            filename VARCHAR(255) NOT NULL, 
+            path VARCHAR(500) NOT NULL, 
+            type VARCHAR(50) NOT NULL DEFAULT \'upload\', 
+            entity_type VARCHAR(20) NOT NULL, 
+            entity_id INTEGER NOT NULL, 
+            created_at DATETIME NOT NULL,
+            CONSTRAINT FK_63540598DB60186 FOREIGN KEY (task_id) REFERENCES tasks (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+        )');
+
+        // Git Links table
+        $this->addSql('CREATE TABLE git_links (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+            task_id INTEGER NOT NULL, 
+            commit_hash VARCHAR(255) DEFAULT NULL, 
+            pr_reference VARCHAR(255) DEFAULT NULL, 
+            created_at DATETIME NOT NULL,
+            CONSTRAINT FK_7D1A45478DB60186 FOREIGN KEY (task_id) REFERENCES tasks (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+        )');
+
+        // Create indexes
+        $this->addSql('CREATE INDEX IDX_5C93B3A4A76ED395 ON projects (user_id)');
+        $this->addSql('CREATE INDEX IDX_50586597166D1F9C ON tasks (project_id)');
+        $this->addSql('CREATE INDEX IDX_63540598DB60186 ON files (task_id)');
+        $this->addSql('CREATE INDEX IDX_7D1A45478DB60186 ON git_links (task_id)');
+        $this->addSql('CREATE INDEX IDX_63540596A58936A0 ON files (entity_type, entity_id)');
+    }
+
+    public function down(Schema $schema): void
+    {
+        // Drop tables in reverse order due to foreign key constraints
+        $this->addSql('DROP TABLE git_links');
+        $this->addSql('DROP TABLE files');
+        $this->addSql('DROP TABLE tasks');
+        $this->addSql('DROP TABLE projects');
+        $this->addSql('DROP TABLE users');
+    }
+}

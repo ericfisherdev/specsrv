@@ -1,0 +1,468 @@
+openapi: 3.0.0
+info:
+  title: SpecSrv API
+  description: Task management system API for AI agents and developers
+  version: 1.0.0
+  contact:
+    name: SpecSrv API Support
+    email: api-support@specsrv.com
+  license:
+    name: AGPL-3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+
+servers:
+  - url: http://localhost:8080/api
+    description: Development server
+  - url: https://api.specsrv.com
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: API key for authentication
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Invalid input data
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: My Project
+        description:
+          type: string
+          nullable: true
+          example: Project description
+        github_repo:
+          type: string
+          nullable: true
+          example: username/repo-name
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-01-01T12:00:00Z"
+
+    File:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        filename:
+          type: string
+          example: document.pdf
+        path:
+          type: string
+          example: project/1/document-abc123.pdf
+        type:
+          type: string
+          example: application/pdf
+        size:
+          type: integer
+          example: 1024000
+        entity_type:
+          type: string
+          enum: [project, task]
+          example: project
+        entity_id:
+          type: integer
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-01T12:00:00Z"
+
+paths:
+  /projects:
+    get:
+      tags:
+        - Projects
+      summary: List all projects
+      description: Get a list of all projects for the authenticated user
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      projects:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Project'
+                      total:
+                        type: integer
+                        example: 1
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Projects
+      summary: Create a new project
+      description: Create a new project for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  example: My New Project
+                description:
+                  type: string
+                  example: Project description
+                github_repo:
+                  type: string
+                  example: username/repo-name
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      project:
+                        $ref: '#/components/schemas/Project'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /projects/{id}:
+    get:
+      tags:
+        - Projects
+      summary: Get project details
+      description: Get details of a specific project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      project:
+                        $ref: '#/components/schemas/Project'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Projects
+      summary: Update project
+      description: Update an existing project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                github_repo:
+                  type: string
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      project:
+                        $ref: '#/components/schemas/Project'
+
+    delete:
+      tags:
+        - Projects
+      summary: Delete project
+      description: Delete a project and all associated resources
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Project deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Project deleted successfully
+
+  /files:
+    post:
+      tags:
+        - Files
+      summary: Upload a file
+      description: Upload a file and associate it with a project or task
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - entity_type
+                - entity_id
+              properties:
+                file:
+                  type: string
+                  format: binary
+                entity_type:
+                  type: string
+                  enum: [project, task]
+                entity_id:
+                  type: integer
+                name:
+                  type: string
+                  description: Optional custom filename
+      responses:
+        '201':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      file:
+                        $ref: '#/components/schemas/File'
+
+  /files/{id}:
+    get:
+      tags:
+        - Files
+      summary: Get file metadata
+      description: Get metadata about a specific file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      file:
+                        $ref: '#/components/schemas/File'
+
+    delete:
+      tags:
+        - Files
+      summary: Delete file
+      description: Delete a file from storage and database
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: File deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: File deleted successfully
+
+  /files/{id}/download:
+    get:
+      tags:
+        - Files
+      summary: Download file
+      description: Download a file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /files/limits:
+    get:
+      tags:
+        - Files
+      summary: Get upload limits
+      description: Get file upload configuration and limits
+      responses:
+        '200':
+          description: Upload limits
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      limits:
+                        type: object
+                        properties:
+                          maxUploadSize:
+                            type: integer
+                            example: 52428800
+                          allowedFileTypes:
+                            type: array
+                            items:
+                              type: string
+                            example: ["txt", "md", "json", "pdf"]
+
+  /csrf-token:
+    get:
+      tags:
+        - Authentication
+      summary: Get CSRF token
+      description: Get a CSRF token for form submissions
+      security: []
+      responses:
+        '200':
+          description: CSRF token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: csrf-token-string

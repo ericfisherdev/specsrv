@@ -1,0 +1,22 @@
+
+# Development overrides for docker-compose.yaml
+
+services:
+  app:
+    environment:
+      - APP_ENV=dev
+      - APP_DEBUG=1
+      - XDEBUG_MODE=develop,debug,coverage
+      - PHP_IDE_CONFIG=serverName=specsrv
+    # Enable bind mounting for hot reload in development
+    volumes:
+      - .:/app:cached
+      - /app/var/cache  # Exclude cache from bind mount for performance
+      - /app/vendor     # Exclude vendor from bind mount for performance
+    # Override command for development
+    command: ["php", "-S", "0.0.0.0:8080", "-t", "public", "public/index.php"]
+    
+  # Disable nginx in development (use built-in PHP server)
+  nginx:
+    profiles:
+      - production

@@ -1,0 +1,13 @@
+parameters:
+    # File upload configuration
+    uploads_directory: '%kernel.project_dir%/var/uploads'
+    max_upload_size: 52428800  # 50MB in bytes
+    allowed_file_types: ['txt', 'md', 'json', 'yaml', 'yml', 'xml', 'pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'gif', 'svg']
+    
+services:
+    # File upload service
+    App\Service\FileUploadService:
+        arguments:
+            $uploadsDirectory: '%uploads_directory%'
+            $maxUploadSize: '%max_upload_size%'
+            $allowedFileTypes: '%allowed_file_types%'

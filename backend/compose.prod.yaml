@@ -1,0 +1,102 @@
+# Production Docker Compose configuration
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      # Only mount persistent data directories
+      - app_data:/app/var/data
+      - app_uploads:/app/var/uploads
+      - app_logs:/app/var/log
+    environment:
+      - APP_ENV=prod
+      - APP_DEBUG=0
+      - APP_SECRET=${APP_SECRET}
+      - DATABASE_URL=sqlite:///app/var/data/database.sqlite
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      - TRUSTED_HOSTS=${TRUSTED_HOSTS}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Reverse proxy for production
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      - app_uploads:/app/var/uploads:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  app_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH:-./var/data}
+  app_uploads:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${UPLOADS_PATH:-./var/uploads}
+  app_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${LOGS_PATH:-./var/log}
+
+networks:
+  specsrv-network:
+    driver: bridge
+
+# Optional: Add backup service
+  backup:
+    image: alpine:latest
+    volumes:
+      - app_data:/backup/data:ro
+      - app_uploads:/backup/uploads:ro
+      - ${BACKUP_PATH:-./backups}:/backups
+    environment:
+      - BACKUP_SCHEDULE=${BACKUP_SCHEDULE:-0 2 * * *}
+    command: |
+      sh -c '
+        echo "$$BACKUP_SCHEDULE tar -czf /backups/specsrv-$$(date +%Y%m%d_%H%M%S).tar.gz -C /backup ." | crontab -
+        crond -f
+      '
+    restart: unless-stopped
+    profiles:
+      - backup

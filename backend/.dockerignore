@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+var/log/*
+*.log
+
+# Cache
+var/cache/*
+.phpunit.cache/
+
+# Temporary files
+var/sessions/*
+var/data/*
+!var/data/.gitkeep
+
+# Dependencies (will be installed in container)
+vendor/
+node_modules/
+
+# Development and testing
+tests/
+phpunit.dist.xml
+.phpunit.result.cache
+phpstan.neon
+.php-cs-fixer.dist.php
+.php-cs-fixer.cache
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Environment files
+.env.local
+.env.*.local
+
+# Composer lock (will be used but not copied early)
+composer.lock
+
+# Build artifacts
+build/
+dist/
