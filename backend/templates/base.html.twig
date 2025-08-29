@@ -14,9 +14,13 @@
 
         {% block javascripts %}
             {{ encore_entry_script_tags('app') }}
+            <script src="{{ asset('js/keyboard-navigation.js') }}"></script>
+            <script src="{{ asset('js/offline-detection.js') }}"></script>
         {% endblock %}
     </head>
     <body class="h-full bg-gray-100" x-data="{ showMobileMenu: false }">
+        <!-- Skip to main content link for accessibility -->
+        <a href="#main-content" class="skip-link">Skip to main content</a>
         <!-- Navigation -->
         {% block navigation %}
         <nav class="bg-white shadow-sm border-b border-gray-200">
@@ -40,6 +44,11 @@
                         <a href="{{ path('app_projects') }}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
                             Projects
                         </a>
+                        
+                        <!-- Search Bar -->
+                        <div class="hidden md:block flex-1 max-w-md mx-8">
+                            {% include 'components/_search_autocomplete.html.twig' %}
+                        </div>
                         
                         <!-- User Menu -->
                         <div class="relative" x-data="{ open: false }">
@@ -95,7 +104,7 @@
         {% endblock %}
 
         <!-- Main Content -->
-        <main class="min-h-screen">
+        <main id="main-content" class="min-h-screen">
             {% block body %}{% endblock %}
         </main>
 
