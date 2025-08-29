@@ -30,6 +30,14 @@ jobs:
         path: /tmp/composer-cache
         key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
 
+    - name: Create test .env file
+      working-directory: backend
+      run: |
+        ls -la .env*
+        cp .env.test .env
+        ls -la .env
+        cat .env
+
     - name: Install dependencies
       working-directory: backend
       run: |
@@ -77,6 +85,13 @@ jobs:
         php-version: 8.2
         tools: composer:v2
 
+    - name: Create minimal .env file for Symfony
+      working-directory: backend
+      run: |
+        echo "APP_ENV=prod" > .env
+        echo "APP_SECRET=dev_secret_for_build_only" >> .env
+        echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/database.sqlite" >> .env
+
     - name: Install dependencies
       working-directory: backend
       run: composer install --no-dev --no-progress --prefer-dist --optimize-autoloader
@@ -94,6 +109,13 @@ jobs:
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
+
+    - name: Create minimal .env file for Docker build
+      working-directory: backend
+      run: |
+        echo "APP_ENV=prod" > .env
+        echo "APP_SECRET=docker_build_secret" >> .env
+        echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/database.sqlite" >> .env
 
     - name: Build Docker image
       working-directory: backend
