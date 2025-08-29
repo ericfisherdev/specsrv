@@ -97,15 +97,18 @@ class SearchController extends AbstractController
         
         // Transform tasks for JSON response
         $tasksData = array_map(function ($task) {
+            $project = $task->getProject();
+            $createdAt = $task->getCreatedAt();
+            
             return [
                 'id' => $task->getId(),
                 'title' => $task->getTitle(),
                 'description' => $task->getDescription(),
                 'status' => $task->getStatus(),
                 'priority' => $task->getPriority(),
-                'project' => $task->getProject()->getTitle(),
-                'project_id' => $task->getProject()->getId(),
-                'created_at' => $task->getCreatedAt()->format('Y-m-d H:i:s'),
+                'project' => $project ? $project->getTitle() : 'No Project',
+                'project_id' => $project ? $project->getId() : null,
+                'created_at' => $createdAt ? $createdAt->format('Y-m-d H:i:s') : 'Unknown',
                 'url' => $this->generateUrl('app_task_detail', ['id' => $task->getId()])
             ];
         }, $tasks);

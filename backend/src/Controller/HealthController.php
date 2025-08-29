@@ -89,6 +89,13 @@ class HealthController extends AbstractController
         try {
             $uploadDir = $this->getParameter('uploads_directory');
             
+            if (!is_string($uploadDir)) {
+                return [
+                    'healthy' => false,
+                    'message' => 'Upload directory parameter is not properly configured'
+                ];
+            }
+            
             if (!is_dir($uploadDir)) {
                 return [
                     'healthy' => false,
@@ -118,7 +125,15 @@ class HealthController extends AbstractController
     private function checkFrontendAssets(): array
     {
         try {
-            $publicDir = $this->getParameter('kernel.project_dir') . '/public';
+            $projectDir = $this->getParameter('kernel.project_dir');
+            if (!is_string($projectDir)) {
+                return [
+                    'healthy' => false,
+                    'message' => 'Project directory parameter is not properly configured'
+                ];
+            }
+            
+            $publicDir = $projectDir . '/public';
             $assetDirs = [
                 'build' => $publicDir . '/build',
                 'assets' => $publicDir . '/assets'
@@ -130,6 +145,9 @@ class HealthController extends AbstractController
             foreach ($assetDirs as $type => $dir) {
                 if (is_dir($dir)) {
                     $files = glob($dir . '/**/*', GLOB_BRACE);
+                    if ($files === false) {
+                        $files = [];
+                    }
                     $assetCount = count(array_filter($files, 'is_file'));
                     $totalAssets += $assetCount;
                 } else {
@@ -192,6 +210,13 @@ class HealthController extends AbstractController
     {
         try {
             $cacheDir = $this->getParameter('kernel.cache_dir');
+            
+            if (!is_string($cacheDir)) {
+                return [
+                    'healthy' => false,
+                    'message' => 'Cache directory parameter is not properly configured'
+                ];
+            }
             
             if (!is_dir($cacheDir)) {
                 return [

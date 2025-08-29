@@ -49,7 +49,8 @@ class GitLinkApiController extends BaseApiController
         }
 
         // Check if user owns the task's project
-        if ($task->getProject()->getUser() !== $user) {
+        $project = $task->getProject();
+        if (!$project || $project->getUser() !== $user) {
             return $this->errorResponse('Access denied', 'ACCESS_DENIED', null, 403);
         }
 
@@ -93,7 +94,9 @@ class GitLinkApiController extends BaseApiController
         }
 
         // Check if user owns the git link's task's project
-        if ($gitLink->getTask()->getProject()->getUser() !== $user) {
+        $task = $gitLink->getTask();
+        $project = $task?->getProject();
+        if (!$task || !$project || $project->getUser() !== $user) {
             return $this->errorResponse('Access denied', 'ACCESS_DENIED', null, 403);
         }
 
@@ -116,7 +119,9 @@ class GitLinkApiController extends BaseApiController
         }
 
         // Check if user owns the git link's task's project
-        if ($gitLink->getTask()->getProject()->getUser() !== $user) {
+        $task = $gitLink->getTask();
+        $project = $task?->getProject();
+        if (!$task || !$project || $project->getUser() !== $user) {
             return $this->errorResponse('Access denied', 'ACCESS_DENIED', null, 403);
         }
 

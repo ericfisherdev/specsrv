@@ -93,4 +93,21 @@ class ProjectRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Search projects by title for a user.
+     * 
+     * @return Project[]
+     */
+    public function searchByTitle(User $user, string $query): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.user = :user')
+            ->andWhere('p.title LIKE :query OR p.description LIKE :query')
+            ->setParameter('user', $user)
+            ->setParameter('query', '%' . $query . '%')
+            ->orderBy('p.updatedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

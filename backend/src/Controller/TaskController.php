@@ -76,10 +76,15 @@ class TaskController extends AbstractController
         foreach ($uploadedFiles as $uploadedFile) {
             if ($uploadedFile instanceof UploadedFile && $uploadedFile->isValid()) {
                 try {
+                    $taskId = $task->getId();
+                    if ($taskId === null) {
+                        continue; // Skip if task ID is null
+                    }
+                    
                     $file = $this->fileUploadService->uploadFile(
                         $uploadedFile,
                         'task',
-                        $task->getId()
+                        $taskId
                     );
                     $task->addFile($file);
                 } catch (\Exception $e) {

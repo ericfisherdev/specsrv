@@ -274,12 +274,4 @@ class FileController extends AbstractController
         return ['valid' => true];
     }
     
-    private function generateUniqueFilename(UploadedFile $file): string
-    {
-        $extension = $file->getClientOriginalExtension();
-        $basename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $basename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $basename);
-        
-        return uniqid($basename . '_', true) . '.' . $extension;
-    }
 }
