@@ -1,0 +1,47 @@
+{
+    "devDependencies": {
+        "@babel/core": "^7.17.0",
+        "@babel/preset-env": "^7.16.0",
+        "@symfony/webpack-encore": "^5.0.0",
+        "@tailwindcss/forms": "^0.5.10",
+        "@tailwindcss/postcss": "^4.1.12",
+        "@tailwindcss/typography": "^0.5.16",
+        "autoprefixer": "^10.4.21",
+        "core-js": "^3.38.0",
+        "postcss": "^8.5.6",
+        "postcss-loader": "^8.1.1",
+        "regenerator-runtime": "^0.13.9",
+        "tailwindcss": "^4.1.12",
+        "webpack": "^5.74.0",
+        "webpack-cli": "^5.1.0",
+        "webpack-dev-server": "^5.2.2",
+        "webpack-notifier": "^1.15.0"
+    },
+    "license": "UNLICENSED",
+    "private": true,
+    "scripts": {
+        "dev-server": "encore dev-server",
+        "dev": "encore dev",
+        "watch": "encore dev --watch",
+        "build": "encore production --progress",
+        "sync-version": "node scripts/sync-version.js",
+        "predev": "npm run sync-version",
+        "prewatch": "npm run sync-version",
+        "prebuild": "npm run sync-version"
+    },
+    "name": "backend",
+    "version": "0.1.17",
+    "description": "",
+    "main": "webpack.config.js",
+    "directories": {
+        "doc": "docs",
+        "test": "tests"
+    },
+    "keywords": [],
+    "author": "",
+    "dependencies": {
+        "alpinejs": "^3.14.9",
+        "gsap": "^3.13.0",
+        "htmx.org": "^2.0.6"
+    }
+}

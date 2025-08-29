@@ -1,0 +1,157 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Kanban Board - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Kanban Board</h1>
+        <p class="mt-2 text-gray-600">Manage your tasks across different stages</p>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="flex space-x-6 overflow-x-auto pb-6" x-data="kanbanBoard()">
+        <!-- Backlog Column -->
+        <div class="kanban-column flex-shrink-0 w-80">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Backlog</h2>
+                <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-text="backlogTasks.length"></span>
+            </div>
+            <div class="space-y-3" x-ref="backlogColumn">
+                <template x-for="task in backlogTasks" :key="task.id">
+                    <div class="kanban-card" :data-task-id="task.id">
+                        <h3 class="font-medium text-gray-900" x-text="task.title"></h3>
+                        <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-xs text-gray-500" x-text="task.project"></span>
+                            <div class="flex space-x-1">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                                <button class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <button class="w-full mt-4 p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600">
+                + Add Task
+            </button>
+        </div>
+
+        <!-- Todo Column -->
+        <div class="kanban-column flex-shrink-0 w-80">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Todo</h2>
+                <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-text="todoTasks.length"></span>
+            </div>
+            <div class="space-y-3" x-ref="todoColumn">
+                <template x-for="task in todoTasks" :key="task.id">
+                    <div class="kanban-card" :data-task-id="task.id">
+                        <h3 class="font-medium text-gray-900" x-text="task.title"></h3>
+                        <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-xs text-gray-500" x-text="task.project"></span>
+                            <div class="flex space-x-1">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                                <button class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Working Column -->
+        <div class="kanban-column flex-shrink-0 w-80 bg-blue-50 border-blue-200">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-blue-800">Working</h2>
+                <span class="bg-blue-200 text-blue-700 text-xs px-2 py-1 rounded-full" x-text="workingTasks.length"></span>
+            </div>
+            <div class="space-y-3" x-ref="workingColumn">
+                <template x-for="task in workingTasks" :key="task.id">
+                    <div class="kanban-card border-blue-200" :data-task-id="task.id">
+                        <h3 class="font-medium text-gray-900" x-text="task.title"></h3>
+                        <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-xs text-gray-500" x-text="task.project"></span>
+                            <div class="flex space-x-1">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                                <button class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Review Column -->
+        <div class="kanban-column flex-shrink-0 w-80">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Review</h2>
+                <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-text="reviewTasks.length"></span>
+            </div>
+            <div class="space-y-3" x-ref="reviewColumn">
+                <template x-for="task in reviewTasks" :key="task.id">
+                    <div class="kanban-card" :data-task-id="task.id">
+                        <h3 class="font-medium text-gray-900" x-text="task.title"></h3>
+                        <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-xs text-gray-500" x-text="task.project"></span>
+                            <div class="flex space-x-1">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                                <button class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Done Column -->
+        <div class="kanban-column flex-shrink-0 w-80 bg-green-50 border-green-200">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-green-800">Done</h2>
+                <span class="bg-green-200 text-green-700 text-xs px-2 py-1 rounded-full" x-text="doneTasks.length"></span>
+            </div>
+            <div class="space-y-3" x-ref="doneColumn">
+                <template x-for="task in doneTasks" :key="task.id">
+                    <div class="kanban-card border-green-200 opacity-75" :data-task-id="task.id">
+                        <h3 class="font-medium text-gray-900 line-through" x-text="task.title"></h3>
+                        <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-xs text-gray-500" x-text="task.project"></span>
+                            <div class="flex space-x-1">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                                <button class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function kanbanBoard() {
+    return {
+        backlogTasks: [
+            { id: 1, title: 'Design user interface', description: 'Create mockups for the new feature', project: 'Project Alpha' },
+            { id: 2, title: 'Database schema', description: 'Design the database structure', project: 'Project Beta' }
+        ],
+        todoTasks: [
+            { id: 3, title: 'API integration', description: 'Connect frontend with backend API', project: 'Project Alpha' }
+        ],
+        workingTasks: [
+            { id: 4, title: 'Authentication system', description: 'Implement user login and registration', project: 'Project Gamma' }
+        ],
+        reviewTasks: [
+            { id: 5, title: 'Code review', description: 'Review pull request #123', project: 'Project Alpha' }
+        ],
+        doneTasks: [
+            { id: 6, title: 'Setup development environment', description: 'Configure Docker containers', project: 'Project Setup' }
+        ]
+    }
+}
+</script>
+{% endblock %}
