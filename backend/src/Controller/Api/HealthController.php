@@ -31,7 +31,9 @@ class HealthController extends BaseApiController
 
         // File system availability check
         try {
-            $uploadsDir = $this->getParameter('kernel.project_dir').'/var/uploads';
+            /** @var string $projectDir */
+            $projectDir = $this->getParameter('kernel.project_dir');
+            $uploadsDir = $projectDir.'/var/uploads';
             if (! is_dir($uploadsDir)) {
                 @mkdir($uploadsDir, 0755, true);
             }
@@ -76,7 +78,9 @@ class HealthController extends BaseApiController
 
         // Check if application has finished startup
         try {
-            $cacheDir = $this->getParameter('kernel.project_dir').'/var/cache';
+            /** @var string $projectDir */
+            $projectDir = $this->getParameter('kernel.project_dir');
+            $cacheDir = $projectDir.'/var/cache';
             if (is_dir($cacheDir) && is_readable($cacheDir)) {
                 $checks['cache'] = 'ready';
             } else {

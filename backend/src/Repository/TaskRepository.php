@@ -67,7 +67,7 @@ class TaskRepository extends ServiceEntityRepository
     /**
      * @return Task[] Returns paginated tasks for a user across all projects
      */
-    public function findPaginatedByUser($user, int $limit, int $offset, ?string $status = null, ?string $search = null): array
+    public function findPaginatedByUser(\App\Entity\User $user, int $limit, int $offset, ?string $status = null, ?string $search = null): array
     {
         $qb = $this->createQueryBuilder('t')
             ->join('t.project', 'p')
@@ -94,7 +94,7 @@ class TaskRepository extends ServiceEntityRepository
     /**
      * Count total tasks for a user.
      */
-    public function countByUser($user, ?string $status = null, ?string $search = null): int
+    public function countByUser(\App\Entity\User $user, ?string $status = null, ?string $search = null): int
     {
         $qb = $this->createQueryBuilder('t')
             ->select('count(t.id)')

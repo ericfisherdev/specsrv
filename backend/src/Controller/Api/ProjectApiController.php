@@ -197,7 +197,7 @@ class ProjectApiController extends BaseApiController
         }
 
         $pagination = $this->getPaginationParams($request);
-        $status = $request->query->get('status');
+        $status = $request->query->get('status') ? (string) $request->query->get('status') : null;
 
         if ($status && ! in_array($status, \App\Entity\Task::getAvailableStatuses())) {
             return $this->errorResponse(

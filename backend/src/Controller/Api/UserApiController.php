@@ -161,15 +161,14 @@ class UserApiController extends BaseApiController
         $name = $data['name'] ?? 'API Key';
 
         try {
-            $apiKey = $this->apiKeyService->generateApiKey($user, $name);
+            $apiKeyData = $this->apiKeyService->generateApiKey($user, $name);
 
             return $this->successResponse([
                 'api_key' => [
-                    'id' => $apiKey->getId(),
-                    'name' => $apiKey->getName(),
-                    'key' => $apiKey->getKey(), // Only shown on creation
-                    'created_at' => $apiKey->getCreatedAt()?->format('c'),
-                    'expires_at' => $apiKey->getExpiresAt()?->format('c'),
+                    'id' => $apiKeyData['id'],
+                    'name' => $apiKeyData['name'],
+                    'key' => $apiKeyData['api_key'], // Only shown on creation
+                    'created_at' => $apiKeyData['created_at'],
                 ],
             ], 'API key created successfully', 201);
         } catch (\Exception $e) {
@@ -186,13 +185,13 @@ class UserApiController extends BaseApiController
 
         $apiKeys = $this->apiKeyRepository->findBy(['user' => $user], ['createdAt' => 'DESC']);
 
-        $apiKeysData = array_map(function ($apiKey) {
+        $apiKeysData = array_map(function (\App\Entity\ApiKey $apiKey) {
             return [
                 'id' => $apiKey->getId(),
                 'name' => $apiKey->getName(),
-                'key_preview' => substr($apiKey->getKey(), 0, 8).'...',
-                'created_at' => $apiKey->getCreatedAt()?->format('c'),
-                'expires_at' => $apiKey->getExpiresAt()?->format('c'),
+                'key_preview' => 'sk_' . substr($apiKey->getKeyHash(), 0, 8).'...',
+                'created_at' => $apiKey->getCreatedAt()->format('c'),
+                'last_used_at' => $apiKey->getLastUsedAt()?->format('c'),
                 'is_active' => $apiKey->isActive(),
             ];
         }, $apiKeys);
@@ -216,12 +215,12 @@ class UserApiController extends BaseApiController
             return $this->errorResponse('API key not found', 'API_KEY_NOT_FOUND', null, 404);
         }
 
-        try {
-            $this->apiKeyService->revokeApiKey($apiKey);
-
+        $revoked = $this->apiKeyService->revokeApiKey($keyId, $user);
+        
+        if ($revoked) {
             return $this->successResponse(null, 'API key revoked successfully', 204);
-        } catch (\Exception $e) {
-            return $this->errorResponse('Failed to revoke API key: '.$e->getMessage(), 'API_KEY_REVOKE_FAILED', null, 500);
+        } else {
+            return $this->errorResponse('Failed to revoke API key', 'API_KEY_REVOKE_FAILED', null, 500);
         }
     }
 

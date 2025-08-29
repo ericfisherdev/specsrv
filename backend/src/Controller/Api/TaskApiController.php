@@ -36,8 +36,8 @@ class TaskApiController extends BaseApiController
         assert($user instanceof User);
 
         $pagination = $this->getPaginationParams($request);
-        $status = $request->query->get('status');
-        $search = $request->query->get('search');
+        $status = $request->query->get('status') ? (string) $request->query->get('status') : null;
+        $search = $request->query->get('search') ? (string) $request->query->get('search') : null;
 
         if ($status && ! in_array($status, Task::getAvailableStatuses())) {
             return $this->errorResponse(
