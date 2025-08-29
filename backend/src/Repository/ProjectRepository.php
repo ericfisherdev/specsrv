@@ -64,7 +64,7 @@ class ProjectRepository extends ServiceEntityRepository
      */
     public function countByUser(User $user): int
     {
-        return $this->createQueryBuilder('p')
+        return (int) $this->createQueryBuilder('p')
             ->select('COUNT(p.id)')
             ->andWhere('p.user = :user')
             ->setParameter('user', $user)

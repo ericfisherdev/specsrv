@@ -34,7 +34,7 @@ class SeedCommand extends Command
 
         try {
             $arguments = ['--no-interaction' => true];
-            
+
             if ($append) {
                 $arguments['--append'] = true;
                 $io->note('Appending data to existing database...');
@@ -47,7 +47,7 @@ class SeedCommand extends Command
 
             $io->success('Test data loaded successfully!');
             $io->newLine();
-            
+
             $io->definitionList(
                 ['Users Created' => '6 (admin, test user, + 4 dev users)'],
                 ['Projects Created' => '6 (demo, test, + 4 additional)'],
@@ -57,7 +57,8 @@ class SeedCommand extends Command
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $io->error('Seeding failed: ' . $e->getMessage());
+            $io->error('Seeding failed: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }
@@ -65,14 +66,17 @@ class SeedCommand extends Command
     private function runCommand(string $command, array $arguments, OutputInterface $output): void
     {
         $application = $this->getApplication();
-        
+        if (! $application) {
+            throw new \RuntimeException('Application not available');
+        }
+
         $commandInstance = $application->find($command);
         $input = new ArrayInput(array_merge(['command' => $command], $arguments));
         $input->setInteractive(false);
-        
+
         $returnCode = $commandInstance->run($input, $output);
-        
-        if ($returnCode !== 0) {
+
+        if (0 !== $returnCode) {
             throw new \RuntimeException("Command '{$command}' failed with code {$returnCode}");
         }
     }

@@ -31,7 +31,7 @@ class UserService
         // Validate the user
         $errors = $this->validator->validate($user);
         if (count($errors) > 0) {
-            throw new \InvalidArgumentException('User validation failed: '.(string) $errors);
+            throw new \InvalidArgumentException('User validation failed: '.$this->formatValidationErrors($errors));
         }
 
         $this->entityManager->persist($user);
@@ -72,7 +72,7 @@ class UserService
     {
         $errors = $this->validator->validate($user);
         if (count($errors) > 0) {
-            throw new \InvalidArgumentException('User validation failed: '.(string) $errors);
+            throw new \InvalidArgumentException('User validation failed: '.$this->formatValidationErrors($errors));
         }
 
         $this->entityManager->flush();
@@ -82,5 +82,15 @@ class UserService
     {
         $this->entityManager->remove($user);
         $this->entityManager->flush();
+    }
+
+    private function formatValidationErrors(\Symfony\Component\Validator\ConstraintViolationListInterface $errors): string
+    {
+        $messages = [];
+        foreach ($errors as $error) {
+            $messages[] = $error->getMessage();
+        }
+
+        return implode(', ', $messages);
     }
 }

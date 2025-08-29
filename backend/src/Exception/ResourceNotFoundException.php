@@ -13,13 +13,13 @@ class ResourceNotFoundException extends BaseException
         mixed $identifier = null,
         ?\Throwable $previous = null
     ) {
-        $message = $identifier 
+        $message = $identifier
             ? "{$resourceType} with identifier '{$identifier}' not found"
             : "{$resourceType} not found";
 
         $context = [
             'resource_type' => $resourceType,
-            'identifier' => $identifier
+            'identifier' => $identifier,
         ];
 
         parent::__construct($message, 404, $previous, $context);

@@ -11,21 +11,21 @@ use Symfony\Component\HttpFoundation\Request;
 trait ValidationTrait
 {
     private function validateRequestData(
-        Request $request, 
+        Request $request,
         array $constraints,
         RequestValidationService $validationService
     ): ?JsonResponse {
         $data = json_decode($request->getContent(), true) ?? [];
-        
-        if (json_last_error() !== JSON_ERROR_NONE) {
+
+        if (JSON_ERROR_NONE !== json_last_error()) {
             return new JsonResponse([
-                'error' => 'Invalid JSON payload'
+                'error' => 'Invalid JSON payload',
             ], 400);
         }
 
         $errors = $validationService->validateData($data, $constraints);
-        
-        if (!empty($errors)) {
+
+        if (! empty($errors)) {
             return $validationService->createValidationErrorResponse($errors);
         }
 
@@ -38,7 +38,7 @@ trait ValidationTrait
         RequestValidationService $validationService
     ): ?JsonResponse {
         $params = $request->query->all();
-        
+
         // Convert string values to appropriate types
         if (isset($params['page'])) {
             $params['page'] = (int) $params['page'];
@@ -48,8 +48,8 @@ trait ValidationTrait
         }
 
         $errors = $validationService->validateData($params, $constraints);
-        
-        if (!empty($errors)) {
+
+        if (! empty($errors)) {
             return $validationService->createValidationErrorResponse($errors);
         }
 

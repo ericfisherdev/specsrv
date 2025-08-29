@@ -45,6 +45,8 @@ class SecurityController extends AbstractController
             ], 401);
         }
 
+        assert($user instanceof \App\Entity\User);
+
         return $this->json([
             'message' => 'Login successful',
             'user' => [
@@ -65,6 +67,8 @@ class SecurityController extends AbstractController
                 'message' => 'Not authenticated',
             ], 401);
         }
+
+        assert($user instanceof \App\Entity\User);
 
         return $this->json([
             'user' => [

@@ -24,7 +24,7 @@ class RateLimitListener
         $request = $event->getRequest();
 
         // Only apply rate limiting to API routes
-        if (!str_starts_with($request->getPathInfo(), '/api/')) {
+        if (! str_starts_with($request->getPathInfo(), '/api/')) {
             return;
         }
 
@@ -36,7 +36,7 @@ class RateLimitListener
         $identifier = $this->rateLimitService->generateIdentifierFromRequest($request);
         $limits = $this->getRouteLimits($request->getPathInfo());
 
-        if (!$this->rateLimitService->isAllowed($identifier, $limits['requests'], $limits['window'])) {
+        if (! $this->rateLimitService->isAllowed($identifier, $limits['requests'], $limits['window'])) {
             $response = $this->createRateLimitResponse($identifier, $limits);
             $event->setResponse($response);
         }
@@ -68,13 +68,13 @@ class RateLimitListener
         $response = new JsonResponse([
             'error' => 'Rate limit exceeded',
             'message' => 'Too many requests. Please try again later.',
-            'retry_after' => $resetTime ? $resetTime - time() : $limits['window']
+            'retry_after' => $resetTime ? $resetTime - time() : $limits['window'],
         ], Response::HTTP_TOO_MANY_REQUESTS);
 
         // Add rate limiting headers
         $response->headers->set('X-RateLimit-Limit', (string) $limits['requests']);
         $response->headers->set('X-RateLimit-Remaining', (string) $remaining);
-        
+
         if ($resetTime) {
             $response->headers->set('X-RateLimit-Reset', (string) $resetTime);
         }

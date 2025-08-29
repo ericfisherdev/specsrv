@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Entity\Project;
+use App\Entity\User;
 use App\Repository\ProjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,6 +26,7 @@ class ProjectApiController extends BaseApiController
     {
         $this->requireAuth();
         $user = $this->getUser();
+        assert($user instanceof User);
         $pagination = $this->getPaginationParams($request);
 
         $projects = $this->projectRepository->findPaginatedByUser(
@@ -50,6 +52,7 @@ class ProjectApiController extends BaseApiController
     {
         $this->requireAuth();
         $user = $this->getUser();
+        assert($user instanceof User);
 
         try {
             $data = $this->getJsonPayload($request);

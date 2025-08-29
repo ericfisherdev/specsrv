@@ -6,9 +6,9 @@ namespace App\Service;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class RequestValidationService
 {
@@ -20,7 +20,7 @@ class RequestValidationService
     public function validateData(array $data, array $constraints): array
     {
         $violations = $this->validator->validate($data, new Assert\Collection($constraints));
-        
+
         if (count($violations) > 0) {
             return $this->formatValidationErrors($violations);
         }
@@ -32,14 +32,14 @@ class RequestValidationService
     {
         return new JsonResponse([
             'error' => 'Validation failed',
-            'details' => $errors
+            'details' => $errors,
         ], Response::HTTP_BAD_REQUEST);
     }
 
     public function formatValidationErrors(ConstraintViolationListInterface $violations): array
     {
         $errors = [];
-        
+
         foreach ($violations as $violation) {
             $field = trim($violation->getPropertyPath(), '[]');
             $errors[$field] = $violation->getMessage();
@@ -55,18 +55,18 @@ class RequestValidationService
                 new Assert\NotBlank(['message' => 'Title is required']),
                 new Assert\Length([
                     'max' => 255,
-                    'maxMessage' => 'Title cannot be longer than {{ limit }} characters'
-                ])
+                    'maxMessage' => 'Title cannot be longer than {{ limit }} characters',
+                ]),
             ],
             'description' => [
                 new Assert\Length([
                     'max' => 2000,
-                    'maxMessage' => 'Description cannot be longer than {{ limit }} characters'
-                ])
+                    'maxMessage' => 'Description cannot be longer than {{ limit }} characters',
+                ]),
             ],
             'github_repo' => [
-                new Assert\Url(['message' => 'GitHub repository must be a valid URL'])
-            ]
+                new Assert\Url(['message' => 'GitHub repository must be a valid URL']),
+            ],
         ];
     }
 
@@ -77,28 +77,28 @@ class RequestValidationService
                 new Assert\NotBlank(['message' => 'Title is required']),
                 new Assert\Length([
                     'max' => 255,
-                    'maxMessage' => 'Title cannot be longer than {{ limit }} characters'
-                ])
+                    'maxMessage' => 'Title cannot be longer than {{ limit }} characters',
+                ]),
             ],
             'description' => [
                 new Assert\Length([
                     'max' => 5000,
-                    'maxMessage' => 'Description cannot be longer than {{ limit }} characters'
-                ])
+                    'maxMessage' => 'Description cannot be longer than {{ limit }} characters',
+                ]),
             ],
             'status' => [
                 new Assert\Choice([
                     'choices' => ['todo', 'in_progress', 'completed', 'on_hold'],
-                    'message' => 'Status must be one of: todo, in_progress, completed, on_hold'
-                ])
+                    'message' => 'Status must be one of: todo, in_progress, completed, on_hold',
+                ]),
             ],
             'project_id' => [
                 new Assert\NotBlank(['message' => 'Project ID is required']),
                 new Assert\Type([
                     'type' => 'integer',
-                    'message' => 'Project ID must be an integer'
-                ])
-            ]
+                    'message' => 'Project ID must be an integer',
+                ]),
+            ],
         ];
     }
 
@@ -110,8 +110,8 @@ class RequestValidationService
                 new Assert\Email(['message' => 'Invalid email address']),
                 new Assert\Length([
                     'max' => 180,
-                    'maxMessage' => 'Email cannot be longer than {{ limit }} characters'
-                ])
+                    'maxMessage' => 'Email cannot be longer than {{ limit }} characters',
+                ]),
             ],
             'password' => [
                 new Assert\NotBlank(['message' => 'Password is required']),
@@ -119,13 +119,13 @@ class RequestValidationService
                     'min' => 8,
                     'max' => 255,
                     'minMessage' => 'Password must be at least {{ limit }} characters long',
-                    'maxMessage' => 'Password cannot be longer than {{ limit }} characters'
+                    'maxMessage' => 'Password cannot be longer than {{ limit }} characters',
                 ]),
                 new Assert\Regex([
                     'pattern' => '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/',
-                    'message' => 'Password must contain at least one lowercase letter, one uppercase letter, and one digit'
-                ])
-            ]
+                    'message' => 'Password must contain at least one lowercase letter, one uppercase letter, and one digit',
+                ]),
+            ],
         ];
     }
 
@@ -136,9 +136,9 @@ class RequestValidationService
                 new Assert\NotBlank(['message' => 'API key name is required']),
                 new Assert\Length([
                     'max' => 255,
-                    'maxMessage' => 'API key name cannot be longer than {{ limit }} characters'
-                ])
-            ]
+                    'maxMessage' => 'API key name cannot be longer than {{ limit }} characters',
+                ]),
+            ],
         ];
     }
 
@@ -148,25 +148,25 @@ class RequestValidationService
             'page' => [
                 new Assert\Type([
                     'type' => 'integer',
-                    'message' => 'Page must be an integer'
+                    'message' => 'Page must be an integer',
                 ]),
                 new Assert\Range([
                     'min' => 1,
-                    'minMessage' => 'Page must be at least {{ limit }}'
-                ])
+                    'minMessage' => 'Page must be at least {{ limit }}',
+                ]),
             ],
             'limit' => [
                 new Assert\Type([
                     'type' => 'integer',
-                    'message' => 'Limit must be an integer'
+                    'message' => 'Limit must be an integer',
                 ]),
                 new Assert\Range([
                     'min' => 1,
                     'max' => 100,
                     'minMessage' => 'Limit must be at least {{ limit }}',
-                    'maxMessage' => 'Limit cannot be more than {{ limit }}'
-                ])
-            ]
+                    'maxMessage' => 'Limit cannot be more than {{ limit }}',
+                ]),
+            ],
         ];
 
         return $this->validateData($params, $constraints);

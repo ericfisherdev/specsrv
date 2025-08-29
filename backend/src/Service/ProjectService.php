@@ -33,7 +33,7 @@ class ProjectService
 
         $errors = $this->validator->validate($project);
         if (count($errors) > 0) {
-            throw new \InvalidArgumentException('Project validation failed: '.(string) $errors);
+            throw new \InvalidArgumentException('Project validation failed: '.$this->formatValidationErrors($errors));
         }
 
         $this->entityManager->persist($project);
@@ -58,7 +58,7 @@ class ProjectService
 
         $errors = $this->validator->validate($project);
         if (count($errors) > 0) {
-            throw new \InvalidArgumentException('Project validation failed: '.(string) $errors);
+            throw new \InvalidArgumentException('Project validation failed: '.$this->formatValidationErrors($errors));
         }
 
         $this->entityManager->flush();
@@ -98,5 +98,15 @@ class ProjectService
     public function userOwnsProject(User $user, Project $project): bool
     {
         return $project->getUser() === $user;
+    }
+
+    private function formatValidationErrors(\Symfony\Component\Validator\ConstraintViolationListInterface $errors): string
+    {
+        $messages = [];
+        foreach ($errors as $error) {
+            $messages[] = $error->getMessage();
+        }
+
+        return implode(', ', $messages);
     }
 }

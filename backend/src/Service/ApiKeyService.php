@@ -34,7 +34,7 @@ class ApiKeyService
             'api_key' => $plainKey,
             'id' => $apiKey->getId(),
             'name' => $name,
-            'created_at' => $apiKey->getCreatedAt()->format('c')
+            'created_at' => $apiKey->getCreatedAt()->format('c'),
         ];
     }
 
@@ -42,7 +42,7 @@ class ApiKeyService
     {
         $apiKey = $this->entityManager->getRepository(ApiKey::class)->find($apiKeyId);
 
-        if (!$apiKey || $apiKey->getUser() !== $user) {
+        if (! $apiKey || $apiKey->getUser() !== $user) {
             return false;
         }
 
@@ -61,13 +61,13 @@ class ApiKeyService
                 'id' => $apiKey->getId(),
                 'name' => $apiKey->getName(),
                 'created_at' => $apiKey->getCreatedAt()->format('c'),
-                'last_used_at' => $apiKey->getLastUsedAt()?->format('c')
+                'last_used_at' => $apiKey->getLastUsedAt()?->format('c'),
             ];
         }, $apiKeys);
     }
 
     private function generateSecureKey(): string
     {
-        return 'sk_' . bin2hex(random_bytes(32));
+        return 'sk_'.bin2hex(random_bytes(32));
     }
 }

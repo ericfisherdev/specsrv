@@ -8,6 +8,7 @@ use App\Exception\BaseException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -29,7 +30,7 @@ class ExceptionListener
         $request = $event->getRequest();
 
         // Only handle JSON API requests
-        if (!$this->isApiRequest($request)) {
+        if (! $this->isApiRequest($request)) {
             return;
         }
 
@@ -40,11 +41,11 @@ class ExceptionListener
         $this->logException($exception, $request->getPathInfo());
     }
 
-    private function isApiRequest($request): bool
+    private function isApiRequest(Request $request): bool
     {
-        return str_starts_with($request->getPathInfo(), '/api/') ||
-               $request->headers->get('Content-Type') === 'application/json' ||
-               $request->headers->get('Accept') === 'application/json';
+        return str_starts_with($request->getPathInfo(), '/api/')
+               || 'application/json' === $request->headers->get('Content-Type')
+               || 'application/json' === $request->headers->get('Accept');
     }
 
     private function createApiErrorResponse(\Throwable $exception): JsonResponse
@@ -63,12 +64,12 @@ class ExceptionListener
         ];
 
         // Add context if available
-        if (!empty($context)) {
+        if (! empty($context)) {
             $data['error']['details'] = $context;
         }
 
         // Add debug information in development
-        if ($this->environment === 'dev') {
+        if ('dev' === $this->environment) {
             $data['debug'] = [
                 'exception_class' => get_class($exception),
                 'file' => $exception->getFile(),
@@ -128,8 +129,8 @@ class ExceptionListener
             return 'Authentication failed';
         }
 
-        return $this->environment === 'dev' 
-            ? $exception->getMessage() 
+        return 'dev' === $this->environment
+            ? $exception->getMessage()
             : 'Internal server error';
     }
 
@@ -156,6 +157,6 @@ class ExceptionListener
             $context = array_merge($context, $exception->getContext());
         }
 
-        $this->logger->error('API Exception: ' . $exception->getMessage(), $context);
+        $this->logger->error('API Exception: '.$exception->getMessage(), $context);
     }
 }

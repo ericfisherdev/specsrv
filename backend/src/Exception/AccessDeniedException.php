@@ -10,16 +10,16 @@ class AccessDeniedException extends BaseException
 
     public function __construct(
         string $message = 'Access denied',
-        string $resource = null,
-        string $action = null,
+        ?string $resource = null,
+        ?string $action = null,
         ?\Throwable $previous = null
     ) {
         $context = [];
-        
+
         if ($resource) {
             $context['resource'] = $resource;
         }
-        
+
         if ($action) {
             $context['action'] = $action;
         }

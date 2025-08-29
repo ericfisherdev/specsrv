@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exception;
 
-use Exception;
-
-abstract class BaseException extends Exception
+abstract class BaseException extends \Exception
 {
     protected string $errorCode = 'GENERIC_ERROR';
     protected array $context = [];
@@ -14,7 +12,7 @@ abstract class BaseException extends Exception
     public function __construct(
         string $message = '',
         int $code = 0,
-        ?Exception $previous = null,
+        ?\Throwable $previous = null,
         array $context = []
     ) {
         parent::__construct($message, $code, $previous);
@@ -34,12 +32,14 @@ abstract class BaseException extends Exception
     public function setContext(array $context): static
     {
         $this->context = $context;
+
         return $this;
     }
 
     public function addContext(string $key, mixed $value): static
     {
         $this->context[$key] = $value;
+
         return $this;
     }
 
@@ -51,7 +51,7 @@ abstract class BaseException extends Exception
             'context' => $this->getContext(),
             'file' => $this->getFile(),
             'line' => $this->getLine(),
-            'trace' => $this->getTraceAsString()
+            'trace' => $this->getTraceAsString(),
         ];
     }
 }

@@ -35,7 +35,7 @@ class TaskService
 
         $errors = $this->validator->validate($task);
         if (count($errors) > 0) {
-            throw new \InvalidArgumentException('Task validation failed: '.(string) $errors);
+            throw new \InvalidArgumentException('Task validation failed: '.$this->formatValidationErrors($errors));
         }
 
         $this->entityManager->persist($task);
@@ -60,7 +60,7 @@ class TaskService
 
         $errors = $this->validator->validate($task);
         if (count($errors) > 0) {
-            throw new \InvalidArgumentException('Task validation failed: '.(string) $errors);
+            throw new \InvalidArgumentException('Task validation failed: '.$this->formatValidationErrors($errors));
         }
 
         $this->entityManager->flush();
@@ -94,7 +94,9 @@ class TaskService
 
     public function userOwnsTask(User $user, Task $task): bool
     {
-        return $task->getProject()->getUser() === $user;
+        $project = $task->getProject();
+
+        return $project && $project->getUser() === $user;
     }
 
     public function getTasksByStatus(Project $project, string $status): array
@@ -118,5 +120,15 @@ class TaskService
             'cancelled' => $cancelledTasks,
             'completion_rate' => $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 2) : 0,
         ];
+    }
+
+    private function formatValidationErrors(\Symfony\Component\Validator\ConstraintViolationListInterface $errors): string
+    {
+        $messages = [];
+        foreach ($errors as $error) {
+            $messages[] = $error->getMessage();
+        }
+
+        return implode(', ', $messages);
     }
 }

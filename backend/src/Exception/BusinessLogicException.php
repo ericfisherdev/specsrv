@@ -10,12 +10,12 @@ class BusinessLogicException extends BaseException
 
     public function __construct(
         string $message = 'Business logic error',
-        string $operation = null,
+        ?string $operation = null,
         int $code = 400,
         ?\Throwable $previous = null
     ) {
         $context = [];
-        
+
         if ($operation) {
             $context['operation'] = $operation;
         }

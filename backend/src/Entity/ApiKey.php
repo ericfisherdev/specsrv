@@ -6,7 +6,6 @@ namespace App\Entity;
 
 use App\Repository\ApiKeyRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: ApiKeyRepository::class)]
 #[ORM\Table(name: 'api_keys')]
@@ -54,6 +53,7 @@ class ApiKey
     public function setKeyHash(string $keyHash): static
     {
         $this->keyHash = $keyHash;
+
         return $this;
     }
 
@@ -65,6 +65,7 @@ class ApiKey
     public function setName(string $name): static
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -76,6 +77,7 @@ class ApiKey
     public function setUser(User $user): static
     {
         $this->user = $user;
+
         return $this;
     }
 
@@ -92,6 +94,7 @@ class ApiKey
     public function setLastUsedAt(?\DateTimeImmutable $lastUsedAt): static
     {
         $this->lastUsedAt = $lastUsedAt;
+
         return $this;
     }
 
@@ -103,12 +106,14 @@ class ApiKey
     public function setIsActive(bool $isActive): static
     {
         $this->isActive = $isActive;
+
         return $this;
     }
 
     public function updateLastUsedAt(): static
     {
         $this->lastUsedAt = new \DateTimeImmutable();
+
         return $this;
     }
 }

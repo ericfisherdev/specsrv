@@ -44,17 +44,18 @@ class DebugApiCommand extends Command
 
         if ($generateKey) {
             $user = $this->userRepository->findOneBy(['email' => $generateKey]);
-            
-            if (!$user) {
+
+            if (! $user) {
                 $io->error("User with email '{$generateKey}' not found.");
+
                 return Command::FAILURE;
             }
 
             $keyData = $this->apiKeyService->generateApiKey($user, 'Debug API Key');
-            
+
             $io->success("API key generated for {$generateKey}");
             $io->definitionList(['API Key' => $keyData['api_key']]);
-            
+
             return Command::SUCCESS;
         }
 
@@ -73,7 +74,7 @@ class DebugApiCommand extends Command
                     $apiKey->getUser()->getEmail(),
                     $apiKey->isActive() ? '✓' : '✗',
                     $apiKey->getCreatedAt()->format('Y-m-d H:i:s'),
-                    $apiKey->getLastUsedAt()?->format('Y-m-d H:i:s') ?? 'Never'
+                    $apiKey->getLastUsedAt()?->format('Y-m-d H:i:s') ?? 'Never',
                 ];
             }
 
@@ -105,13 +106,13 @@ class DebugApiCommand extends Command
         $io->text([
             'curl -H "X-API-Key: sk_admin_test_key_12345678901234567890123456789012" http://localhost:8000/api/projects',
             'curl -H "X-API-Key: sk_test_user_key_12345678901234567890123456789012" http://localhost:8000/api/tasks',
-            'curl -X POST -H "Content-Type: application/json" -H "X-API-Key: YOUR_KEY" -d \'{"title":"Test Project","description":"A test"}\' http://localhost:8000/api/projects'
+            'curl -X POST -H "Content-Type: application/json" -H "X-API-Key: YOUR_KEY" -d \'{"title":"Test Project","description":"A test"}\' http://localhost:8000/api/projects',
         ]);
 
         $io->note([
             'Web Profiler available at: /_profiler',
             'Debug toolbar enabled in development mode',
-            'Use --generate-key=user@email.com to create a new API key'
+            'Use --generate-key=user@email.com to create a new API key',
         ]);
 
         return Command::SUCCESS;

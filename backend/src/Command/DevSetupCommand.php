@@ -52,7 +52,7 @@ class DevSetupCommand extends Command
 
             $io->success('Development environment setup completed!');
             $io->newLine();
-            
+
             $io->definitionList(
                 ['Admin User' => 'admin@specsrv.dev / admin123'],
                 ['Test User' => 'user@specsrv.dev / user123'],
@@ -64,7 +64,8 @@ class DevSetupCommand extends Command
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $io->error('Setup failed: ' . $e->getMessage());
+            $io->error('Setup failed: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }
@@ -72,14 +73,17 @@ class DevSetupCommand extends Command
     private function runCommand(string $command, array $arguments, OutputInterface $output): void
     {
         $application = $this->getApplication();
-        
+        if (! $application) {
+            throw new \RuntimeException('Application not available');
+        }
+
         $commandInstance = $application->find($command);
         $input = new ArrayInput(array_merge(['command' => $command], $arguments));
         $input->setInteractive(false);
-        
+
         $returnCode = $commandInstance->run($input, $output);
-        
-        if ($returnCode !== 0) {
+
+        if (0 !== $returnCode) {
             throw new \RuntimeException("Command '{$command}' failed with code {$returnCode}");
         }
     }

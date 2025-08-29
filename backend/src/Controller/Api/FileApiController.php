@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller\Api;
 
-use App\Service\FileUploadService;
 use App\Repository\FileRepository;
+use App\Service\FileUploadService;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -26,16 +25,17 @@ class FileApiController extends BaseApiController
     public function upload(Request $request): JsonResponse
     {
         $uploadedFile = $request->files->get('file');
-        $entityType = $request->request->get('entity_type');
+        $entityType = (string) $request->request->get('entity_type');
         $entityId = (int) $request->request->get('entity_id');
         $customName = $request->request->get('name');
+        $customName = is_string($customName) ? $customName : null;
 
-        if (!$uploadedFile) {
-            return $this->errorResponse('No file provided', 400);
+        if (! $uploadedFile) {
+            return $this->errorResponse('No file provided', 'MISSING_FILE', null, 400);
         }
 
-        if (!$entityType || !$entityId) {
-            return $this->errorResponse('entity_type and entity_id are required', 400);
+        if (! $entityType || ! $entityId) {
+            return $this->errorResponse('entity_type and entity_id are required', 'MISSING_PARAMS', null, 400);
         }
 
         try {
@@ -55,11 +55,11 @@ class FileApiController extends BaseApiController
                     'size' => $this->fileUploadService->getFileSize($file),
                     'entity_type' => $file->getEntityType(),
                     'entity_id' => $file->getEntityId(),
-                    'created_at' => $file->getCreatedAt()->format('Y-m-d H:i:s')
-                ]
-            ], 201);
+                    'created_at' => $file->getCreatedAt()?->format('Y-m-d H:i:s') ?? '',
+                ],
+            ], 'File uploaded successfully', 201);
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 400);
+            return $this->errorResponse($e->getMessage(), 'UPLOAD_ERROR', null, 400);
         }
     }
 
@@ -68,8 +68,8 @@ class FileApiController extends BaseApiController
     {
         $file = $this->fileRepository->find($id);
 
-        if (!$file) {
-            return $this->errorResponse('File not found', 404);
+        if (! $file) {
+            return $this->errorResponse('File not found', 'FILE_NOT_FOUND', null, 404);
         }
 
         return $this->successResponse([
@@ -78,13 +78,13 @@ class FileApiController extends BaseApiController
                 'filename' => $file->getFilename(),
                 'path' => $file->getPath(),
                 'type' => $file->getType(),
-                'size' => $this->fileUploadService->fileExists($file) 
-                    ? $this->fileUploadService->getFileSize($file) 
+                'size' => $this->fileUploadService->fileExists($file)
+                    ? $this->fileUploadService->getFileSize($file)
                     : null,
                 'entity_type' => $file->getEntityType(),
                 'entity_id' => $file->getEntityId(),
-                'created_at' => $file->getCreatedAt()->format('Y-m-d H:i:s')
-            ]
+                'created_at' => $file->getCreatedAt()?->format('Y-m-d H:i:s') ?? '',
+            ],
         ]);
     }
 
@@ -93,22 +93,23 @@ class FileApiController extends BaseApiController
     {
         $file = $this->fileRepository->find($id);
 
-        if (!$file || !$this->fileUploadService->fileExists($file)) {
-            return $this->errorResponse('File not found', 404);
+        if (! $file || ! $this->fileUploadService->fileExists($file)) {
+            return $this->errorResponse('File not found', 'FILE_NOT_FOUND', null, 404);
         }
 
         try {
             $content = $this->fileUploadService->getFileContent($file);
-            
+
             $response = new Response($content);
             $response->headers->set('Content-Type', $file->getType());
-            $response->headers->set('Content-Disposition', 
-                ResponseHeaderBag::DISPOSITION_ATTACHMENT . '; filename="' . $file->getFilename() . '"'
+            $response->headers->set(
+                'Content-Disposition',
+                ResponseHeaderBag::DISPOSITION_ATTACHMENT.'; filename="'.$file->getFilename().'"'
             );
-            
+
             return $response;
         } catch (\Exception $e) {
-            return $this->errorResponse('Error reading file: ' . $e->getMessage(), 500);
+            return $this->errorResponse('Error reading file: '.$e->getMessage(), 'FILE_READ_ERROR', null, 500);
         }
     }
 
@@ -117,15 +118,16 @@ class FileApiController extends BaseApiController
     {
         $file = $this->fileRepository->find($id);
 
-        if (!$file) {
-            return $this->errorResponse('File not found', 404);
+        if (! $file) {
+            return $this->errorResponse('File not found', 'FILE_NOT_FOUND', null, 404);
         }
 
         try {
             $this->fileUploadService->deleteFile($file);
+
             return $this->successResponse(['message' => 'File deleted successfully']);
         } catch (\Exception $e) {
-            return $this->errorResponse('Error deleting file: ' . $e->getMessage(), 500);
+            return $this->errorResponse('Error deleting file: '.$e->getMessage(), 'FILE_DELETE_ERROR', null, 500);
         }
     }
 
@@ -133,7 +135,7 @@ class FileApiController extends BaseApiController
     public function limits(): JsonResponse
     {
         return $this->successResponse([
-            'limits' => $this->fileUploadService->getUploadLimits()
+            'limits' => $this->fileUploadService->getUploadLimits(),
         ]);
     }
 
@@ -142,27 +144,27 @@ class FileApiController extends BaseApiController
     {
         $files = $this->fileRepository->findBy([
             'entityType' => $entityType,
-            'entityId' => $entityId
+            'entityId' => $entityId,
         ], ['createdAt' => 'DESC']);
 
-        $filesData = array_map(function($file) {
+        $filesData = array_map(function ($file) {
             return [
                 'id' => $file->getId(),
                 'filename' => $file->getFilename(),
                 'path' => $file->getPath(),
                 'type' => $file->getType(),
-                'size' => $this->fileUploadService->fileExists($file) 
-                    ? $this->fileUploadService->getFileSize($file) 
+                'size' => $this->fileUploadService->fileExists($file)
+                    ? $this->fileUploadService->getFileSize($file)
                     : null,
                 'entity_type' => $file->getEntityType(),
                 'entity_id' => $file->getEntityId(),
-                'created_at' => $file->getCreatedAt()->format('Y-m-d H:i:s')
+                'created_at' => $file->getCreatedAt()?->format('Y-m-d H:i:s') ?? '',
             ];
         }, $files);
 
         return $this->successResponse([
             'files' => $filesData,
-            'total' => count($filesData)
+            'total' => count($filesData),
         ]);
     }
 }

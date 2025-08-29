@@ -23,8 +23,8 @@ class AttributeRateLimitListener
     public function onKernelController(ControllerEvent $event): void
     {
         $controller = $event->getController();
-        
-        if (!is_array($controller)) {
+
+        if (! is_array($controller)) {
             return;
         }
 
@@ -34,46 +34,46 @@ class AttributeRateLimitListener
         $reflection = new \ReflectionMethod($controllerObject, $method);
         $rateLimitAttribute = $reflection->getAttributes(RateLimit::class)[0] ?? null;
 
-        if (!$rateLimitAttribute) {
+        if (! $rateLimitAttribute) {
             // Check class-level attribute
             $classReflection = new \ReflectionClass($controllerObject);
             $rateLimitAttribute = $classReflection->getAttributes(RateLimit::class)[0] ?? null;
         }
 
-        if (!$rateLimitAttribute) {
+        if (! $rateLimitAttribute) {
             return;
         }
 
         /** @var RateLimit $rateLimit */
         $rateLimit = $rateLimitAttribute->newInstance();
         $request = $event->getRequest();
-        
+
         $identifier = $this->rateLimitService->generateIdentifierFromRequest($request);
-        
+
         // Add attribute identifier suffix for more granular control
-        if ($rateLimit->identifier !== 'default') {
-            $identifier .= '_' . $rateLimit->identifier;
+        if ('default' !== $rateLimit->identifier) {
+            $identifier .= '_'.$rateLimit->identifier;
         }
 
-        if (!$this->rateLimitService->isAllowed($identifier, $rateLimit->requests, $rateLimit->window)) {
+        if (! $this->rateLimitService->isAllowed($identifier, $rateLimit->requests, $rateLimit->window)) {
             $remaining = $this->rateLimitService->getRemainingRequests($identifier, $rateLimit->requests, $rateLimit->window);
             $resetTime = $this->rateLimitService->getResetTime($identifier, $rateLimit->window);
 
             $response = new JsonResponse([
                 'error' => 'Rate limit exceeded',
                 'message' => 'Too many requests. Please try again later.',
-                'retry_after' => $resetTime ? $resetTime - time() : $rateLimit->window
+                'retry_after' => $resetTime ? $resetTime - time() : $rateLimit->window,
             ], Response::HTTP_TOO_MANY_REQUESTS);
 
             // Add rate limiting headers
             $response->headers->set('X-RateLimit-Limit', (string) $rateLimit->requests);
             $response->headers->set('X-RateLimit-Remaining', (string) $remaining);
-            
+
             if ($resetTime) {
                 $response->headers->set('X-RateLimit-Reset', (string) $resetTime);
             }
 
-            $event->setController(function() use ($response) {
+            $event->setController(function () use ($response) {
                 return $response;
             });
         }

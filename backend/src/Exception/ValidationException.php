@@ -28,6 +28,7 @@ class ValidationException extends BaseException
     {
         $this->violations = $violations;
         $this->context['violations'] = $violations;
+
         return $this;
     }
 
@@ -35,11 +36,12 @@ class ValidationException extends BaseException
     {
         $this->violations[$field] = $message;
         $this->context['violations'] = $this->violations;
+
         return $this;
     }
 
     public function hasViolations(): bool
     {
-        return !empty($this->violations);
+        return ! empty($this->violations);
     }
 }

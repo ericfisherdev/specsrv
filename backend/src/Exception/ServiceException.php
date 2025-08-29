@@ -10,12 +10,12 @@ class ServiceException extends BaseException
 
     public function __construct(
         string $message = 'Service error',
-        string $service = null,
+        ?string $service = null,
         int $code = 500,
         ?\Throwable $previous = null
     ) {
         $context = [];
-        
+
         if ($service) {
             $context['service'] = $service;
         }

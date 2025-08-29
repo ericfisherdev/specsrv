@@ -32,14 +32,14 @@ class ApiKeyAuthenticator extends AbstractAuthenticator
     {
         $apiKey = $request->headers->get('X-API-Key') ?? $request->query->get('api_key');
 
-        if (null === $apiKey) {
+        if (null === $apiKey || ! is_string($apiKey)) {
             throw new CustomUserMessageAuthenticationException('No API key provided');
         }
 
         $keyHash = hash('sha256', $apiKey);
         $apiKeyEntity = $this->apiKeyRepository->findActiveByKeyHash($keyHash);
 
-        if (!$apiKeyEntity) {
+        if (! $apiKeyEntity) {
             throw new CustomUserMessageAuthenticationException('Invalid API key');
         }
 
@@ -47,8 +47,10 @@ class ApiKeyAuthenticator extends AbstractAuthenticator
         $apiKeyEntity->updateLastUsedAt();
         $this->apiKeyRepository->save($apiKeyEntity, true);
 
+        $user = $apiKeyEntity->getUser();
+
         return new SelfValidatingPassport(
-            new UserBadge($apiKeyEntity->getUser()->getEmail())
+            new UserBadge($user->getEmail() ?? '')
         );
     }
 
@@ -61,7 +63,7 @@ class ApiKeyAuthenticator extends AbstractAuthenticator
     {
         return new JsonResponse([
             'error' => 'Authentication failed',
-            'message' => strtr($exception->getMessageKey(), $exception->getMessageData())
+            'message' => strtr($exception->getMessageKey(), $exception->getMessageData()),
         ], Response::HTTP_UNAUTHORIZED);
     }
 }

@@ -11,10 +11,11 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 abstract class BaseApiController extends AbstractController
 {
     use ValidationTrait;
+
     /**
      * Create a successful API response.
      */
-    protected function successResponse($data = null, ?string $message = null, int $status = 200): JsonResponse
+    protected function successResponse(mixed $data = null, ?string $message = null, int $status = 200): JsonResponse
     {
         $response = [
             'success' => true,
@@ -37,7 +38,7 @@ abstract class BaseApiController extends AbstractController
     protected function errorResponse(
         string $message,
         string $code = 'GENERIC_ERROR',
-        $details = null,
+        mixed $details = null,
         int $status = 400
     ): JsonResponse {
         $response = [
@@ -136,7 +137,7 @@ abstract class BaseApiController extends AbstractController
     /**
      * Check if user owns the resource.
      */
-    protected function checkResourceOwnership($resource): bool
+    protected function checkResourceOwnership(object $resource): bool
     {
         $user = $this->getUser();
 
@@ -172,7 +173,7 @@ abstract class BaseApiController extends AbstractController
     /**
      * Transform entity to array for API response.
      */
-    protected function transformEntity($entity): array
+    protected function transformEntity(object $entity): array
     {
         if (method_exists($entity, 'toArray')) {
             return $entity->toArray();

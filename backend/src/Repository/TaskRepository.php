@@ -26,7 +26,7 @@ class TaskRepository extends ServiceEntityRepository
             ->andWhere('t.project = :project')
             ->setParameter('project', $project);
 
-        if ($status !== null) {
+        if (null !== $status) {
             $qb->andWhere('t.status = :status')
                ->setParameter('status', $status);
         }
