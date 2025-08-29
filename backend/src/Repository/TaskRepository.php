@@ -63,4 +63,94 @@ class TaskRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return Task[] Returns paginated tasks for a user across all projects
+     */
+    public function findPaginatedByUser(\App\Entity\User $user, int $limit, int $offset, ?string $status = null, ?string $search = null): array
+    {
+        $qb = $this->createQueryBuilder('t')
+            ->join('t.project', 'p')
+            ->andWhere('p.user = :user')
+            ->setParameter('user', $user);
+
+        if (null !== $status) {
+            $qb->andWhere('t.status = :status')
+               ->setParameter('status', $status);
+        }
+
+        if (null !== $search) {
+            $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
+               ->setParameter('search', '%'.$search.'%');
+        }
+
+        return $qb->orderBy('t.updatedAt', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Count total tasks for a user.
+     */
+    public function countByUser(\App\Entity\User $user, ?string $status = null, ?string $search = null): int
+    {
+        $qb = $this->createQueryBuilder('t')
+            ->select('count(t.id)')
+            ->join('t.project', 'p')
+            ->andWhere('p.user = :user')
+            ->setParameter('user', $user);
+
+        if (null !== $status) {
+            $qb->andWhere('t.status = :status')
+               ->setParameter('status', $status);
+        }
+
+        if (null !== $search) {
+            $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
+               ->setParameter('search', '%'.$search.'%');
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @return Task[] Returns paginated tasks for a specific project
+     */
+    public function findPaginatedByProject(Project $project, int $limit, int $offset, ?string $status = null): array
+    {
+        $qb = $this->createQueryBuilder('t')
+            ->andWhere('t.project = :project')
+            ->setParameter('project', $project);
+
+        if (null !== $status) {
+            $qb->andWhere('t.status = :status')
+               ->setParameter('status', $status);
+        }
+
+        return $qb->orderBy('t.updatedAt', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Count tasks for a specific project.
+     */
+    public function countByProject(Project $project, ?string $status = null): int
+    {
+        $qb = $this->createQueryBuilder('t')
+            ->select('count(t.id)')
+            ->andWhere('t.project = :project')
+            ->setParameter('project', $project);
+
+        if (null !== $status) {
+            $qb->andWhere('t.status = :status')
+               ->setParameter('status', $status);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
 }
