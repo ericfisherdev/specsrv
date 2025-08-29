@@ -1,0 +1,28 @@
+{
+    "name": "specsrv/specsrv",
+    "description": "A PHP-based task server designed for use with AI agents",
+    "type": "project",
+    "license": "AGPL-3.0",
+    "require": {
+        "php": "^8.1"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.10",
+        "rector/rector": "^0.18"
+    },
+    "autoload": {
+        "psr-4": {
+            "Specsrv\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Specsrv\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "phpstan": "phpstan analyse",
+        "rector": "rector process --dry-run",
+        "rector-fix": "rector process"
+    }
+}
