@@ -16,6 +16,11 @@ class Task
     public const STATUS_IN_PROGRESS = 'in_progress';
     public const STATUS_COMPLETED = 'completed';
     public const STATUS_CANCELLED = 'cancelled';
+    
+    public const PRIORITY_LOW = 'low';
+    public const PRIORITY_MEDIUM = 'medium';
+    public const PRIORITY_HIGH = 'high';
+    public const PRIORITY_CRITICAL = 'critical';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -30,6 +35,9 @@ class Task
 
     #[ORM\Column(length: 20)]
     private ?string $status = self::STATUS_TODO;
+
+    #[ORM\Column(length: 20)]
+    private ?string $priority = self::PRIORITY_MEDIUM;
 
     #[ORM\ManyToOne(inversedBy: 'tasks')]
     #[ORM\JoinColumn(nullable: false)]
@@ -94,6 +102,19 @@ class Task
     public function setStatus(string $status): static
     {
         $this->status = $status;
+        $this->setUpdatedAt(new \DateTime());
+
+        return $this;
+    }
+
+    public function getPriority(): ?string
+    {
+        return $this->priority;
+    }
+
+    public function setPriority(string $priority): static
+    {
+        $this->priority = $priority;
         $this->setUpdatedAt(new \DateTime());
 
         return $this;
@@ -202,5 +223,37 @@ class Task
             self::STATUS_COMPLETED,
             self::STATUS_CANCELLED,
         ];
+    }
+
+    public static function getAvailablePriorities(): array
+    {
+        return [
+            self::PRIORITY_LOW,
+            self::PRIORITY_MEDIUM,
+            self::PRIORITY_HIGH,
+            self::PRIORITY_CRITICAL,
+        ];
+    }
+
+    public function getPriorityColor(): string
+    {
+        return match ($this->priority) {
+            self::PRIORITY_LOW => 'text-green-600 bg-green-100',
+            self::PRIORITY_MEDIUM => 'text-yellow-600 bg-yellow-100',
+            self::PRIORITY_HIGH => 'text-orange-600 bg-orange-100',
+            self::PRIORITY_CRITICAL => 'text-red-600 bg-red-100',
+            default => 'text-gray-600 bg-gray-100',
+        };
+    }
+
+    public function getPriorityLabel(): string
+    {
+        return match ($this->priority) {
+            self::PRIORITY_LOW => 'Low',
+            self::PRIORITY_MEDIUM => 'Medium',
+            self::PRIORITY_HIGH => 'High',
+            self::PRIORITY_CRITICAL => 'Critical',
+            default => 'Unknown',
+        };
     }
 }
