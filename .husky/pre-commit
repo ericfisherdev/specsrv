@@ -2,6 +2,6 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 ./scripts/bump-version.sh && \
-composer phpstan && \
+cd backend && composer lint && \
 composer rector && \
-actionlint .github/workflows/*.yml 2>/dev/null || true
+cd .. && actionlint .github/workflows/*.yml 2>/dev/null || true
