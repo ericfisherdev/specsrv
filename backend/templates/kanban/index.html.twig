@@ -13,15 +13,39 @@
     <!-- Kanban Board -->
     <div class="flex space-x-6 overflow-x-auto pb-6" x-data="kanbanBoard()">
         <!-- Backlog Column -->
-        <div class="kanban-column flex-shrink-0 w-80">
+        <div class="kanban-column flex-shrink-0" x-data="{ collapsed: false }" :class="collapsed ? 'w-16' : 'w-80'">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">Backlog</h2>
-                <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-text="backlogTasks.length"></span>
+                <h2 class="text-lg font-semibold text-gray-800" x-show="!collapsed">Backlog</h2>
+                <h2 class="text-sm font-semibold text-gray-800 transform -rotate-90 whitespace-nowrap" x-show="collapsed">Backlog</h2>
+                <div class="flex items-center space-x-2">
+                    <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed" x-text="backlogTasks.length"></span>
+                    <button @click="collapsed = !collapsed" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-4 h-4 transform transition-transform" :class="collapsed ? 'rotate-0' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="space-y-3" x-ref="backlogColumn">
+            <div class="space-y-3 min-h-32" 
+                 x-ref="backlogColumn" 
+                 x-show="!collapsed" 
+                 x-transition
+                 @dragover.prevent
+                 @drop.prevent="handleDrop('backlog', $event)">
                 <template x-for="task in backlogTasks" :key="task.id">
-                    <div class="kanban-card" :data-task-id="task.id">
-                        <h3 class="font-medium text-gray-900" x-text="task.title"></h3>
+                    <div class="kanban-card transition-all duration-200" 
+                         :data-task-id="task.id"
+                         draggable="true"
+                         @dragstart="handleDragStart(task, $event)"
+                         @dragend="handleDragEnd($event)">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-medium text-gray-900 flex-1" x-text="task.title"></h3>
+                            <span 
+                                class="priority-badge px-2 py-1 text-xs font-medium rounded-full ml-2"
+                                :class="task.priority_color"
+                                x-text="task.priority_label"
+                            ></span>
+                        </div>
                         <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
                         <div class="flex items-center justify-between mt-3">
                             <span class="text-xs text-gray-500" x-text="task.project"></span>
@@ -33,21 +57,45 @@
                     </div>
                 </template>
             </div>
-            <button class="w-full mt-4 p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600">
+            <button class="w-full mt-4 p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600" x-show="!collapsed" x-transition>
                 + Add Task
             </button>
         </div>
 
         <!-- Todo Column -->
-        <div class="kanban-column flex-shrink-0 w-80">
+        <div class="kanban-column flex-shrink-0" x-data="{ collapsed: false }" :class="collapsed ? 'w-16' : 'w-80'">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">Todo</h2>
-                <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-text="todoTasks.length"></span>
+                <h2 class="text-lg font-semibold text-gray-800" x-show="!collapsed">Todo</h2>
+                <h2 class="text-sm font-semibold text-gray-800 transform -rotate-90 whitespace-nowrap" x-show="collapsed">Todo</h2>
+                <div class="flex items-center space-x-2">
+                    <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed" x-text="todoTasks.length"></span>
+                    <button @click="collapsed = !collapsed" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-4 h-4 transform transition-transform" :class="collapsed ? 'rotate-0' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="space-y-3" x-ref="todoColumn">
+            <div class="space-y-3 min-h-32" 
+                 x-ref="todoColumn" 
+                 x-show="!collapsed" 
+                 x-transition
+                 @dragover.prevent
+                 @drop.prevent="handleDrop('todo', $event)">
                 <template x-for="task in todoTasks" :key="task.id">
-                    <div class="kanban-card" :data-task-id="task.id">
-                        <h3 class="font-medium text-gray-900" x-text="task.title"></h3>
+                    <div class="kanban-card transition-all duration-200" 
+                         :data-task-id="task.id"
+                         draggable="true"
+                         @dragstart="handleDragStart(task, $event)"
+                         @dragend="handleDragEnd($event)">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-medium text-gray-900 flex-1" x-text="task.title"></h3>
+                            <span 
+                                class="priority-badge px-2 py-1 text-xs font-medium rounded-full ml-2"
+                                :class="task.priority_color"
+                                x-text="task.priority_label"
+                            ></span>
+                        </div>
                         <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
                         <div class="flex items-center justify-between mt-3">
                             <span class="text-xs text-gray-500" x-text="task.project"></span>
@@ -62,15 +110,39 @@
         </div>
 
         <!-- Working Column -->
-        <div class="kanban-column flex-shrink-0 w-80 bg-blue-50 border-blue-200">
+        <div class="kanban-column flex-shrink-0 bg-blue-50 border-blue-200" x-data="{ collapsed: false }" :class="collapsed ? 'w-16' : 'w-80'">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-blue-800">Working</h2>
-                <span class="bg-blue-200 text-blue-700 text-xs px-2 py-1 rounded-full" x-text="workingTasks.length"></span>
+                <h2 class="text-lg font-semibold text-blue-800" x-show="!collapsed">Working</h2>
+                <h2 class="text-sm font-semibold text-blue-800 transform -rotate-90 whitespace-nowrap" x-show="collapsed">Working</h2>
+                <div class="flex items-center space-x-2">
+                    <span class="bg-blue-200 text-blue-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed" x-text="workingTasks.length"></span>
+                    <button @click="collapsed = !collapsed" class="text-blue-500 hover:text-blue-700">
+                        <svg class="w-4 h-4 transform transition-transform" :class="collapsed ? 'rotate-0' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="space-y-3" x-ref="workingColumn">
+            <div class="space-y-3 min-h-32" 
+                 x-ref="workingColumn" 
+                 x-show="!collapsed" 
+                 x-transition
+                 @dragover.prevent
+                 @drop.prevent="handleDrop('in_progress', $event)">
                 <template x-for="task in workingTasks" :key="task.id">
-                    <div class="kanban-card border-blue-200" :data-task-id="task.id">
-                        <h3 class="font-medium text-gray-900" x-text="task.title"></h3>
+                    <div class="kanban-card border-blue-200 transition-all duration-200" 
+                         :data-task-id="task.id"
+                         draggable="true"
+                         @dragstart="handleDragStart(task, $event)"
+                         @dragend="handleDragEnd($event)">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-medium text-gray-900 flex-1" x-text="task.title"></h3>
+                            <span 
+                                class="priority-badge px-2 py-1 text-xs font-medium rounded-full ml-2"
+                                :class="task.priority_color"
+                                x-text="task.priority_label"
+                            ></span>
+                        </div>
                         <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
                         <div class="flex items-center justify-between mt-3">
                             <span class="text-xs text-gray-500" x-text="task.project"></span>
@@ -85,15 +157,39 @@
         </div>
 
         <!-- Review Column -->
-        <div class="kanban-column flex-shrink-0 w-80">
+        <div class="kanban-column flex-shrink-0" x-data="{ collapsed: false }" :class="collapsed ? 'w-16' : 'w-80'">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">Review</h2>
-                <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-text="reviewTasks.length"></span>
+                <h2 class="text-lg font-semibold text-gray-800" x-show="!collapsed">Review</h2>
+                <h2 class="text-sm font-semibold text-gray-800 transform -rotate-90 whitespace-nowrap" x-show="collapsed">Review</h2>
+                <div class="flex items-center space-x-2">
+                    <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed" x-text="reviewTasks.length"></span>
+                    <button @click="collapsed = !collapsed" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-4 h-4 transform transition-transform" :class="collapsed ? 'rotate-0' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="space-y-3" x-ref="reviewColumn">
+            <div class="space-y-3 min-h-32" 
+                 x-ref="reviewColumn" 
+                 x-show="!collapsed" 
+                 x-transition
+                 @dragover.prevent
+                 @drop.prevent="handleDrop('review', $event)">
                 <template x-for="task in reviewTasks" :key="task.id">
-                    <div class="kanban-card" :data-task-id="task.id">
-                        <h3 class="font-medium text-gray-900" x-text="task.title"></h3>
+                    <div class="kanban-card transition-all duration-200" 
+                         :data-task-id="task.id"
+                         draggable="true"
+                         @dragstart="handleDragStart(task, $event)"
+                         @dragend="handleDragEnd($event)">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-medium text-gray-900 flex-1" x-text="task.title"></h3>
+                            <span 
+                                class="priority-badge px-2 py-1 text-xs font-medium rounded-full ml-2"
+                                :class="task.priority_color"
+                                x-text="task.priority_label"
+                            ></span>
+                        </div>
                         <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
                         <div class="flex items-center justify-between mt-3">
                             <span class="text-xs text-gray-500" x-text="task.project"></span>
@@ -108,15 +204,39 @@
         </div>
 
         <!-- Done Column -->
-        <div class="kanban-column flex-shrink-0 w-80 bg-green-50 border-green-200">
+        <div class="kanban-column flex-shrink-0 bg-green-50 border-green-200" x-data="{ collapsed: false }" :class="collapsed ? 'w-16' : 'w-80'">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-green-800">Done</h2>
-                <span class="bg-green-200 text-green-700 text-xs px-2 py-1 rounded-full" x-text="doneTasks.length"></span>
+                <h2 class="text-lg font-semibold text-green-800" x-show="!collapsed">Done</h2>
+                <h2 class="text-sm font-semibold text-green-800 transform -rotate-90 whitespace-nowrap" x-show="collapsed">Done</h2>
+                <div class="flex items-center space-x-2">
+                    <span class="bg-green-200 text-green-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed" x-text="doneTasks.length"></span>
+                    <button @click="collapsed = !collapsed" class="text-green-500 hover:text-green-700">
+                        <svg class="w-4 h-4 transform transition-transform" :class="collapsed ? 'rotate-0' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="space-y-3" x-ref="doneColumn">
+            <div class="space-y-3 min-h-32" 
+                 x-ref="doneColumn" 
+                 x-show="!collapsed" 
+                 x-transition
+                 @dragover.prevent
+                 @drop.prevent="handleDrop('completed', $event)">
                 <template x-for="task in doneTasks" :key="task.id">
-                    <div class="kanban-card border-green-200 opacity-75" :data-task-id="task.id">
-                        <h3 class="font-medium text-gray-900 line-through" x-text="task.title"></h3>
+                    <div class="kanban-card border-green-200 opacity-75 transition-all duration-200" 
+                         :data-task-id="task.id"
+                         draggable="true"
+                         @dragstart="handleDragStart(task, $event)"
+                         @dragend="handleDragEnd($event)">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-medium text-gray-900 line-through flex-1" x-text="task.title"></h3>
+                            <span 
+                                class="priority-badge px-2 py-1 text-xs font-medium rounded-full ml-2 opacity-75"
+                                :class="task.priority_color"
+                                x-text="task.priority_label"
+                            ></span>
+                        </div>
                         <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
                         <div class="flex items-center justify-between mt-3">
                             <span class="text-xs text-gray-500" x-text="task.project"></span>
@@ -135,22 +255,163 @@
 <script>
 function kanbanBoard() {
     return {
+        draggedTask: null,
+        draggedFromStatus: null,
         backlogTasks: [
-            { id: 1, title: 'Design user interface', description: 'Create mockups for the new feature', project: 'Project Alpha' },
-            { id: 2, title: 'Database schema', description: 'Design the database structure', project: 'Project Beta' }
+            { 
+                id: 1, 
+                title: 'Design user interface', 
+                description: 'Create mockups for the new feature', 
+                project: 'Project Alpha',
+                priority_color: 'text-orange-600 bg-orange-100',
+                priority_label: 'High'
+            },
+            { 
+                id: 2, 
+                title: 'Database schema', 
+                description: 'Design the database structure', 
+                project: 'Project Beta',
+                priority_color: 'text-yellow-600 bg-yellow-100',
+                priority_label: 'Medium'
+            }
         ],
         todoTasks: [
-            { id: 3, title: 'API integration', description: 'Connect frontend with backend API', project: 'Project Alpha' }
+            { 
+                id: 3, 
+                title: 'API integration', 
+                description: 'Connect frontend with backend API', 
+                project: 'Project Alpha',
+                priority_color: 'text-red-600 bg-red-100',
+                priority_label: 'Critical'
+            }
         ],
         workingTasks: [
-            { id: 4, title: 'Authentication system', description: 'Implement user login and registration', project: 'Project Gamma' }
+            { 
+                id: 4, 
+                title: 'Authentication system', 
+                description: 'Implement user login and registration', 
+                project: 'Project Gamma',
+                priority_color: 'text-orange-600 bg-orange-100',
+                priority_label: 'High'
+            }
         ],
         reviewTasks: [
-            { id: 5, title: 'Code review', description: 'Review pull request #123', project: 'Project Alpha' }
+            { 
+                id: 5, 
+                title: 'Code review', 
+                description: 'Review pull request #123', 
+                project: 'Project Alpha',
+                priority_color: 'text-yellow-600 bg-yellow-100',
+                priority_label: 'Medium'
+            }
         ],
         doneTasks: [
-            { id: 6, title: 'Setup development environment', description: 'Configure Docker containers', project: 'Project Setup' }
-        ]
+            { 
+                id: 6, 
+                title: 'Setup development environment', 
+                description: 'Configure Docker containers', 
+                project: 'Project Setup',
+                priority_color: 'text-green-600 bg-green-100',
+                priority_label: 'Low'
+            }
+        ],
+        
+        handleDragStart(task, event) {
+            this.draggedTask = task;
+            // Determine which status the task is being dragged from
+            if (this.backlogTasks.includes(task)) this.draggedFromStatus = 'backlog';
+            else if (this.todoTasks.includes(task)) this.draggedFromStatus = 'todo';
+            else if (this.workingTasks.includes(task)) this.draggedFromStatus = 'in_progress';
+            else if (this.reviewTasks.includes(task)) this.draggedFromStatus = 'review';
+            else if (this.doneTasks.includes(task)) this.draggedFromStatus = 'completed';
+            
+            event.target.classList.add('opacity-50');
+            event.dataTransfer.effectAllowed = 'move';
+        },
+        
+        handleDragEnd(event) {
+            event.target.classList.remove('opacity-50');
+        },
+        
+        async handleDrop(newStatus, event) {
+            event.preventDefault();
+            
+            if (!this.draggedTask || this.draggedFromStatus === newStatus) {
+                return;
+            }
+            
+            try {
+                // Send HTMX request to update task status
+                const response = await fetch(`/api/tasks/${this.draggedTask.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (response.ok) {
+                    // Move task between arrays
+                    this.removeTaskFromCurrentStatus(this.draggedTask);
+                    this.addTaskToNewStatus(this.draggedTask, newStatus);
+                    
+                    // Show success feedback
+                    this.showNotification('Task moved successfully!', 'success');
+                } else {
+                    // Show error feedback
+                    this.showNotification('Failed to move task. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating task:', error);
+                this.showNotification('Failed to move task. Please try again.', 'error');
+            }
+            
+            this.draggedTask = null;
+            this.draggedFromStatus = null;
+        },
+        
+        removeTaskFromCurrentStatus(task) {
+            const arrays = {
+                'backlog': this.backlogTasks,
+                'todo': this.todoTasks,
+                'in_progress': this.workingTasks,
+                'review': this.reviewTasks,
+                'completed': this.doneTasks
+            };
+            
+            const currentArray = arrays[this.draggedFromStatus];
+            const index = currentArray.findIndex(t => t.id === task.id);
+            if (index > -1) {
+                currentArray.splice(index, 1);
+            }
+        },
+        
+        addTaskToNewStatus(task, newStatus) {
+            const arrays = {
+                'backlog': this.backlogTasks,
+                'todo': this.todoTasks,
+                'in_progress': this.workingTasks,
+                'review': this.reviewTasks,
+                'completed': this.doneTasks
+            };
+            
+            arrays[newStatus].push(task);
+        },
+        
+        showNotification(message, type) {
+            // Simple notification - could be enhanced with a proper notification system
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white z-50 ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
     }
 }
 </script>

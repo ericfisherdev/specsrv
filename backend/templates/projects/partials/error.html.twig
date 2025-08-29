@@ -1,0 +1,8 @@
+<div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-4" role="alert">
+    <div class="font-bold">Error creating project:</div>
+    <ul class="mt-1">
+        {% for violation in errors %}
+            <li>{{ violation.message }}</li>
+        {% endfor %}
+    </ul>
+</div>

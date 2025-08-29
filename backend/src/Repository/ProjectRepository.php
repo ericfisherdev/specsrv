@@ -71,4 +71,26 @@ class ProjectRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * Find projects by user with search and status filters.
+     */
+    public function findByUserWithFilters(User $user, string $search = '', string $status = ''): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->andWhere('p.user = :user')
+            ->setParameter('user', $user);
+
+        if (!empty($search)) {
+            $qb->andWhere('p.title LIKE :search OR p.description LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        // Note: Projects don't have status field, but we can filter by task counts later if needed
+        // For now, status filter is ignored for projects
+
+        return $qb->orderBy('p.updatedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }
