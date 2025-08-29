@@ -3,44 +3,104 @@
 {% block title %}Kanban Board - {{ parent() }}{% endblock %}
 
 {% block body %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Header -->
+<div class="max-w-full px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Enhanced Header -->
     <div class="mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Kanban Board</h1>
-                <p class="mt-2 text-gray-600">Manage your tasks across different stages</p>
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div class="space-y-2">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Kanban Board</h1>
+                <p class="text-gray-600 dark:text-gray-400">Manage your tasks across different stages</p>
+                <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <span x-text="`${getTotalTasks()} tasks`"></span>
+                    </span>
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Last updated: <span x-text="getLastUpdated()"></span>
+                    </span>
+                </div>
             </div>
-            <div class="flex items-center space-x-4">
-                <!-- Quick Search -->
-                <div class="relative">
+            
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                <!-- Enhanced Quick Search -->
+                <div class="relative" x-data="search()">
                     <input 
                         type="text" 
-                        x-data="boardSearch()"
-                        x-model="searchQuery"
-                        @input.debounce.300ms="filterTasks()"
-                        placeholder="Search tasks..."
-                        class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        x-model="query"
+                        @focus="focused = true"
+                        @blur="setTimeout(() => focused = false, 200)"
+                        data-search-input
+                        placeholder="Search tasks... (⌘K)"
+                        class="w-64 pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
                     >
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </div>
+                    <!-- Search results dropdown -->
+                    <div x-show="focused && results.length > 0" 
+                         x-transition
+                         class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
+                        <template x-for="result in results.slice(0, 5)" :key="result.id">
+                            <div @click="selectResult(result)" 
+                                 class="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0">
+                                <div class="font-medium text-gray-900 dark:text-white" x-text="result.title"></div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400" x-text="result.project"></div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
                 
-                <!-- Project Filter -->
-                <select 
-                    x-data="projectFilter()"
-                    x-model="selectedProject"
-                    @change="filterByProject()"
-                    class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="">All Projects</option>
-                    <option value="1">Project Alpha</option>
-                    <option value="2">Project Beta</option>
-                    <option value="3">Project Gamma</option>
-                </select>
+                <!-- Enhanced Project Filter -->
+                <div class="relative" x-data="dropdown()">
+                    <button @click="toggle()"
+                            class="flex items-center px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                        All Projects
+                        <svg class="w-4 h-4 ml-2 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    <div x-show="open" 
+                         @click.away="close()"
+                         x-transition
+                         class="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 py-1">
+                        <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <span class="w-3 h-3 bg-blue-500 rounded-full mr-3"></span>
+                            All Projects
+                        </a>
+                        <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <span class="w-3 h-3 bg-green-500 rounded-full mr-3"></span>
+                            Project Alpha
+                        </a>
+                        <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <span class="w-3 h-3 bg-purple-500 rounded-full mr-3"></span>
+                            Project Beta
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- View Options -->
+                <div class="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
+                    <button class="px-3 py-2 bg-primary-500 text-white text-sm font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z"/>
+                        </svg>
+                    </button>
+                    <button class="px-3 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium border-l border-gray-300 dark:border-gray-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
