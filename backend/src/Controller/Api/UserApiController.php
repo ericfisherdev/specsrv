@@ -189,7 +189,7 @@ class UserApiController extends BaseApiController
             return [
                 'id' => $apiKey->getId(),
                 'name' => $apiKey->getName(),
-                'key_preview' => 'sk_' . substr($apiKey->getKeyHash(), 0, 8).'...',
+                'key_preview' => 'sk_'.substr($apiKey->getKeyHash(), 0, 8).'...',
                 'created_at' => $apiKey->getCreatedAt()->format('c'),
                 'last_used_at' => $apiKey->getLastUsedAt()?->format('c'),
                 'is_active' => $apiKey->isActive(),
@@ -216,7 +216,7 @@ class UserApiController extends BaseApiController
         }
 
         $revoked = $this->apiKeyService->revokeApiKey($keyId, $user);
-        
+
         if ($revoked) {
             return $this->successResponse(null, 'API key revoked successfully', 204);
         } else {
