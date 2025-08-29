@@ -64,7 +64,7 @@
             "@auto-scripts"
         ],
         "test": "php bin/phpunit",
-        "test-coverage": "php bin/phpunit --coverage-html var/coverage",
+        "test-coverage": "php bin/phpunit --coverage-html var/coverage --coverage-clover var/coverage/coverage.xml",
         "lint": "php -d memory_limit=512M vendor/bin/phpstan analyse -c phpstan.neon",
         "cs-fix": "vendor/bin/php-cs-fixer fix",
         "cs-check": "vendor/bin/php-cs-fixer fix --dry-run --diff",
