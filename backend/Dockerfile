@@ -51,6 +51,7 @@ RUN apk add --no-cache \
     nginx \
     supervisor \
     sqlite \
+    curl \
     && docker-php-ext-install \
     pdo \
     pdo_sqlite \
@@ -85,16 +86,21 @@ COPY --from=composer --chown=app:app /app .
 # Copy built frontend assets from frontend stage
 COPY --from=frontend --chown=app:app /app/public/build ./public/build
 
+# Copy health check script
+COPY --chown=app:app scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod +x /usr/local/bin/healthcheck.sh
+
 # Create required directories with proper permissions
 RUN mkdir -p \
     var/cache \
     var/log \
     var/data \
     var/sessions \
+    var/uploads \
     public \
     && chown -R app:app var/ \
     && chmod -R 755 var/ \
-    && chmod -R 777 var/cache var/log var/sessions
+    && chmod -R 777 var/cache var/log var/sessions var/uploads
 
 # Switch to application user
 USER app
@@ -102,9 +108,9 @@ USER app
 # Expose port 8080 (Nginx)
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+# Health check with comprehensive frontend readiness check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD /usr/local/bin/healthcheck.sh readiness
 
 # Use supervisor to manage processes
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

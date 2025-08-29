@@ -6,8 +6,43 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Kanban Board</h1>
-        <p class="mt-2 text-gray-600">Manage your tasks across different stages</p>
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Kanban Board</h1>
+                <p class="mt-2 text-gray-600">Manage your tasks across different stages</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <!-- Quick Search -->
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        x-data="boardSearch()"
+                        x-model="searchQuery"
+                        @input.debounce.300ms="filterTasks()"
+                        placeholder="Search tasks..."
+                        class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Project Filter -->
+                <select 
+                    x-data="projectFilter()"
+                    x-model="selectedProject"
+                    @change="filterByProject()"
+                    class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="">All Projects</option>
+                    <option value="1">Project Alpha</option>
+                    <option value="2">Project Beta</option>
+                    <option value="3">Project Gamma</option>
+                </select>
+            </div>
+        </div>
     </div>
 
     <!-- Kanban Board -->
@@ -57,7 +92,7 @@
                     </div>
                 </template>
             </div>
-            <button class="w-full mt-4 p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600" x-show="!collapsed" x-transition>
+            <button class="w-full mt-4 p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600" x-show="!collapsed" x-transition @click="$dispatch('open-task-modal', { status: 'backlog' })">
                 + Add Task
             </button>
         </div>
@@ -107,6 +142,9 @@
                     </div>
                 </template>
             </div>
+            <button class="w-full mt-4 p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600" x-show="!collapsed" x-transition @click="$dispatch('open-task-modal', { status: 'todo' })">
+                + Add Task
+            </button>
         </div>
 
         <!-- Working Column -->
@@ -247,6 +285,172 @@
                         </div>
                     </div>
                 </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Creation Modal -->
+    <div x-data="taskModal()" x-show="isOpen" x-cloak 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+         @open-task-modal.window="openModal($event.detail)"
+         @keydown.escape.window="closeModal()">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" 
+             @click.stop
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 transform scale-100"
+             x-transition:leave-end="opacity-0 transform scale-95">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900">Create New Task</h2>
+                    <button @click="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="px-6 py-4">
+                <form @submit.prevent="submitTask()" enctype="multipart/form-data">
+                    <!-- Title -->
+                    <div class="mb-6">
+                        <label for="task-title" class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                        <input 
+                            type="text" 
+                            id="task-title" 
+                            x-model="form.title"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter task title"
+                            required
+                        >
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-6">
+                        <label for="task-description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea 
+                            id="task-description" 
+                            x-model="form.description"
+                            rows="4"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter task description"
+                        ></textarea>
+                    </div>
+
+                    <!-- Project Selection -->
+                    <div class="mb-6">
+                        <label for="task-project" class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                        <select 
+                            id="task-project" 
+                            x-model="form.project_id"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                        >
+                            <option value="">Select a project...</option>
+                            <template x-for="project in projects" :key="project.id">
+                                <option :value="project.id" x-text="project.name"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- Priority -->
+                    <div class="mb-6">
+                        <label for="task-priority" class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                        <select 
+                            id="task-priority" 
+                            x-model="form.priority"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Attach Files</label>
+                        <div 
+                            x-data="fileUpload()" 
+                            class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
+                            x-bind:class="{ 'border-blue-500 bg-blue-50': isDragging }"
+                            @dragover.prevent="isDragging = true"
+                            @dragleave.prevent="isDragging = false"
+                            @drop.prevent="handleDrop($event)"
+                        >
+                            <div x-show="!uploading && files.length === 0">
+                                <svg class="mx-auto h-8 w-8 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <div class="mt-2">
+                                    <label for="task-files" class="cursor-pointer">
+                                        <span class="text-sm font-medium text-gray-900">
+                                            Drop files here or click to browse
+                                        </span>
+                                        <input 
+                                            id="task-files" 
+                                            name="files[]" 
+                                            type="file" 
+                                            class="sr-only" 
+                                            multiple
+                                            @change="handleFileSelect($event)"
+                                        >
+                                    </label>
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        PNG, JPG, PDF, MD, TXT up to 10MB
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- File List -->
+                            <div x-show="files.length > 0" class="space-y-2">
+                                <template x-for="file in files" :key="file.name">
+                                    <div class="flex items-center justify-between p-2 bg-gray-100 rounded">
+                                        <span class="text-sm text-gray-700" x-text="file.name"></span>
+                                        <button type="button" @click="removeFile(file)" class="text-red-600 hover:text-red-800">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6m0 12L6 6"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button 
+                    @click="closeModal()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                    type="button"
+                >
+                    Cancel
+                </button>
+                <button 
+                    @click="submitTask()"
+                    x-bind:disabled="isSubmitting"
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
+                    type="button"
+                >
+                    <span x-show="!isSubmitting">Create Task</span>
+                    <span x-show="isSubmitting" class="flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Creating...
+                    </span>
+                </button>
             </div>
         </div>
     </div>
@@ -413,6 +617,418 @@ function kanbanBoard() {
             }, 3000);
         }
     }
+}
+
+function taskModal() {
+    return {
+        isOpen: false,
+        isSubmitting: false,
+        status: 'todo',
+        projects: [],
+        form: {
+            title: '',
+            description: '',
+            project_id: '',
+            priority: 'medium',
+            status: 'todo'
+        },
+        files: [],
+        isDragging: false,
+
+        init() {
+            this.loadProjects();
+        },
+
+        async loadProjects() {
+            try {
+                const response = await fetch('/api/projects');
+                const data = await response.json();
+                this.projects = data.data || [];
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+        },
+
+        openModal(detail) {
+            this.status = detail?.status || 'todo';
+            this.form.status = this.status;
+            this.isOpen = true;
+            this.resetForm();
+            
+            // Focus on title input after modal is rendered
+            this.$nextTick(() => {
+                document.getElementById('task-title')?.focus();
+            });
+        },
+
+        closeModal() {
+            this.isOpen = false;
+            this.resetForm();
+        },
+
+        resetForm() {
+            this.form = {
+                title: '',
+                description: '',
+                project_id: '',
+                priority: 'medium',
+                status: this.status
+            };
+            this.files = [];
+            this.isSubmitting = false;
+        },
+
+        handleDrop(event) {
+            this.isDragging = false;
+            const files = Array.from(event.dataTransfer.files);
+            this.addFiles(files);
+        },
+
+        handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            this.addFiles(files);
+        },
+
+        addFiles(files) {
+            // Add to files array for preview
+            this.files.push(...files);
+        },
+
+        removeFile(file) {
+            const index = this.files.findIndex(f => f === file);
+            if (index > -1) {
+                this.files.splice(index, 1);
+            }
+        },
+
+        async submitTask() {
+            if (this.isSubmitting) return;
+            
+            this.isSubmitting = true;
+            
+            try {
+                const formData = new FormData();
+                formData.append('title', this.form.title);
+                formData.append('description', this.form.description);
+                formData.append('project_id', this.form.project_id);
+                formData.append('priority', this.form.priority);
+                formData.append('status', this.form.status);
+                
+                // Add files
+                this.files.forEach((file, index) => {
+                    formData.append(`files[]`, file);
+                });
+
+                const response = await fetch('/tasks/create', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    const taskHtml = await response.text();
+                    
+                    // Add the new task to the appropriate column
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(taskHtml, 'text/html');
+                    const taskElement = doc.body.firstChild;
+                    
+                    if (taskElement) {
+                        // Parse task data from the HTML
+                        const taskData = this.parseTaskFromHtml(taskElement);
+                        
+                        // Add to the appropriate array in kanban board
+                        this.addTaskToBoard(taskData);
+                        
+                        this.showNotification('Task created successfully!', 'success');
+                        this.closeModal();
+                    }
+                } else {
+                    const errorData = await response.json();
+                    this.showNotification(errorData.message || 'Failed to create task', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating task:', error);
+                this.showNotification('An error occurred while creating the task', 'error');
+            } finally {
+                this.isSubmitting = false;
+            }
+        },
+
+        parseTaskFromHtml(element) {
+            // Extract task data from the rendered HTML
+            // This is a simplified approach - in a real app you'd get JSON response
+            return {
+                id: Math.floor(Math.random() * 10000), // Temporary ID
+                title: this.form.title,
+                description: this.form.description,
+                project: this.projects.find(p => p.id == this.form.project_id)?.name || 'Unknown',
+                priority_color: this.getPriorityColor(this.form.priority),
+                priority_label: this.getPriorityLabel(this.form.priority)
+            };
+        },
+
+        addTaskToBoard(taskData) {
+            // Get the kanban board component and add task to appropriate array
+            const kanbanComponent = Alpine.findClosest(document.body, '[x-data*="kanbanBoard"]');
+            if (kanbanComponent) {
+                const data = kanbanComponent._x_dataStack[0];
+                switch (this.status) {
+                    case 'backlog':
+                        data.backlogTasks.push(taskData);
+                        break;
+                    case 'todo':
+                        data.todoTasks.push(taskData);
+                        break;
+                    case 'in_progress':
+                        data.workingTasks.push(taskData);
+                        break;
+                    case 'review':
+                        data.reviewTasks.push(taskData);
+                        break;
+                    case 'completed':
+                        data.doneTasks.push(taskData);
+                        break;
+                }
+            }
+        },
+
+        getPriorityColor(priority) {
+            const colors = {
+                low: 'text-green-600 bg-green-100',
+                medium: 'text-yellow-600 bg-yellow-100',
+                high: 'text-orange-600 bg-orange-100',
+                critical: 'text-red-600 bg-red-100'
+            };
+            return colors[priority] || colors.medium;
+        },
+
+        getPriorityLabel(priority) {
+            const labels = {
+                low: 'Low',
+                medium: 'Medium', 
+                high: 'High',
+                critical: 'Critical'
+            };
+            return labels[priority] || 'Medium';
+        },
+
+        showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white z-50 ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    };
+}
+
+// Simple file upload component for the modal
+function fileUpload() {
+    return {
+        files: [],
+        isDragging: false,
+        uploading: false,
+
+        handleDrop(event) {
+            this.isDragging = false;
+            const files = Array.from(event.dataTransfer.files);
+            this.files.push(...files);
+        },
+
+        handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            this.files.push(...files);
+        },
+
+        removeFile(file) {
+            const index = this.files.findIndex(f => f === file);
+            if (index > -1) {
+                this.files.splice(index, 1);
+            }
+        }
+    };
+}
+
+// Board search functionality
+function boardSearch() {
+    return {
+        searchQuery: '',
+        originalTasks: null,
+
+        init() {
+            // Store original task data for filtering
+            this.originalTasks = {
+                backlog: [...this.getAllTasks('backlog')],
+                todo: [...this.getAllTasks('todo')],
+                in_progress: [...this.getAllTasks('in_progress')],
+                review: [...this.getAllTasks('review')],
+                completed: [...this.getAllTasks('completed')]
+            };
+        },
+
+        filterTasks() {
+            const kanbanComponent = this.getKanbanComponent();
+            if (!kanbanComponent || !this.originalTasks) return;
+
+            const query = this.searchQuery.toLowerCase().trim();
+            
+            if (!query) {
+                // Restore all tasks
+                kanbanComponent.backlogTasks = [...this.originalTasks.backlog];
+                kanbanComponent.todoTasks = [...this.originalTasks.todo];
+                kanbanComponent.workingTasks = [...this.originalTasks.in_progress];
+                kanbanComponent.reviewTasks = [...this.originalTasks.review];
+                kanbanComponent.doneTasks = [...this.originalTasks.completed];
+                return;
+            }
+
+            // Filter tasks based on search query
+            kanbanComponent.backlogTasks = this.originalTasks.backlog.filter(task => 
+                this.taskMatchesQuery(task, query)
+            );
+            kanbanComponent.todoTasks = this.originalTasks.todo.filter(task => 
+                this.taskMatchesQuery(task, query)
+            );
+            kanbanComponent.workingTasks = this.originalTasks.in_progress.filter(task => 
+                this.taskMatchesQuery(task, query)
+            );
+            kanbanComponent.reviewTasks = this.originalTasks.review.filter(task => 
+                this.taskMatchesQuery(task, query)
+            );
+            kanbanComponent.doneTasks = this.originalTasks.completed.filter(task => 
+                this.taskMatchesQuery(task, query)
+            );
+        },
+
+        taskMatchesQuery(task, query) {
+            return task.title.toLowerCase().includes(query) ||
+                   task.description.toLowerCase().includes(query) ||
+                   task.project.toLowerCase().includes(query);
+        },
+
+        getAllTasks(status) {
+            const kanbanComponent = this.getKanbanComponent();
+            if (!kanbanComponent) return [];
+
+            switch (status) {
+                case 'backlog': return kanbanComponent.backlogTasks;
+                case 'todo': return kanbanComponent.todoTasks;
+                case 'in_progress': return kanbanComponent.workingTasks;
+                case 'review': return kanbanComponent.reviewTasks;
+                case 'completed': return kanbanComponent.doneTasks;
+                default: return [];
+            }
+        },
+
+        getKanbanComponent() {
+            const kanbanElement = document.querySelector('[x-data*="kanbanBoard"]');
+            return kanbanElement ? kanbanElement._x_dataStack[0] : null;
+        }
+    };
+}
+
+// Project filter functionality
+function projectFilter() {
+    return {
+        selectedProject: '',
+        originalTasks: null,
+
+        init() {
+            // Load projects dynamically
+            this.loadProjects();
+            
+            // Store original task data
+            this.originalTasks = {
+                backlog: [...this.getAllTasks('backlog')],
+                todo: [...this.getAllTasks('todo')],
+                in_progress: [...this.getAllTasks('in_progress')],
+                review: [...this.getAllTasks('review')],
+                completed: [...this.getAllTasks('completed')]
+            };
+        },
+
+        async loadProjects() {
+            try {
+                const response = await fetch('/api/projects');
+                const data = await response.json();
+                
+                // Update the select options dynamically
+                const selectElement = this.$el;
+                selectElement.innerHTML = '<option value="">All Projects</option>';
+                
+                if (data.data) {
+                    data.data.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.id;
+                        option.textContent = project.title;
+                        selectElement.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+        },
+
+        filterByProject() {
+            const kanbanComponent = this.getKanbanComponent();
+            if (!kanbanComponent || !this.originalTasks) return;
+
+            if (!this.selectedProject) {
+                // Show all tasks
+                kanbanComponent.backlogTasks = [...this.originalTasks.backlog];
+                kanbanComponent.todoTasks = [...this.originalTasks.todo];
+                kanbanComponent.workingTasks = [...this.originalTasks.in_progress];
+                kanbanComponent.reviewTasks = [...this.originalTasks.review];
+                kanbanComponent.doneTasks = [...this.originalTasks.completed];
+                return;
+            }
+
+            // Filter tasks by selected project
+            kanbanComponent.backlogTasks = this.originalTasks.backlog.filter(task => 
+                task.project_id == this.selectedProject
+            );
+            kanbanComponent.todoTasks = this.originalTasks.todo.filter(task => 
+                task.project_id == this.selectedProject
+            );
+            kanbanComponent.workingTasks = this.originalTasks.in_progress.filter(task => 
+                task.project_id == this.selectedProject
+            );
+            kanbanComponent.reviewTasks = this.originalTasks.review.filter(task => 
+                task.project_id == this.selectedProject
+            );
+            kanbanComponent.doneTasks = this.originalTasks.completed.filter(task => 
+                task.project_id == this.selectedProject
+            );
+        },
+
+        getAllTasks(status) {
+            const kanbanComponent = this.getKanbanComponent();
+            if (!kanbanComponent) return [];
+
+            switch (status) {
+                case 'backlog': return kanbanComponent.backlogTasks;
+                case 'todo': return kanbanComponent.todoTasks;
+                case 'in_progress': return kanbanComponent.workingTasks;
+                case 'review': return kanbanComponent.reviewTasks;
+                case 'completed': return kanbanComponent.doneTasks;
+                default: return [];
+            }
+        },
+
+        getKanbanComponent() {
+            const kanbanElement = document.querySelector('[x-data*="kanbanBoard"]');
+            return kanbanElement ? kanbanElement._x_dataStack[0] : null;
+        }
+    };
 }
 </script>
 {% endblock %}

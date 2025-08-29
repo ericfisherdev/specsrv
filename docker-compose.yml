@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  specsrv-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: specsrv-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENV=dev
+      - APP_DEBUG=1
+      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/db.sqlite
+    volumes:
+      # Mount source code for development
+      - ./backend:/app
+      - specsrv-cache:/app/var/cache
+      - specsrv-logs:/app/var/log
+      - specsrv-uploads:/app/var/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+
+  specsrv-frontend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: frontend
+    container_name: specsrv-frontend-build
+    volumes:
+      - ./backend/assets:/app/assets
+      - specsrv-assets:/app/public/build
+    command: ["npm", "run", "watch"]
+    networks:
+      - specsrv-network
+    profiles:
+      - dev
+
+  # Nginx proxy for production-like setup (optional)
+  specsrv-proxy:
+    image: nginx:alpine
+    container_name: specsrv-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./scripts/nginx-proxy.conf:/etc/nginx/nginx.conf:ro
+      - specsrv-assets:/var/www/html/build:ro
+    depends_on:
+      specsrv-backend:
+        condition: service_healthy
+    networks:
+      - specsrv-network
+    profiles:
+      - production
+
+volumes:
+  specsrv-cache:
+    driver: local
+  specsrv-logs:
+    driver: local
+  specsrv-uploads:
+    driver: local
+  specsrv-assets:
+    driver: local
+
+networks:
+  specsrv-network:
+    driver: bridge
+    name: specsrv-network

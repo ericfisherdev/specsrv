@@ -6,8 +6,10 @@ use App\Entity\Task;
 use App\Entity\User;
 use App\Repository\ProjectRepository;
 use App\Repository\TaskRepository;
+use App\Service\FileUploadService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -19,7 +21,8 @@ class TaskController extends AbstractController
         private TaskRepository $taskRepository,
         private ProjectRepository $projectRepository,
         private EntityManagerInterface $entityManager,
-        private ValidatorInterface $validator
+        private ValidatorInterface $validator,
+        private FileUploadService $fileUploadService
     ) {
     }
 
@@ -63,6 +66,32 @@ class TaskController extends AbstractController
 
         $this->entityManager->persist($task);
         $this->entityManager->flush();
+
+        // Handle file uploads
+        $uploadedFiles = $request->files->get('files', []);
+        if (!is_array($uploadedFiles)) {
+            $uploadedFiles = [$uploadedFiles];
+        }
+
+        foreach ($uploadedFiles as $uploadedFile) {
+            if ($uploadedFile instanceof UploadedFile && $uploadedFile->isValid()) {
+                try {
+                    $file = $this->fileUploadService->uploadFile(
+                        $uploadedFile,
+                        'task',
+                        $task->getId()
+                    );
+                    $task->addFile($file);
+                } catch (\Exception $e) {
+                    // Log error but don't fail task creation
+                    error_log('File upload error: ' . $e->getMessage());
+                }
+            }
+        }
+
+        if (!empty($uploadedFiles)) {
+            $this->entityManager->flush();
+        }
 
         return $this->render('tasks/partials/task_card.html.twig', [
             'task' => $task,
