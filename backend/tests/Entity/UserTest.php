@@ -12,10 +12,10 @@ class UserTest extends AbstractKernelTestCase
         $user = new User();
         $user->setEmail('test@example.com');
         $user->setPassword('password123');
-        
+
         $this->entityManager->persist($user);
         $this->entityManager->flush();
-        
+
         $this->assertNotNull($user->getId());
         $this->assertEquals('test@example.com', $user->getEmail());
         $this->assertEquals('password123', $user->getPassword());
@@ -29,17 +29,17 @@ class UserTest extends AbstractKernelTestCase
         $user1 = new User();
         $user1->setEmail('duplicate@example.com');
         $user1->setPassword('password123');
-        
+
         $this->entityManager->persist($user1);
         $this->entityManager->flush();
-        
+
         // Try to create second user with same email
         $user2 = new User();
         $user2->setEmail('duplicate@example.com');
         $user2->setPassword('password456');
-        
+
         $this->entityManager->persist($user2);
-        
+
         $this->expectException(\Doctrine\DBAL\Exception\UniqueConstraintViolationException::class);
         $this->entityManager->flush();
     }
@@ -48,9 +48,9 @@ class UserTest extends AbstractKernelTestCase
     {
         $user = $this->createTestUser();
         $project = $this->createTestProject($user);
-        
+
         $this->entityManager->refresh($user);
-        
+
         $this->assertTrue($user->getProjects()->contains($project));
         $this->assertEquals($user, $project->getUser());
     }
@@ -58,16 +58,16 @@ class UserTest extends AbstractKernelTestCase
     public function testUserCanHaveApiKeys(): void
     {
         $user = $this->createTestUser();
-        
+
         // Create ApiKey manually since User doesn't have inverse relationship
         $apiKey = new \App\Entity\ApiKey();
         $apiKey->setKeyHash('test-hash-123');
         $apiKey->setName('Test API Key');
         $apiKey->setUser($user);
-        
+
         $this->entityManager->persist($apiKey);
         $this->entityManager->flush();
-        
+
         $this->assertEquals($user, $apiKey->getUser());
         $this->assertEquals('Test API Key', $apiKey->getName());
     }

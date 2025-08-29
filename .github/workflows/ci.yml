@@ -43,15 +43,19 @@ jobs:
       run: |
         composer install --no-progress --prefer-dist --optimize-autoloader
 
-    - name: Create test database
+    - name: Setup test environment and database
       working-directory: backend
       run: |
-        APP_ENV=test php bin/console doctrine:database:create --if-not-exists
+        mkdir -p var/data var/log var/cache var/coverage
+        chmod -R 755 var/
+        APP_ENV=test php bin/console cache:clear
         APP_ENV=test php bin/console doctrine:migrations:migrate --no-interaction
 
     - name: Run PHPStan
       working-directory: backend
-      run: composer lint
+      run: |
+        mkdir -p var/cache/phpstan
+        composer lint
 
     - name: Run PHP CS Fixer (check only)
       working-directory: backend
@@ -64,7 +68,9 @@ jobs:
     - name: Run PHPUnit with coverage
       working-directory: backend
       if: matrix.php-version == '8.2'
-      run: composer test-coverage
+      run: |
+        mkdir -p var/coverage
+        composer test-coverage
 
     - name: Upload coverage to Codecov
       if: matrix.php-version == '8.2'

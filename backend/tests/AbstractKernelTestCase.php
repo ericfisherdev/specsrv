@@ -2,11 +2,11 @@
 
 namespace App\Tests;
 
-use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\User;
 use App\Entity\Project;
 use App\Entity\Task;
+use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 abstract class AbstractKernelTestCase extends KernelTestCase
 {
@@ -17,7 +17,7 @@ abstract class AbstractKernelTestCase extends KernelTestCase
         parent::setUp();
         self::bootKernel();
         $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        
+
         // Clean up database before each test
         $this->cleanDatabase();
     }
@@ -44,10 +44,10 @@ abstract class AbstractKernelTestCase extends KernelTestCase
         $user = new User();
         $user->setEmail($data['email'] ?? 'test@example.com');
         $user->setPassword($data['password'] ?? 'password123');
-        
+
         $this->entityManager->persist($user);
         $this->entityManager->flush();
-        
+
         return $user;
     }
 
@@ -58,10 +58,10 @@ abstract class AbstractKernelTestCase extends KernelTestCase
         $project->setDescription($data['description'] ?? 'Test project description');
         $project->setGithubRepo($data['githubRepo'] ?? 'user/test-repo');
         $project->setUser($user);
-        
+
         $this->entityManager->persist($project);
         $this->entityManager->flush();
-        
+
         return $project;
     }
 
@@ -72,10 +72,10 @@ abstract class AbstractKernelTestCase extends KernelTestCase
         $task->setDescription($data['description'] ?? 'Test task description');
         $task->setStatus($data['status'] ?? 'pending');
         $task->setProject($project);
-        
+
         $this->entityManager->persist($task);
         $this->entityManager->flush();
-        
+
         return $task;
     }
 

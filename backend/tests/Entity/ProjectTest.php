@@ -15,10 +15,10 @@ class ProjectTest extends AbstractKernelTestCase
         $project->setDescription('This is a test project');
         $project->setGithubRepo('user/test-repo');
         $project->setUser($user);
-        
+
         $this->entityManager->persist($project);
         $this->entityManager->flush();
-        
+
         $this->assertNotNull($project->getId());
         $this->assertEquals('Test Project', $project->getTitle());
         $this->assertEquals('This is a test project', $project->getDescription());
@@ -35,9 +35,9 @@ class ProjectTest extends AbstractKernelTestCase
         $project->setDescription('This is a test project');
         $project->setGithubRepo('user/test-repo');
         // Not setting user - this should fail
-        
+
         $this->entityManager->persist($project);
-        
+
         $this->expectException(\Doctrine\DBAL\Exception\NotNullConstraintViolationException::class);
         $this->entityManager->flush();
     }
@@ -47,9 +47,9 @@ class ProjectTest extends AbstractKernelTestCase
         $user = $this->createTestUser();
         $project = $this->createTestProject($user);
         $task = $this->createTestTask($project);
-        
+
         $this->entityManager->refresh($project);
-        
+
         $this->assertTrue($project->getTasks()->contains($task));
         $this->assertEquals($project, $task->getProject());
     }
@@ -58,7 +58,7 @@ class ProjectTest extends AbstractKernelTestCase
     {
         $user = $this->createTestUser();
         $project = $this->createTestProject($user);
-        
+
         // Since Project doesn't have getFiles() method, let's test file creation via File entity
         $file = new \App\Entity\File();
         $file->setFilename('test.txt');
@@ -66,10 +66,10 @@ class ProjectTest extends AbstractKernelTestCase
         $file->setType('text/plain');
         $file->setEntityType('project');
         $file->setEntityId($project->getId());
-        
+
         $this->entityManager->persist($file);
         $this->entityManager->flush();
-        
+
         $this->assertEquals('test.txt', $file->getFilename());
         $this->assertEquals($project->getId(), $file->getEntityId());
     }
@@ -79,9 +79,9 @@ class ProjectTest extends AbstractKernelTestCase
         $user = $this->createTestUser();
         $project = $this->createTestProject($user, [
             'title' => 'Properties Test',
-            'description' => 'Testing project properties'
+            'description' => 'Testing project properties',
         ]);
-        
+
         $this->assertNotNull($project->getId());
         $this->assertEquals('Properties Test', $project->getTitle());
         $this->assertEquals('Testing project properties', $project->getDescription());
