@@ -1,0 +1,63 @@
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      # Mount source code for development
+      - .:/app:cached
+      # Persistent data directory for SQLite database
+      - app_data:/app/var/data
+      # Cache directory
+      - app_cache:/app/var/cache
+      # Log directory  
+      - app_logs:/app/var/log
+      # File uploads directory
+      - app_uploads:/app/var/uploads
+    environment:
+      - APP_ENV=${APP_ENV:-dev}
+      - APP_DEBUG=${APP_DEBUG:-1}
+      - DATABASE_URL=sqlite:///app/var/data/database.sqlite
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      - TRUSTED_HOSTS=${TRUSTED_HOSTS:-'^(localhost|app)$'}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - specsrv-network
+
+  # Optional reverse proxy for production-like setup
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - app_uploads:/app/var/uploads:ro
+    depends_on:
+      - app
+    networks:
+      - specsrv-network
+
+volumes:
+  app_data:
+    driver: local
+  app_cache:
+    driver: local  
+  app_logs:
+    driver: local
+  app_uploads:
+    driver: local
+
+networks:
+  specsrv-network:
+    driver: bridge
