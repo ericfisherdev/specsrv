@@ -63,7 +63,7 @@
         ],
         "test": "php bin/phpunit",
         "test-coverage": "php bin/phpunit --coverage-html var/coverage",
-        "lint": "vendor/bin/phpstan analyse src --level=8",
+        "lint": "vendor/bin/phpstan analyse -c phpstan.neon",
         "cs-fix": "vendor/bin/php-cs-fixer fix",
         "cs-check": "vendor/bin/php-cs-fixer fix --dry-run --diff",
         "db-create": "php bin/console doctrine:database:create --if-not-exists",
