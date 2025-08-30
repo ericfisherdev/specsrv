@@ -11,8 +11,13 @@ class DashboardController extends AbstractController
     #[Route('/', name: 'app_dashboard')]
     public function dashboard(): Response
     {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        // Check if user is authenticated
+        if (!$this->getUser()) {
+            return $this->redirectToRoute('app_login');
+        }
 
-        return $this->redirectToRoute('app_kanban');
+        return $this->render('dashboard/index.html.twig', [
+            'user' => $this->getUser(),
+        ]);
     }
 }

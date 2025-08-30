@@ -56,90 +56,15 @@ Encore
         config.corejs = '3.38';
     })
 
-    // Production optimizations
-    .configureOptimization((options) => {
-        if (Encore.isProduction()) {
-            // Enable minification
-            options.minimize = true;
-            
-            // Split vendor dependencies into separate chunk
-            options.splitChunks = {
-                chunks: 'all',
-                cacheGroups: {
-                    vendor: {
-                        test: /[\\/]node_modules[\\/]/,
-                        name: 'vendors',
-                        chunks: 'all',
-                        priority: 10
-                    },
-                    common: {
-                        name: 'common',
-                        minChunks: 2,
-                        chunks: 'all',
-                        priority: 5,
-                        reuseExistingChunk: true
-                    }
-                }
-            };
-        }
-    })
+    // Enable split chunks for production optimization
+    .splitEntryChunks()
 
-    // Configure image optimization
-    .configureLoaderRule('images', (config) => {
-        config.test = /\.(png|jpg|jpeg|gif|ico|svg|webp)$/;
-        if (Encore.isProduction()) {
-            // Optimize images in production
-            config.type = 'asset';
-            config.parser = {
-                dataUrlCondition: {
-                    maxSize: 4 * 1024 // 4kb - inline small images
-                }
-            };
-            config.generator = {
-                filename: 'images/[name].[hash:8][ext]'
-            };
-        }
-    })
-
-    // Configure font optimization  
-    .configureLoaderRule('fonts', (config) => {
-        config.test = /\.(woff|woff2|eot|ttf|otf)$/;
-        config.type = 'asset/resource';
-        config.generator = {
-            filename: 'fonts/[name].[hash:8][ext]'
-        };
-    })
 
     // enables Sass/SCSS support
     //.enableSassLoader()
 
-    // Enable PostCSS loader for Tailwind CSS with optimization
-    .enablePostCssLoader((options) => {
-        if (Encore.isProduction()) {
-            // Add CSS optimization for production
-            options.postcssOptions = {
-                plugins: [
-                    require('tailwindcss'),
-                    require('autoprefixer'),
-                    require('cssnano')({
-                        preset: ['default', {
-                            discardComments: { removeAll: true },
-                            normalizeWhitespace: true,
-                            mergeLonghand: true,
-                            mergeRules: true
-                        }]
-                    })
-                ]
-            };
-        } else {
-            options.postcssOptions = {
-                plugins: [
-                    require('tailwindcss'),
-                    require('autoprefixer')
-                ]
-            };
-        }
-    })
+    // Enable PostCSS loader for Tailwind CSS
+    .enablePostCssLoader()
 
     // uncomment if you use TypeScript
     //.enableTypeScriptLoader()

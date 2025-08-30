@@ -15,20 +15,20 @@
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
-                        <span x-text="`${getTotalTasks()} tasks`"></span>
+                        <span id="task-count">{{ tasksByStatus|reduce((carry, tasks) => carry + tasks|length, 0) }} tasks</span>
                     </span>
                     <span class="flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        Last updated: <span x-text="getLastUpdated()"></span>
+                        Last updated: <span id="last-updated">{{ 'now'|date('g:i A') }}</span>
                     </span>
                 </div>
             </div>
             
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
                 <!-- Enhanced Quick Search -->
-                <div class="relative" x-data="search()">
+                <div class="relative" x-data="{ query: '', focused: false }">
                     <input 
                         type="text" 
                         x-model="query"
@@ -43,48 +43,34 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </div>
-                    <!-- Search results dropdown -->
-                    <div x-show="focused && results.length > 0" 
-                         x-transition
-                         class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
-                        <template x-for="result in results.slice(0, 5)" :key="result.id">
-                            <div @click="selectResult(result)" 
-                                 class="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0">
-                                <div class="font-medium text-gray-900 dark:text-white" x-text="result.title"></div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400" x-text="result.project"></div>
-                            </div>
-                        </template>
-                    </div>
                 </div>
                 
                 <!-- Enhanced Project Filter -->
-                <div class="relative" x-data="dropdown()">
-                    <button @click="toggle()"
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open"
                             class="flex items-center px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                         </svg>
-                        All Projects
+                        <span id="selected-project-name">{{ selectedProject ? projects|filter(p => p.id == selectedProject)|first.title|default('All Projects') : 'All Projects' }}</span>
                         <svg class="w-4 h-4 ml-2 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                         </svg>
                     </button>
                     <div x-show="open" 
-                         @click.away="close()"
+                         @click.away="open = false"
                          x-transition
                          class="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 py-1">
-                        <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <a href="{{ path('app_kanban') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <span class="w-3 h-3 bg-blue-500 rounded-full mr-3"></span>
                             All Projects
                         </a>
-                        <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <span class="w-3 h-3 bg-green-500 rounded-full mr-3"></span>
-                            Project Alpha
+                        {% for project in projects %}
+                        <a href="{{ path('app_kanban', {'project': project.id}) }}" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <span class="w-3 h-3 bg-{{ cycle(['green', 'purple', 'yellow', 'red'], loop.index0) }}-500 rounded-full mr-3"></span>
+                            {{ project.title }}
                         </a>
-                        <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <span class="w-3 h-3 bg-purple-500 rounded-full mr-3"></span>
-                            Project Beta
-                        </a>
+                        {% endfor %}
                     </div>
                 </div>
                 
@@ -107,14 +93,16 @@
 
     <!-- Kanban Board -->
     <div class="flex space-x-6 overflow-x-auto pb-6" x-data="kanbanBoard()">
-        <!-- Backlog Column -->
-        <div class="kanban-column flex-shrink-0" x-data="{ collapsed: false }" :class="collapsed ? 'w-16' : 'w-80'">
+        {% for status, statusInfo in statuses %}
+        <div class="kanban-column flex-shrink-0 {% if status == 'in_progress' %}bg-blue-50 border-blue-200{% endif %}" 
+             x-data="{ collapsed: false }" 
+             :class="collapsed ? 'w-16' : 'w-80'">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800" x-show="!collapsed">Backlog</h2>
-                <h2 class="text-sm font-semibold text-gray-800 transform -rotate-90 whitespace-nowrap" x-show="collapsed">Backlog</h2>
+                <h2 class="text-lg font-semibold {% if status == 'in_progress' %}text-blue-800{% else %}text-gray-800{% endif %}" x-show="!collapsed">{{ statusInfo.label }}</h2>
+                <h2 class="text-sm font-semibold {% if status == 'in_progress' %}text-blue-800{% else %}text-gray-800{% endif %} transform -rotate-90 whitespace-nowrap" x-show="collapsed">{{ statusInfo.label }}</h2>
                 <div class="flex items-center space-x-2">
-                    <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed" x-text="backlogTasks.length"></span>
-                    <button @click="collapsed = !collapsed" class="text-gray-500 hover:text-gray-700">
+                    <span class="bg-{{ statusInfo.color }}-200 text-{{ statusInfo.color }}-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed">{{ tasksByStatus[status]|length }}</span>
+                    <button @click="collapsed = !collapsed" class="text-{{ statusInfo.color }}-500 hover:text-{{ statusInfo.color }}-700">
                         <svg class="w-4 h-4 transform transition-transform" :class="collapsed ? 'rotate-0' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                         </svg>
@@ -122,396 +110,208 @@
                 </div>
             </div>
             <div class="space-y-3 min-h-32" 
-                 x-ref="backlogColumn" 
+                 x-ref="{{ status }}Column" 
                  x-show="!collapsed" 
                  x-transition
+                 data-status="{{ status }}"
                  @dragover.prevent
-                 @drop.prevent="handleDrop('backlog', $event)">
-                <template x-for="task in backlogTasks" :key="task.id">
-                    <div class="kanban-card transition-all duration-200" 
-                         :data-task-id="task.id"
-                         draggable="true"
-                         @dragstart="handleDragStart(task, $event)"
-                         @dragend="handleDragEnd($event)">
-                        <div class="flex items-start justify-between mb-2">
-                            <h3 class="font-medium text-gray-900 flex-1" x-text="task.title"></h3>
-                            <span 
-                                class="priority-badge px-2 py-1 text-xs font-medium rounded-full ml-2"
-                                :class="task.priority_color"
-                                x-text="task.priority_label"
-                            ></span>
-                        </div>
-                        <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
-                        <div class="flex items-center justify-between mt-3">
-                            <span class="text-xs text-gray-500" x-text="task.project"></span>
-                            <div class="flex space-x-1">
-                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
-                                <button class="text-red-600 hover:text-red-800 text-sm">Delete</button>
-                            </div>
+                 @drop.prevent="handleDrop('{{ status }}', $event)">
+                {% for task in tasksByStatus[status] %}
+                <div class="kanban-card {% if status == 'in_progress' %}border-blue-200{% endif %} transition-all duration-200" 
+                     data-task-id="{{ task.id }}"
+                     draggable="true"
+                     @dragstart="handleDragStart({{ task|json_encode }}, $event)"
+                     @dragend="handleDragEnd($event)">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="font-medium text-gray-900 flex-1">{{ task.title }}</h3>
+                        <span class="priority-badge px-2 py-1 text-xs font-medium rounded-full ml-2 
+                            {% if task.priority == 'low' %}text-green-600 bg-green-100
+                            {% elseif task.priority == 'medium' %}text-yellow-600 bg-yellow-100
+                            {% elseif task.priority == 'high' %}text-orange-600 bg-orange-100
+                            {% elseif task.priority == 'critical' %}text-red-600 bg-red-100
+                            {% else %}text-gray-600 bg-gray-100{% endif %}">
+                            {{ task.priority|capitalize }}
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">{{ task.description }}</p>
+                    <div class="flex items-center justify-between mt-3">
+                        <span class="text-xs text-gray-500">{{ task.project.name|default('No Project') }}</span>
+                        <div class="flex space-x-1">
+                            <button @click="$dispatch('open-edit-modal', { task: {{ task|json_encode }} })" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                            <button @click="deleteTask({{ task.id }})" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
                         </div>
                     </div>
-                </template>
+                </div>
+                {% endfor %}
             </div>
-            <button class="w-full mt-4 p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600" x-show="!collapsed" x-transition @click="$dispatch('open-task-modal', { status: 'backlog' })">
+            <button class="w-full mt-4 p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600" 
+                    x-show="!collapsed" 
+                    x-transition 
+                    @click="$dispatch('open-task-modal', { status: '{{ status }}' })">
                 + Add Task
             </button>
         </div>
-
-        <!-- Todo Column -->
-        <div class="kanban-column flex-shrink-0" x-data="{ collapsed: false }" :class="collapsed ? 'w-16' : 'w-80'">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800" x-show="!collapsed">Todo</h2>
-                <h2 class="text-sm font-semibold text-gray-800 transform -rotate-90 whitespace-nowrap" x-show="collapsed">Todo</h2>
-                <div class="flex items-center space-x-2">
-                    <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed" x-text="todoTasks.length"></span>
-                    <button @click="collapsed = !collapsed" class="text-gray-500 hover:text-gray-700">
-                        <svg class="w-4 h-4 transform transition-transform" :class="collapsed ? 'rotate-0' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="space-y-3 min-h-32" 
-                 x-ref="todoColumn" 
-                 x-show="!collapsed" 
-                 x-transition
-                 @dragover.prevent
-                 @drop.prevent="handleDrop('todo', $event)">
-                <template x-for="task in todoTasks" :key="task.id">
-                    <div class="kanban-card transition-all duration-200" 
-                         :data-task-id="task.id"
-                         draggable="true"
-                         @dragstart="handleDragStart(task, $event)"
-                         @dragend="handleDragEnd($event)">
-                        <div class="flex items-start justify-between mb-2">
-                            <h3 class="font-medium text-gray-900 flex-1" x-text="task.title"></h3>
-                            <span 
-                                class="priority-badge px-2 py-1 text-xs font-medium rounded-full ml-2"
-                                :class="task.priority_color"
-                                x-text="task.priority_label"
-                            ></span>
-                        </div>
-                        <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
-                        <div class="flex items-center justify-between mt-3">
-                            <span class="text-xs text-gray-500" x-text="task.project"></span>
-                            <div class="flex space-x-1">
-                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
-                                <button class="text-red-600 hover:text-red-800 text-sm">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-            </div>
-            <button class="w-full mt-4 p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600" x-show="!collapsed" x-transition @click="$dispatch('open-task-modal', { status: 'todo' })">
-                + Add Task
-            </button>
-        </div>
-
-        <!-- Working Column -->
-        <div class="kanban-column flex-shrink-0 bg-blue-50 border-blue-200" x-data="{ collapsed: false }" :class="collapsed ? 'w-16' : 'w-80'">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-blue-800" x-show="!collapsed">Working</h2>
-                <h2 class="text-sm font-semibold text-blue-800 transform -rotate-90 whitespace-nowrap" x-show="collapsed">Working</h2>
-                <div class="flex items-center space-x-2">
-                    <span class="bg-blue-200 text-blue-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed" x-text="workingTasks.length"></span>
-                    <button @click="collapsed = !collapsed" class="text-blue-500 hover:text-blue-700">
-                        <svg class="w-4 h-4 transform transition-transform" :class="collapsed ? 'rotate-0' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="space-y-3 min-h-32" 
-                 x-ref="workingColumn" 
-                 x-show="!collapsed" 
-                 x-transition
-                 @dragover.prevent
-                 @drop.prevent="handleDrop('in_progress', $event)">
-                <template x-for="task in workingTasks" :key="task.id">
-                    <div class="kanban-card border-blue-200 transition-all duration-200" 
-                         :data-task-id="task.id"
-                         draggable="true"
-                         @dragstart="handleDragStart(task, $event)"
-                         @dragend="handleDragEnd($event)">
-                        <div class="flex items-start justify-between mb-2">
-                            <h3 class="font-medium text-gray-900 flex-1" x-text="task.title"></h3>
-                            <span 
-                                class="priority-badge px-2 py-1 text-xs font-medium rounded-full ml-2"
-                                :class="task.priority_color"
-                                x-text="task.priority_label"
-                            ></span>
-                        </div>
-                        <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
-                        <div class="flex items-center justify-between mt-3">
-                            <span class="text-xs text-gray-500" x-text="task.project"></span>
-                            <div class="flex space-x-1">
-                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
-                                <button class="text-red-600 hover:text-red-800 text-sm">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- Review Column -->
-        <div class="kanban-column flex-shrink-0" x-data="{ collapsed: false }" :class="collapsed ? 'w-16' : 'w-80'">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800" x-show="!collapsed">Review</h2>
-                <h2 class="text-sm font-semibold text-gray-800 transform -rotate-90 whitespace-nowrap" x-show="collapsed">Review</h2>
-                <div class="flex items-center space-x-2">
-                    <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed" x-text="reviewTasks.length"></span>
-                    <button @click="collapsed = !collapsed" class="text-gray-500 hover:text-gray-700">
-                        <svg class="w-4 h-4 transform transition-transform" :class="collapsed ? 'rotate-0' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="space-y-3 min-h-32" 
-                 x-ref="reviewColumn" 
-                 x-show="!collapsed" 
-                 x-transition
-                 @dragover.prevent
-                 @drop.prevent="handleDrop('review', $event)">
-                <template x-for="task in reviewTasks" :key="task.id">
-                    <div class="kanban-card transition-all duration-200" 
-                         :data-task-id="task.id"
-                         draggable="true"
-                         @dragstart="handleDragStart(task, $event)"
-                         @dragend="handleDragEnd($event)">
-                        <div class="flex items-start justify-between mb-2">
-                            <h3 class="font-medium text-gray-900 flex-1" x-text="task.title"></h3>
-                            <span 
-                                class="priority-badge px-2 py-1 text-xs font-medium rounded-full ml-2"
-                                :class="task.priority_color"
-                                x-text="task.priority_label"
-                            ></span>
-                        </div>
-                        <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
-                        <div class="flex items-center justify-between mt-3">
-                            <span class="text-xs text-gray-500" x-text="task.project"></span>
-                            <div class="flex space-x-1">
-                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
-                                <button class="text-red-600 hover:text-red-800 text-sm">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- Done Column -->
-        <div class="kanban-column flex-shrink-0 bg-green-50 border-green-200" x-data="{ collapsed: false }" :class="collapsed ? 'w-16' : 'w-80'">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-green-800" x-show="!collapsed">Done</h2>
-                <h2 class="text-sm font-semibold text-green-800 transform -rotate-90 whitespace-nowrap" x-show="collapsed">Done</h2>
-                <div class="flex items-center space-x-2">
-                    <span class="bg-green-200 text-green-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed" x-text="doneTasks.length"></span>
-                    <button @click="collapsed = !collapsed" class="text-green-500 hover:text-green-700">
-                        <svg class="w-4 h-4 transform transition-transform" :class="collapsed ? 'rotate-0' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="space-y-3 min-h-32" 
-                 x-ref="doneColumn" 
-                 x-show="!collapsed" 
-                 x-transition
-                 @dragover.prevent
-                 @drop.prevent="handleDrop('completed', $event)">
-                <template x-for="task in doneTasks" :key="task.id">
-                    <div class="kanban-card border-green-200 opacity-75 transition-all duration-200" 
-                         :data-task-id="task.id"
-                         draggable="true"
-                         @dragstart="handleDragStart(task, $event)"
-                         @dragend="handleDragEnd($event)">
-                        <div class="flex items-start justify-between mb-2">
-                            <h3 class="font-medium text-gray-900 line-through flex-1" x-text="task.title"></h3>
-                            <span 
-                                class="priority-badge px-2 py-1 text-xs font-medium rounded-full ml-2 opacity-75"
-                                :class="task.priority_color"
-                                x-text="task.priority_label"
-                            ></span>
-                        </div>
-                        <p class="text-sm text-gray-600 mt-1" x-text="task.description"></p>
-                        <div class="flex items-center justify-between mt-3">
-                            <span class="text-xs text-gray-500" x-text="task.project"></span>
-                            <div class="flex space-x-1">
-                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
-                                <button class="text-red-600 hover:text-red-800 text-sm">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-            </div>
-        </div>
+        {% endfor %}
     </div>
+</div>
 
-    <!-- Task Creation Modal -->
-    <div x-data="taskModal()" x-show="isOpen" x-cloak 
-         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-         @open-task-modal.window="openModal($event.detail)"
-         @keydown.escape.window="closeModal()">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" 
-             @click.stop
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform scale-95"
-             x-transition:enter-end="opacity-100 transform scale-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 transform scale-100"
-             x-transition:leave-end="opacity-0 transform scale-95">
+<!-- Task Creation Modal -->
+<div x-data="taskModal()" 
+     x-show="isOpen" 
+     @open-task-modal.window="open($event.detail.status)"
+     x-cloak
+     class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div x-show="isOpen" @click="close()" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        
+        <div x-show="isOpen" 
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl transform transition-all sm:max-w-lg sm:w-full">
             
-            <!-- Modal Header -->
-            <div class="px-6 py-4 border-b border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-900">Create New Task</h2>
-                    <button @click="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Create New Task</h2>
+                    <button @click="close()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
             </div>
-
-            <!-- Modal Body -->
-            <div class="px-6 py-4">
-                <form @submit.prevent="submitTask()" enctype="multipart/form-data">
-                    <!-- Title -->
-                    <div class="mb-6">
-                        <label for="task-title" class="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                        <input 
-                            type="text" 
-                            id="task-title" 
-                            x-model="form.title"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter task title"
-                            required
-                        >
+            
+            <form @submit.prevent="submitTask()" class="px-6 py-4">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                        <input type="text" x-model="form.title" required
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                     </div>
-
-                    <!-- Description -->
-                    <div class="mb-6">
-                        <label for="task-description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <textarea 
-                            id="task-description" 
-                            x-model="form.description"
-                            rows="4"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter task description"
-                        ></textarea>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                        <textarea x-model="form.description" rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"></textarea>
                     </div>
-
-                    <!-- Project Selection -->
-                    <div class="mb-6">
-                        <label for="task-project" class="block text-sm font-medium text-gray-700 mb-2">Project</label>
-                        <select 
-                            id="task-project" 
-                            x-model="form.project_id"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        >
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project</label>
+                        <select x-model="form.project_id"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                             <option value="">Select a project...</option>
-                            <template x-for="project in projects" :key="project.id">
-                                <option :value="project.id" x-text="project.name"></option>
-                            </template>
+                            {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.title }}</option>
+                            {% endfor %}
                         </select>
                     </div>
-
-                    <!-- Priority -->
-                    <div class="mb-6">
-                        <label for="task-priority" class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-                        <select 
-                            id="task-priority" 
-                            x-model="form.priority"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
+                        <select x-model="form.priority"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                             <option value="low">Low</option>
                             <option value="medium" selected>Medium</option>
                             <option value="high">High</option>
                             <option value="critical">Critical</option>
                         </select>
                     </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" @click="close()"
+                            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600">
+                        Create Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-                    <!-- File Upload -->
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Attach Files</label>
-                        <div 
-                            x-data="fileUpload()" 
-                            class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
-                            x-bind:class="{ 'border-blue-500 bg-blue-50': isDragging }"
-                            @dragover.prevent="isDragging = true"
-                            @dragleave.prevent="isDragging = false"
-                            @drop.prevent="handleDrop($event)"
-                        >
-                            <div x-show="!uploading && files.length === 0">
-                                <svg class="mx-auto h-8 w-8 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <div class="mt-2">
-                                    <label for="task-files" class="cursor-pointer">
-                                        <span class="text-sm font-medium text-gray-900">
-                                            Drop files here or click to browse
-                                        </span>
-                                        <input 
-                                            id="task-files" 
-                                            name="files[]" 
-                                            type="file" 
-                                            class="sr-only" 
-                                            multiple
-                                            @change="handleFileSelect($event)"
-                                        >
-                                    </label>
-                                    <p class="mt-1 text-xs text-gray-500">
-                                        PNG, JPG, PDF, MD, TXT up to 10MB
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <!-- File List -->
-                            <div x-show="files.length > 0" class="space-y-2">
-                                <template x-for="file in files" :key="file.name">
-                                    <div class="flex items-center justify-between p-2 bg-gray-100 rounded">
-                                        <span class="text-sm text-gray-700" x-text="file.name"></span>
-                                        <button type="button" @click="removeFile(file)" class="text-red-600 hover:text-red-800">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6m0 12L6 6"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-                <button 
-                    @click="closeModal()"
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-                    type="button"
-                >
-                    Cancel
-                </button>
-                <button 
-                    @click="submitTask()"
-                    x-bind:disabled="isSubmitting"
-                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
-                    type="button"
-                >
-                    <span x-show="!isSubmitting">Create Task</span>
-                    <span x-show="isSubmitting" class="flex items-center">
-                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+<!-- Task Edit Modal -->
+<div x-data="editTaskModal()" 
+     x-show="isOpen" 
+     @open-edit-modal.window="open($event.detail.task)"
+     x-cloak
+     class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div x-show="isOpen" @click="close()" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        
+        <div x-show="isOpen" 
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+            
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Edit Task</h2>
+                    <button @click="close()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
-                        Creating...
-                    </span>
-                </button>
+                    </button>
+                </div>
             </div>
+            
+            <form @submit.prevent="updateTask()" class="px-6 py-4">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                        <input type="text" x-model="form.title" required
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                        <textarea x-model="form.description" rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
+                        <select x-model="form.priority"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                        <select x-model="form.status"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            {% for status, statusInfo in statuses %}
+                            <option value="{{ status }}">{{ statusInfo.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" @click="close()"
+                            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600">
+                        Update Task
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -521,73 +321,17 @@ function kanbanBoard() {
     return {
         draggedTask: null,
         draggedFromStatus: null,
-        backlogTasks: [
-            { 
-                id: 1, 
-                title: 'Design user interface', 
-                description: 'Create mockups for the new feature', 
-                project: 'Project Alpha',
-                priority_color: 'text-orange-600 bg-orange-100',
-                priority_label: 'High'
-            },
-            { 
-                id: 2, 
-                title: 'Database schema', 
-                description: 'Design the database structure', 
-                project: 'Project Beta',
-                priority_color: 'text-yellow-600 bg-yellow-100',
-                priority_label: 'Medium'
-            }
-        ],
-        todoTasks: [
-            { 
-                id: 3, 
-                title: 'API integration', 
-                description: 'Connect frontend with backend API', 
-                project: 'Project Alpha',
-                priority_color: 'text-red-600 bg-red-100',
-                priority_label: 'Critical'
-            }
-        ],
-        workingTasks: [
-            { 
-                id: 4, 
-                title: 'Authentication system', 
-                description: 'Implement user login and registration', 
-                project: 'Project Gamma',
-                priority_color: 'text-orange-600 bg-orange-100',
-                priority_label: 'High'
-            }
-        ],
-        reviewTasks: [
-            { 
-                id: 5, 
-                title: 'Code review', 
-                description: 'Review pull request #123', 
-                project: 'Project Alpha',
-                priority_color: 'text-yellow-600 bg-yellow-100',
-                priority_label: 'Medium'
-            }
-        ],
-        doneTasks: [
-            { 
-                id: 6, 
-                title: 'Setup development environment', 
-                description: 'Configure Docker containers', 
-                project: 'Project Setup',
-                priority_color: 'text-green-600 bg-green-100',
-                priority_label: 'Low'
-            }
-        ],
+        tasks: {{ tasksByStatus|json_encode|raw }},
         
         handleDragStart(task, event) {
             this.draggedTask = task;
-            // Determine which status the task is being dragged from
-            if (this.backlogTasks.includes(task)) this.draggedFromStatus = 'backlog';
-            else if (this.todoTasks.includes(task)) this.draggedFromStatus = 'todo';
-            else if (this.workingTasks.includes(task)) this.draggedFromStatus = 'in_progress';
-            else if (this.reviewTasks.includes(task)) this.draggedFromStatus = 'review';
-            else if (this.doneTasks.includes(task)) this.draggedFromStatus = 'completed';
+            // Find which status the task is from
+            for (const [status, tasks] of Object.entries(this.tasks)) {
+                if (tasks.some(t => t.id === task.id)) {
+                    this.draggedFromStatus = status;
+                    break;
+                }
+            }
             
             event.target.classList.add('opacity-50');
             event.dataTransfer.effectAllowed = 'move';
@@ -605,28 +349,37 @@ function kanbanBoard() {
             }
             
             try {
-                // Send HTMX request to update task status
-                const response = await fetch(`/api/tasks/${this.draggedTask.id}`, {
-                    method: 'PUT',
+                const response = await fetch('/api/kanban/move-task', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify({
+                        taskId: this.draggedTask.id,
+                        status: newStatus
+                    })
                 });
                 
-                if (response.ok) {
-                    // Move task between arrays
-                    this.removeTaskFromCurrentStatus(this.draggedTask);
-                    this.addTaskToNewStatus(this.draggedTask, newStatus);
-                    
-                    // Show success feedback
-                    this.showNotification('Task moved successfully!', 'success');
-                } else {
-                    // Show error feedback
-                    this.showNotification('Failed to move task. Please try again.', 'error');
+                if (!response.ok) {
+                    throw new Error('Failed to move task');
                 }
+                
+                // Move task in UI
+                const fromTasks = this.tasks[this.draggedFromStatus];
+                const taskIndex = fromTasks.findIndex(t => t.id === this.draggedTask.id);
+                if (taskIndex > -1) {
+                    fromTasks.splice(taskIndex, 1);
+                }
+                
+                this.tasks[newStatus].push(this.draggedTask);
+                
+                // Update UI
+                this.updateTaskCounts();
+                this.showNotification('Task moved successfully', 'success');
+                
             } catch (error) {
-                console.error('Error updating task:', error);
+                console.error('Error moving task:', error);
                 this.showNotification('Failed to move task. Please try again.', 'error');
             }
             
@@ -634,36 +387,13 @@ function kanbanBoard() {
             this.draggedFromStatus = null;
         },
         
-        removeTaskFromCurrentStatus(task) {
-            const arrays = {
-                'backlog': this.backlogTasks,
-                'todo': this.todoTasks,
-                'in_progress': this.workingTasks,
-                'review': this.reviewTasks,
-                'completed': this.doneTasks
-            };
-            
-            const currentArray = arrays[this.draggedFromStatus];
-            const index = currentArray.findIndex(t => t.id === task.id);
-            if (index > -1) {
-                currentArray.splice(index, 1);
-            }
-        },
-        
-        addTaskToNewStatus(task, newStatus) {
-            const arrays = {
-                'backlog': this.backlogTasks,
-                'todo': this.todoTasks,
-                'in_progress': this.workingTasks,
-                'review': this.reviewTasks,
-                'completed': this.doneTasks
-            };
-            
-            arrays[newStatus].push(task);
+        updateTaskCounts() {
+            const totalTasks = Object.values(this.tasks).reduce((sum, tasks) => sum + tasks.length, 0);
+            document.getElementById('task-count').textContent = `${totalTasks} tasks`;
+            document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
         },
         
         showNotification(message, type) {
-            // Simple notification - could be enhanced with a proper notification system
             const notification = document.createElement('div');
             notification.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white z-50 ${
                 type === 'success' ? 'bg-green-500' : 'bg-red-500'
@@ -675,204 +405,212 @@ function kanbanBoard() {
             setTimeout(() => {
                 notification.remove();
             }, 3000);
-        }
-    }
-}
-
-function taskModal() {
-    return {
-        isOpen: false,
-        isSubmitting: false,
-        status: 'todo',
-        projects: [],
-        form: {
-            title: '',
-            description: '',
-            project_id: '',
-            priority: 'medium',
-            status: 'todo'
-        },
-        files: [],
-        isDragging: false,
-
-        init() {
-            this.loadProjects();
         },
 
-        async loadProjects() {
-            try {
-                const response = await fetch('/api/projects');
-                const data = await response.json();
-                this.projects = data.data || [];
-            } catch (error) {
-                console.error('Error loading projects:', error);
+        async deleteTask(taskId) {
+            if (!confirm('Are you sure you want to delete this task?')) {
+                return;
             }
-        },
 
-        openModal(detail) {
-            this.status = detail?.status || 'todo';
-            this.form.status = this.status;
-            this.isOpen = true;
-            this.resetForm();
-            
-            // Focus on title input after modal is rendered
-            this.$nextTick(() => {
-                document.getElementById('task-title')?.focus();
-            });
-        },
-
-        closeModal() {
-            this.isOpen = false;
-            this.resetForm();
-        },
-
-        resetForm() {
-            this.form = {
-                title: '',
-                description: '',
-                project_id: '',
-                priority: 'medium',
-                status: this.status
-            };
-            this.files = [];
-            this.isSubmitting = false;
-        },
-
-        handleDrop(event) {
-            this.isDragging = false;
-            const files = Array.from(event.dataTransfer.files);
-            this.addFiles(files);
-        },
-
-        handleFileSelect(event) {
-            const files = Array.from(event.target.files);
-            this.addFiles(files);
-        },
-
-        addFiles(files) {
-            // Add to files array for preview
-            this.files.push(...files);
-        },
-
-        removeFile(file) {
-            const index = this.files.findIndex(f => f === file);
-            if (index > -1) {
-                this.files.splice(index, 1);
-            }
-        },
-
-        async submitTask() {
-            if (this.isSubmitting) return;
-            
-            this.isSubmitting = true;
-            
             try {
-                const formData = new FormData();
-                formData.append('title', this.form.title);
-                formData.append('description', this.form.description);
-                formData.append('project_id', this.form.project_id);
-                formData.append('priority', this.form.priority);
-                formData.append('status', this.form.status);
-                
-                // Add files
-                this.files.forEach((file, index) => {
-                    formData.append(`files[]`, file);
-                });
-
-                const response = await fetch('/tasks/create', {
-                    method: 'POST',
-                    body: formData,
+                const response = await fetch(`/tasks/${taskId}/delete`, {
+                    method: 'DELETE',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
 
-                if (response.ok) {
-                    const taskHtml = await response.text();
-                    
-                    // Add the new task to the appropriate column
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(taskHtml, 'text/html');
-                    const taskElement = doc.body.firstChild;
-                    
-                    if (taskElement) {
-                        // Parse task data from the HTML
-                        const taskData = this.parseTaskFromHtml(taskElement);
-                        
-                        // Add to the appropriate array in kanban board
-                        this.addTaskToBoard(taskData);
-                        
-                        this.showNotification('Task created successfully!', 'success');
-                        this.closeModal();
-                    }
-                } else {
-                    const errorData = await response.json();
-                    this.showNotification(errorData.message || 'Failed to create task', 'error');
+                if (!response.ok) {
+                    throw new Error('Failed to delete task');
                 }
+
+                // Remove task from UI
+                for (const [status, tasks] of Object.entries(this.tasks)) {
+                    const taskIndex = tasks.findIndex(t => t.id === taskId);
+                    if (taskIndex > -1) {
+                        tasks.splice(taskIndex, 1);
+                        break;
+                    }
+                }
+
+                this.updateTaskCounts();
+                this.showNotification('Task deleted successfully', 'success');
+
+            } catch (error) {
+                console.error('Error deleting task:', error);
+                this.showNotification('Failed to delete task. Please try again.', 'error');
+            }
+        }
+    };
+}
+
+function taskModal() {
+    return {
+        isOpen: false,
+        status: '',
+        form: {
+            title: '',
+            description: '',
+            project_id: '',
+            priority: 'medium'
+        },
+        
+        open(status) {
+            this.status = status;
+            this.isOpen = true;
+        },
+        
+        close() {
+            this.isOpen = false;
+            this.resetForm();
+        },
+        
+        resetForm() {
+            this.form = {
+                title: '',
+                description: '',
+                project_id: '',
+                priority: 'medium'
+            };
+        },
+        
+        async submitTask() {
+            try {
+                const response = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        ...this.form,
+                        status: this.status
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to create task');
+                }
+                
+                const newTask = await response.json();
+                
+                // Add task to kanban board
+                const kanbanComponent = document.querySelector('[x-data*="kanbanBoard"]')._x_dataStack[0];
+                kanbanComponent.tasks[this.status].push(newTask);
+                kanbanComponent.updateTaskCounts();
+                
+                this.close();
+                kanbanComponent.showNotification('Task created successfully', 'success');
+                
             } catch (error) {
                 console.error('Error creating task:', error);
-                this.showNotification('An error occurred while creating the task', 'error');
-            } finally {
-                this.isSubmitting = false;
+                alert('Failed to create task. Please try again.');
             }
-        },
+        }
+    };
+}
 
-        parseTaskFromHtml(element) {
-            // Extract task data from the rendered HTML
-            // This is a simplified approach - in a real app you'd get JSON response
-            return {
-                id: Math.floor(Math.random() * 10000), // Temporary ID
-                title: this.form.title,
-                description: this.form.description,
-                project: this.projects.find(p => p.id == this.form.project_id)?.name || 'Unknown',
-                priority_color: this.getPriorityColor(this.form.priority),
-                priority_label: this.getPriorityLabel(this.form.priority)
+function editTaskModal() {
+    return {
+        isOpen: false,
+        currentTask: null,
+        form: {
+            title: '',
+            description: '',
+            priority: 'medium',
+            status: ''
+        },
+        
+        open(task) {
+            this.currentTask = task;
+            this.form = {
+                title: task.title,
+                description: task.description,
+                priority: task.priority,
+                status: task.status
+            };
+            this.isOpen = true;
+        },
+        
+        close() {
+            this.isOpen = false;
+            this.currentTask = null;
+            this.resetForm();
+        },
+        
+        resetForm() {
+            this.form = {
+                title: '',
+                description: '',
+                priority: 'medium',
+                status: ''
             };
         },
+        
+        async updateTask() {
+            if (!this.currentTask) return;
 
-        addTaskToBoard(taskData) {
-            // Get the kanban board component and add task to appropriate array
-            const kanbanComponent = Alpine.findClosest(document.body, '[x-data*="kanbanBoard"]');
-            if (kanbanComponent) {
-                const data = kanbanComponent._x_dataStack[0];
-                switch (this.status) {
-                    case 'backlog':
-                        data.backlogTasks.push(taskData);
-                        break;
-                    case 'todo':
-                        data.todoTasks.push(taskData);
-                        break;
-                    case 'in_progress':
-                        data.workingTasks.push(taskData);
-                        break;
-                    case 'review':
-                        data.reviewTasks.push(taskData);
-                        break;
-                    case 'completed':
-                        data.doneTasks.push(taskData);
-                        break;
+            try {
+                const formData = new FormData();
+                formData.append('title', this.form.title);
+                formData.append('description', this.form.description);
+                formData.append('priority', this.form.priority);
+                formData.append('status', this.form.status);
+
+                const response = await fetch(`/tasks/${this.currentTask.id}/edit`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update task');
                 }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error('Failed to update task');
+                }
+                
+                // Create updated task object with form data
+                const updatedTask = { 
+                    ...this.currentTask,
+                    title: this.form.title,
+                    description: this.form.description,
+                    priority: this.form.priority,
+                    status: this.form.status
+                };
+                
+                // Update task in kanban board
+                const kanbanComponent = document.querySelector('[x-data*="kanbanBoard"]')._x_dataStack[0];
+                
+                // Find and update the task in the current status
+                for (const [status, tasks] of Object.entries(kanbanComponent.tasks)) {
+                    const taskIndex = tasks.findIndex(t => t.id === this.currentTask.id);
+                    if (taskIndex > -1) {
+                        // If status changed, move task to new status
+                        if (status !== this.form.status) {
+                            tasks.splice(taskIndex, 1);
+                            kanbanComponent.tasks[this.form.status].push(updatedTask);
+                        } else {
+                            // Update task in place
+                            tasks[taskIndex] = updatedTask;
+                        }
+                        break;
+                    }
+                }
+                
+                kanbanComponent.updateTaskCounts();
+                this.close();
+                kanbanComponent.showNotification('Task updated successfully', 'success');
+                
+            } catch (error) {
+                console.error('Error updating task:', error);
+                this.showNotification('Failed to update task. Please try again.', 'error');
             }
-        },
-
-        getPriorityColor(priority) {
-            const colors = {
-                low: 'text-green-600 bg-green-100',
-                medium: 'text-yellow-600 bg-yellow-100',
-                high: 'text-orange-600 bg-orange-100',
-                critical: 'text-red-600 bg-red-100'
-            };
-            return colors[priority] || colors.medium;
-        },
-
-        getPriorityLabel(priority) {
-            const labels = {
-                low: 'Low',
-                medium: 'Medium', 
-                high: 'High',
-                critical: 'Critical'
-            };
-            return labels[priority] || 'Medium';
         },
 
         showNotification(message, type) {
@@ -887,206 +625,6 @@ function taskModal() {
             setTimeout(() => {
                 notification.remove();
             }, 3000);
-        }
-    };
-}
-
-// Simple file upload component for the modal
-function fileUpload() {
-    return {
-        files: [],
-        isDragging: false,
-        uploading: false,
-
-        handleDrop(event) {
-            this.isDragging = false;
-            const files = Array.from(event.dataTransfer.files);
-            this.files.push(...files);
-        },
-
-        handleFileSelect(event) {
-            const files = Array.from(event.target.files);
-            this.files.push(...files);
-        },
-
-        removeFile(file) {
-            const index = this.files.findIndex(f => f === file);
-            if (index > -1) {
-                this.files.splice(index, 1);
-            }
-        }
-    };
-}
-
-// Board search functionality
-function boardSearch() {
-    return {
-        searchQuery: '',
-        originalTasks: null,
-
-        init() {
-            // Store original task data for filtering
-            this.originalTasks = {
-                backlog: [...this.getAllTasks('backlog')],
-                todo: [...this.getAllTasks('todo')],
-                in_progress: [...this.getAllTasks('in_progress')],
-                review: [...this.getAllTasks('review')],
-                completed: [...this.getAllTasks('completed')]
-            };
-        },
-
-        filterTasks() {
-            const kanbanComponent = this.getKanbanComponent();
-            if (!kanbanComponent || !this.originalTasks) return;
-
-            const query = this.searchQuery.toLowerCase().trim();
-            
-            if (!query) {
-                // Restore all tasks
-                kanbanComponent.backlogTasks = [...this.originalTasks.backlog];
-                kanbanComponent.todoTasks = [...this.originalTasks.todo];
-                kanbanComponent.workingTasks = [...this.originalTasks.in_progress];
-                kanbanComponent.reviewTasks = [...this.originalTasks.review];
-                kanbanComponent.doneTasks = [...this.originalTasks.completed];
-                return;
-            }
-
-            // Filter tasks based on search query
-            kanbanComponent.backlogTasks = this.originalTasks.backlog.filter(task => 
-                this.taskMatchesQuery(task, query)
-            );
-            kanbanComponent.todoTasks = this.originalTasks.todo.filter(task => 
-                this.taskMatchesQuery(task, query)
-            );
-            kanbanComponent.workingTasks = this.originalTasks.in_progress.filter(task => 
-                this.taskMatchesQuery(task, query)
-            );
-            kanbanComponent.reviewTasks = this.originalTasks.review.filter(task => 
-                this.taskMatchesQuery(task, query)
-            );
-            kanbanComponent.doneTasks = this.originalTasks.completed.filter(task => 
-                this.taskMatchesQuery(task, query)
-            );
-        },
-
-        taskMatchesQuery(task, query) {
-            return task.title.toLowerCase().includes(query) ||
-                   task.description.toLowerCase().includes(query) ||
-                   task.project.toLowerCase().includes(query);
-        },
-
-        getAllTasks(status) {
-            const kanbanComponent = this.getKanbanComponent();
-            if (!kanbanComponent) return [];
-
-            switch (status) {
-                case 'backlog': return kanbanComponent.backlogTasks;
-                case 'todo': return kanbanComponent.todoTasks;
-                case 'in_progress': return kanbanComponent.workingTasks;
-                case 'review': return kanbanComponent.reviewTasks;
-                case 'completed': return kanbanComponent.doneTasks;
-                default: return [];
-            }
-        },
-
-        getKanbanComponent() {
-            const kanbanElement = document.querySelector('[x-data*="kanbanBoard"]');
-            return kanbanElement ? kanbanElement._x_dataStack[0] : null;
-        }
-    };
-}
-
-// Project filter functionality
-function projectFilter() {
-    return {
-        selectedProject: '',
-        originalTasks: null,
-
-        init() {
-            // Load projects dynamically
-            this.loadProjects();
-            
-            // Store original task data
-            this.originalTasks = {
-                backlog: [...this.getAllTasks('backlog')],
-                todo: [...this.getAllTasks('todo')],
-                in_progress: [...this.getAllTasks('in_progress')],
-                review: [...this.getAllTasks('review')],
-                completed: [...this.getAllTasks('completed')]
-            };
-        },
-
-        async loadProjects() {
-            try {
-                const response = await fetch('/api/projects');
-                const data = await response.json();
-                
-                // Update the select options dynamically
-                const selectElement = this.$el;
-                selectElement.innerHTML = '<option value="">All Projects</option>';
-                
-                if (data.data) {
-                    data.data.forEach(project => {
-                        const option = document.createElement('option');
-                        option.value = project.id;
-                        option.textContent = project.title;
-                        selectElement.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading projects:', error);
-            }
-        },
-
-        filterByProject() {
-            const kanbanComponent = this.getKanbanComponent();
-            if (!kanbanComponent || !this.originalTasks) return;
-
-            if (!this.selectedProject) {
-                // Show all tasks
-                kanbanComponent.backlogTasks = [...this.originalTasks.backlog];
-                kanbanComponent.todoTasks = [...this.originalTasks.todo];
-                kanbanComponent.workingTasks = [...this.originalTasks.in_progress];
-                kanbanComponent.reviewTasks = [...this.originalTasks.review];
-                kanbanComponent.doneTasks = [...this.originalTasks.completed];
-                return;
-            }
-
-            // Filter tasks by selected project
-            kanbanComponent.backlogTasks = this.originalTasks.backlog.filter(task => 
-                task.project_id == this.selectedProject
-            );
-            kanbanComponent.todoTasks = this.originalTasks.todo.filter(task => 
-                task.project_id == this.selectedProject
-            );
-            kanbanComponent.workingTasks = this.originalTasks.in_progress.filter(task => 
-                task.project_id == this.selectedProject
-            );
-            kanbanComponent.reviewTasks = this.originalTasks.review.filter(task => 
-                task.project_id == this.selectedProject
-            );
-            kanbanComponent.doneTasks = this.originalTasks.completed.filter(task => 
-                task.project_id == this.selectedProject
-            );
-        },
-
-        getAllTasks(status) {
-            const kanbanComponent = this.getKanbanComponent();
-            if (!kanbanComponent) return [];
-
-            switch (status) {
-                case 'backlog': return kanbanComponent.backlogTasks;
-                case 'todo': return kanbanComponent.todoTasks;
-                case 'in_progress': return kanbanComponent.workingTasks;
-                case 'review': return kanbanComponent.reviewTasks;
-                case 'completed': return kanbanComponent.doneTasks;
-                default: return [];
-            }
-        },
-
-        getKanbanComponent() {
-            const kanbanElement = document.querySelector('[x-data*="kanbanBoard"]');
-            return kanbanElement ? kanbanElement._x_dataStack[0] : null;
         }
     };
 }
