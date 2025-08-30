@@ -3,7 +3,56 @@
 /* Custom styles for kanban board */
 .kanban-column {
     @apply bg-gray-50 rounded-lg p-4 min-h-[600px];
+    
+    /* Ensure the column is a flex container that fills height */
+    display: flex;
+    flex-direction: column;
 }
+
+/* Drag and drop cursor styles */
+.kanban-column[data-status] {
+    /* Allow cursor to be overridden during drag operations */
+    cursor: auto !important;
+}
+
+.kanban-column[data-status]:hover {
+    /* Ensure hover cursor doesn't interfere with drag cursor */
+    cursor: auto;
+}
+
+/* Enhanced visual feedback for drag and drop since cursor control is limited in HTML5 DnD */
+.kanban-column[data-can-drop="true"] {
+    background: linear-gradient(135deg, rgb(239 246 255), rgb(219 234 254)) !important;
+    border: 2px solid rgb(59 130 246) !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4) !important;
+    /* Remove scale to prevent clipping, use enhanced shadow and border instead */
+}
+
+.kanban-column[data-can-drop="false"] {
+    background: linear-gradient(135deg, rgb(254 242 242), rgb(252 226 226)) !important;
+    border: 2px solid rgb(239 68 68) !important;
+    border-radius: 8px !important;
+    opacity: 0.7 !important;
+    transition: all 0.2s ease !important;
+    pointer-events: none !important;
+}
+
+/* Custom drag image styling */
+.drag-preview {
+    background: white !important;
+    border: 2px solid rgb(59 130 246) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+    transform: rotate(5deg) !important;
+    opacity: 0.9 !important;
+    padding: 12px !important;
+    max-width: 280px !important;
+    font-size: 14px !important;
+}
+
+/* Drag state indicators removed - visual feedback provided by background, border, and shadow instead */
 
 .kanban-card {
     @apply bg-white rounded-lg shadow-sm p-4 mb-3 cursor-move border border-gray-200 hover:shadow-md transition-shadow;
