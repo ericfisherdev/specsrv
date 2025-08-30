@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # Simple development setup with hot reloading using existing production image
+  specsrv-dev-simple:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.new
+      target: production
+    container_name: specsrv-dev-simple
+    ports:
+      - "8003:8080"
+    environment:
+      - APP_ENV=dev
+      - APP_DEBUG=1
+      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/db.sqlite
+    volumes:
+      # Mount source code for hot reloading (read-write for templates/src)
+      - ./backend:/app
+      # Writable directories
+      - specsrv-simple-data:/app/var/data
+      - specsrv-simple-logs:/app/var/log
+      - specsrv-simple-uploads:/app/var/uploads
+      - specsrv-simple-cache:/app/var/cache
+    networks:
+      - specsrv-dev-network
+    restart: unless-stopped
+    command: |
+      sh -c "
+        echo 'Starting development mode...' &&
+        if [ ! -f /app/var/data/db.sqlite ]; then
+          echo 'Setting up database...' &&
+          touch /app/var/data/db.sqlite &&
+          php bin/console doctrine:migrations:migrate --no-interaction --env=dev
+        fi &&
+        echo 'Starting services...' &&
+        supervisord -c /etc/supervisor/conf.d/supervisord.conf
+      "
+
+  # Webpack watcher for asset changes
+  specsrv-webpack-watcher:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.new
+      target: production
+    container_name: specsrv-webpack-watcher
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./backend:/app
+    networks:
+      - specsrv-dev-network
+    working_dir: /app
+    command: |
+      sh -c "
+        echo 'Installing npm dependencies...' &&
+        npm ci &&
+        echo 'Starting webpack in watch mode...' &&
+        npm run watch
+      "
+    restart: unless-stopped
+    depends_on:
+      - specsrv-dev-simple
+
+volumes:
+  specsrv-simple-data:
+    driver: local
+  specsrv-simple-logs:
+    driver: local
+  specsrv-simple-uploads:
+    driver: local
+  specsrv-simple-cache:
+    driver: local
+
+networks:
+  specsrv-dev-network:
+    driver: bridge
+    name: specsrv-dev-network

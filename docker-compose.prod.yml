@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  specsrv-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: specsrv-backend-prod
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENV=prod
+      - APP_DEBUG=0
+      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/db.sqlite
+    volumes:
+      # Named volumes for persistent data only - no source code mount
+      - specsrv-data:/app/var/data
+      - specsrv-logs:/app/var/log
+      - specsrv-uploads:/app/var/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+
+volumes:
+  specsrv-data:
+    driver: local
+  specsrv-logs:
+    driver: local
+  specsrv-uploads:
+    driver: local
+
+networks:
+  specsrv-network:
+    driver: bridge
+    name: specsrv-network

@@ -1,0 +1,132 @@
+services:
+  specsrv-app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.new
+      target: production
+    container_name: specsrv-app
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENV=prod
+      - APP_DEBUG=0
+      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/db.sqlite
+      - TRUSTED_PROXIES=127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+    volumes:
+      # Persistent data volumes only - no source code mounts
+      - specsrv-data:/app/var/data
+      - specsrv-logs:/app/var/log
+      - specsrv-uploads:/app/var/uploads
+      # Note: cache directory is part of the container image, not mounted
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+
+  # Development container with source code mount and hot reloading
+  specsrv-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.new
+      target: development
+    container_name: specsrv-dev
+    ports:
+      - "8081:8080"
+    environment:
+      - APP_ENV=dev
+      - APP_DEBUG=1
+      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/db.sqlite
+    volumes:
+      # Mount source code for development with hot reloading
+      - ./backend:/app
+      - specsrv-dev-data:/app/var/data
+      - specsrv-dev-logs:/app/var/log
+      - specsrv-dev-uploads:/app/var/uploads
+      # Exclude node_modules from mount to avoid conflicts
+      - /app/node_modules
+    networks:
+      - specsrv-network
+    profiles:
+      - dev
+    depends_on:
+      - specsrv-webpack-dev
+
+  # Webpack dev server for hot reloading
+  specsrv-webpack-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.new
+      target: development
+    container_name: specsrv-webpack-dev
+    ports:
+      - "8082:8080"  # Webpack dev server port
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # Mount source code for hot reloading
+      - ./backend:/app
+      # Exclude node_modules from mount to avoid conflicts
+      - /app/node_modules
+    networks:
+      - specsrv-network
+    profiles:
+      - dev
+    command: npm run dev-server
+    stdin_open: true
+    tty: true
+
+  # Simple development container with hot reloading support
+  specsrv-dev-simple:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.new
+      target: production
+    container_name: specsrv-dev-simple
+    ports:
+      - "8001:8080"
+    environment:
+      - APP_ENV=dev
+      - APP_DEBUG=1
+      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/db.sqlite
+      - TRUSTED_PROXIES=127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+    volumes:
+      # Mount source code for live changes
+      - ./backend:/app
+    networks:
+      - specsrv-network
+    profiles:
+      - dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+volumes:
+  # Production volumes
+  specsrv-data:
+    driver: local
+  specsrv-logs:
+    driver: local
+  specsrv-uploads:
+    driver: local
+  
+  # Development volumes
+  specsrv-dev-data:
+    driver: local
+  specsrv-dev-logs:
+    driver: local
+  specsrv-dev-uploads:
+    driver: local
+
+networks:
+  specsrv-network:
+    driver: bridge
+    name: specsrv-network

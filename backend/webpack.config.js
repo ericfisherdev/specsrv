@@ -38,8 +38,8 @@ Encore
      */
     .cleanupOutputBeforeBuild()
 
-    // Displays build status system notifications to the user
-    .enableBuildNotifications()
+    // Disable build notifications to prevent filesystem events
+    // .enableBuildNotifications()
 
     .enableSourceMaps(!Encore.isProduction())
     // enables hashed filenames (e.g. app.abc123.css)
@@ -56,8 +56,7 @@ Encore
         config.corejs = '3.38';
     })
 
-    // Enable split chunks for production optimization
-    .splitEntryChunks()
+    
 
 
     // enables Sass/SCSS support
@@ -79,7 +78,14 @@ Encore
     // uncomment if you're having problems with a jQuery plugin
     //.autoProvidejQuery()
 
-    // Configure dev server for hot reloading
+    // Configure watch options to prevent excessive recompilation
+    .configureWatchOptions(watchOptions => {
+        watchOptions.ignored = ['**/node_modules/**', '**/public/build/**', '**/public/**'];
+        watchOptions.poll = 1000;
+        watchOptions.aggregateTimeout = 500;
+    })
+
+    // Configure dev server for hot reloading with PHP proxy
     .configureDevServerOptions(options => {
         options.allowedHosts = 'all';
         options.host = '0.0.0.0';
@@ -90,6 +96,49 @@ Encore
             'templates/**/*.twig',
             'src/**/*.php'
         ];
+        
+        // Configure watcher to reduce unnecessary recompilation
+        options.watchOptions = {
+            ignored: ['**/node_modules/**', '**/public/build/**'],
+            poll: 1000,
+            aggregateTimeout: 500
+        };
+        
+        // Proxy PHP requests to the PHP container
+        if (process.env.WEBPACK_DEV_SERVER) {
+            options.proxy = [
+                {
+                    context: ['/login', '/register', '/logout', '/api', '/dashboard', '/kanban', '/health'],
+                    target: 'http://specsrv-app-dev:8080',
+                    changeOrigin: true,
+                    secure: false
+                },
+                // Proxy all PHP files
+                {
+                    context: ['**/*.php'],
+                    target: 'http://specsrv-app-dev:8080',
+                    changeOrigin: true,
+                    secure: false
+                },
+                // Proxy root requests that might be handled by PHP
+                {
+                    context: (pathname, req) => {
+                        // Don't proxy webpack dev server assets
+                        if (pathname.startsWith('/build/') || 
+                            pathname.startsWith('/__webpack') || 
+                            pathname.startsWith('/webpack-dev-server/') ||
+                            pathname.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg)$/)) {
+                            return false;
+                        }
+                        // Proxy everything else to PHP
+                        return true;
+                    },
+                    target: 'http://specsrv-app-dev:8080',
+                    changeOrigin: true,
+                    secure: false
+                }
+            ];
+        }
     })
 ;
 
