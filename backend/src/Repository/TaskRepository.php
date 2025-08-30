@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Project;
 use App\Entity\Task;
+use App\Enum\TaskStatusEnum;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -165,31 +166,31 @@ class TaskRepository extends ServiceEntityRepository
             ->setParameter('user', $user);
 
         // Text search
-        if (!empty($criteria['query'])) {
+        if (! empty($criteria['query'])) {
             $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
                ->setParameter('search', '%'.$criteria['query'].'%');
         }
 
         // Project filter
-        if (!empty($criteria['project_id'])) {
+        if (! empty($criteria['project_id'])) {
             $qb->andWhere('t.project = :project_id')
                ->setParameter('project_id', $criteria['project_id']);
         }
 
         // Status filter
-        if (!empty($criteria['status'])) {
+        if (! empty($criteria['status'])) {
             $qb->andWhere('t.status = :status')
                ->setParameter('status', $criteria['status']);
         }
 
         // Priority filter
-        if (!empty($criteria['priority'])) {
+        if (! empty($criteria['priority'])) {
             $qb->andWhere('t.priority = :priority')
                ->setParameter('priority', $criteria['priority']);
         }
 
         // Date range filter
-        if (!empty($criteria['date_range'])) {
+        if (! empty($criteria['date_range'])) {
             $dateConstraints = $this->getDateRangeConstraints($criteria['date_range']);
             if ($dateConstraints) {
                 $qb->andWhere('t.createdAt >= :date_from AND t.createdAt <= :date_to')
@@ -216,35 +217,55 @@ class TaskRepository extends ServiceEntityRepository
             case 'today':
                 $from->setTime(0, 0, 0);
                 $to->setTime(23, 59, 59);
+
                 break;
-            
+
             case 'week':
                 $from->modify('monday this week')->setTime(0, 0, 0);
                 $to->modify('sunday this week')->setTime(23, 59, 59);
+
                 break;
-                
+
             case 'month':
                 $from->modify('first day of this month')->setTime(0, 0, 0);
                 $to->modify('last day of this month')->setTime(23, 59, 59);
+
                 break;
-                
+
             case 'quarter':
                 $month = (int) $now->format('n');
                 $quarterStart = floor(($month - 1) / 3) * 3 + 1;
                 $from->setDate((int) $now->format('Y'), (int) $quarterStart, 1)->setTime(0, 0, 0);
                 $to->setDate((int) $now->format('Y'), (int) ($quarterStart + 2), 1)
                    ->modify('last day of this month')->setTime(23, 59, 59);
+
                 break;
-                
+
             case 'year':
                 $from->setDate((int) $now->format('Y'), 1, 1)->setTime(0, 0, 0);
                 $to->setDate((int) $now->format('Y'), 12, 31)->setTime(23, 59, 59);
+
                 break;
-                
+
             default:
                 return null;
         }
 
         return ['from' => $from, 'to' => $to];
+    }
+
+    /**
+     * @return Task[] Returns an array of active Task objects for a project (excludes obsolete)
+     */
+    public function findActiveByProject(Project $project): array
+    {
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.project = :project')
+            ->andWhere('t.status != :obsolete')
+            ->setParameter('project', $project)
+            ->setParameter('obsolete', TaskStatusEnum::OBSOLETE->value)
+            ->orderBy('t.updatedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }

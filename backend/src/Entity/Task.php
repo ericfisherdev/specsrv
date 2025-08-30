@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\TaskStatusEnum;
 use App\Repository\TaskRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -12,11 +13,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'tasks')]
 class Task
 {
-    public const STATUS_TODO = 'todo';
-    public const STATUS_IN_PROGRESS = 'in_progress';
-    public const STATUS_COMPLETED = 'completed';
-    public const STATUS_CANCELLED = 'cancelled';
-    
     public const PRIORITY_LOW = 'low';
     public const PRIORITY_MEDIUM = 'medium';
     public const PRIORITY_HIGH = 'high';
@@ -34,7 +30,7 @@ class Task
     private ?string $description = null;
 
     #[ORM\Column(length: 20)]
-    private ?string $status = self::STATUS_TODO;
+    private ?string $status = 'todo';
 
     #[ORM\Column(length: 20)]
     private ?string $priority = self::PRIORITY_MEDIUM;
@@ -94,17 +90,35 @@ class Task
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): ?TaskStatusEnum
     {
-        return $this->status;
+        if (! $this->status) {
+            return null;
+        }
+
+        // Use tryFrom to avoid fatal errors on unknown/unmigrated DB values
+        $statusEnum = TaskStatusEnum::tryFrom($this->status);
+        if (! $statusEnum) {
+            // Log unexpected values for debugging but don't throw
+            error_log('Warning: Unknown task status value: '.$this->status);
+
+            return null;
+        }
+
+        return $statusEnum;
     }
 
-    public function setStatus(string $status): static
+    public function setStatus(TaskStatusEnum $status): static
     {
-        $this->status = $status;
+        $this->status = $status->value;
         $this->setUpdatedAt(new \DateTime());
 
         return $this;
+    }
+
+    public function getStatusValue(): ?string
+    {
+        return $this->status;
     }
 
     public function getPriority(): ?string
@@ -217,12 +231,7 @@ class Task
 
     public static function getAvailableStatuses(): array
     {
-        return [
-            self::STATUS_TODO,
-            self::STATUS_IN_PROGRESS,
-            self::STATUS_COMPLETED,
-            self::STATUS_CANCELLED,
-        ];
+        return array_map(fn (TaskStatusEnum $status) => $status->value, TaskStatusEnum::cases());
     }
 
     public static function getAvailablePriorities(): array

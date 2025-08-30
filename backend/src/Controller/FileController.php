@@ -4,23 +4,32 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\File;
+use App\Entity\User;
 use App\Repository\FileRepository;
+use App\Repository\ProjectRepository;
+use App\Repository\TaskRepository;
 use App\Service\FileUploadService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/files')]
 class FileController extends AbstractController
 {
     public function __construct(
         private FileUploadService $fileUploadService,
-        private FileRepository $fileRepository
+        private FileRepository $fileRepository,
+        private ProjectRepository $projectRepository,
+        private TaskRepository $taskRepository,
+        private LoggerInterface $logger
     ) {
     }
 
@@ -40,9 +49,9 @@ class FileController extends AbstractController
         'text/css',
         'text/html',
         'application/xml',
-        'text/xml'
+        'text/xml',
     ];
-    
+
     private const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     #[Route('/upload', name: 'app_file_upload', methods: ['POST'])]
@@ -51,15 +60,15 @@ class FileController extends AbstractController
         $files = $request->files->get('files', []);
         $projectId = $request->request->get('project_id');
         $taskId = $request->request->get('task_id');
-        
-        if (!is_array($files)) {
+
+        if (! is_array($files)) {
             $files = [$files];
         }
-        
+
         // Determine entity type and ID
         $entityType = null;
         $entityId = null;
-        
+
         if ($taskId) {
             $entityType = 'task';
             $entityId = (int) $taskId;
@@ -69,28 +78,29 @@ class FileController extends AbstractController
         } else {
             return new JsonResponse([
                 'success' => false,
-                'errors' => [['filename' => 'Upload', 'error' => 'No task or project ID provided']]
+                'errors' => [['filename' => 'Upload', 'error' => 'No task or project ID provided']],
             ], 400);
         }
-        
+
         $uploadedFiles = [];
         $errors = [];
-        
+
         foreach ($files as $file) {
-            if (!$file instanceof UploadedFile) {
+            if (! $file instanceof UploadedFile) {
                 continue;
             }
-            
+
             // Validate file
             $validation = $this->validateFile($file);
-            if (!$validation['valid']) {
+            if (! $validation['valid']) {
                 $errors[] = [
                     'filename' => $file->getClientOriginalName(),
-                    'error' => $validation['error']
+                    'error' => $validation['error'],
                 ];
+
                 continue;
             }
-            
+
             try {
                 // Use the FileUploadService to properly handle the upload
                 $uploadedFile = $this->fileUploadService->uploadFile(
@@ -98,180 +108,312 @@ class FileController extends AbstractController
                     $entityType,
                     $entityId
                 );
-                
+
                 $uploadedFiles[] = [
                     'id' => $uploadedFile->getId(),
                     'original_name' => $uploadedFile->getFilename(),
-                    'filename' => $uploadedFile->getFilename(),
+                    'filename' => basename($uploadedFile->getPath() ?? ''),
                     'size' => $this->fileUploadService->getFileSize($uploadedFile),
-                    'mime_type' => $uploadedFile->getType()
+                    'mime_type' => $uploadedFile->getType(),
                 ];
-                
+
             } catch (\Exception $e) {
+                $this->logger->error('File upload failed', [
+                    'filename' => $file->getClientOriginalName(),
+                    'exception' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+
                 $errors[] = [
                     'filename' => $file->getClientOriginalName(),
-                    'error' => 'Failed to upload file: ' . $e->getMessage()
+                    'error' => 'Failed to upload file.',
                 ];
             }
         }
-        
+
         return new JsonResponse([
             'success' => count($uploadedFiles) > 0,
             'uploaded_files' => $uploadedFiles,
-            'errors' => $errors
+            'errors' => $errors,
         ]);
     }
-    
+
     #[Route('/download/{id}', name: 'app_file_download', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
     public function download(int $id): Response
     {
         $file = $this->fileRepository->find($id);
-        
-        if (!$file) {
+
+        if (! $file) {
             throw $this->createNotFoundException('File not found');
         }
-        
-        // Check if user has permission to access this file
-        // TODO: Add proper permission checking based on entity ownership
-        
-        if (!$this->fileUploadService->fileExists($file)) {
+
+        /** @var User|null $user */
+        $user = $this->getUser();
+        $this->checkFileAccess($file, $user);
+
+        if (! $this->fileUploadService->fileExists($file)) {
             throw $this->createNotFoundException('File not found on disk');
         }
-        
+
         $fileContent = $this->fileUploadService->getFileContent($file);
         $fileSize = $this->fileUploadService->getFileSize($file);
-        
+
         $response = new Response();
         $response->setContent($fileContent);
         $response->headers->set('Content-Type', $file->getType() ?: 'application/octet-stream');
-        $response->headers->set('Content-Disposition', 'attachment; filename="' . $file->getFilename() . '"');
+        $filename = $file->getFilename() ?? 'download';
+        $safeFilename = preg_replace('/[^\x20-\x7E]/', '', $filename) ?: 'download';
+        $disposition = HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT,
+            $filename,
+            $safeFilename
+        );
+        $response->headers->set('Content-Disposition', $disposition);
         $response->headers->set('Content-Length', (string) $fileSize);
-        
+
         return $response;
     }
-    
+
     #[Route('/download-legacy/{filename}', name: 'app_file_download_legacy', methods: ['GET'])]
     public function downloadLegacy(string $filename): Response
     {
+        // Validate filename to prevent path traversal
+        if (str_contains($filename, '..') || str_contains($filename, '/') || str_contains($filename, '\\')) {
+            throw $this->createNotFoundException('Invalid filename');
+        }
+
+        $safeFilename = basename($filename);
+        if ($safeFilename !== $filename || empty($safeFilename)) {
+            throw $this->createNotFoundException('Invalid filename');
+        }
+
         $projectDir = $this->getParameter('kernel.project_dir');
-        if (!is_string($projectDir)) {
+        if (! is_string($projectDir)) {
             throw new \RuntimeException('Project directory parameter must be a string');
         }
-        $uploadPath = $projectDir . '/var/uploads';
-        $filePath = $uploadPath . '/' . $filename;
-        
-        if (!file_exists($filePath)) {
+
+        $uploadPath = realpath($projectDir.'/var/uploads');
+        if (false === $uploadPath) {
+            throw $this->createNotFoundException('Upload directory not found');
+        }
+
+        $filePath = $uploadPath.DIRECTORY_SEPARATOR.$safeFilename;
+        $realFilePath = realpath($filePath);
+
+        if (false === $realFilePath || ! str_starts_with($realFilePath, $uploadPath.DIRECTORY_SEPARATOR)) {
             throw $this->createNotFoundException('File not found');
         }
-        
-        $fileContents = file_get_contents($filePath);
-        if ($fileContents === false) {
+
+        if (! file_exists($realFilePath)) {
+            throw $this->createNotFoundException('File not found');
+        }
+
+        $fileContents = file_get_contents($realFilePath);
+        if (false === $fileContents) {
             throw $this->createNotFoundException('File could not be read');
         }
-        
+
         $response = new Response();
         $response->setContent($fileContents);
-        $response->headers->set('Content-Type', mime_content_type($filePath) ?: 'application/octet-stream');
-        $response->headers->set('Content-Disposition', 'attachment; filename="' . basename($filename) . '"');
-        
+        $response->headers->set('Content-Type', mime_content_type($realFilePath) ?: 'application/octet-stream');
+        $fallbackFilename = preg_replace('/[^\x20-\x7E]/', '', $safeFilename) ?: 'download';
+        $disposition = HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT,
+            $safeFilename,
+            $fallbackFilename
+        );
+        $response->headers->set('Content-Disposition', $disposition);
+
         return $response;
     }
-    
+
     #[Route('/delete/{id}', name: 'app_file_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_USER')]
     public function delete(int $id): JsonResponse
     {
         $file = $this->fileRepository->find($id);
-        
-        if (!$file) {
+
+        if (! $file) {
             return new JsonResponse(['success' => false, 'error' => 'File not found'], 404);
         }
-        
-        // Check if user has permission to delete this file
-        // TODO: Add proper permission checking based on entity ownership
-        
+
+        /** @var User|null $user */
+        $user = $this->getUser();
+        $this->checkFileAccess($file, $user);
+
         try {
             $this->fileUploadService->deleteFile($file);
+
             return new JsonResponse(['success' => true]);
         } catch (\Exception $e) {
+            $this->logger->error('File deletion failed', [
+                'file_id' => $id,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return new JsonResponse(['success' => false, 'error' => 'Failed to delete file'], 500);
         }
     }
-    
+
     #[Route('/delete-legacy/{filename}', name: 'app_file_delete_legacy', methods: ['DELETE'])]
     public function deleteLegacy(string $filename): JsonResponse
     {
+        // Validate filename to prevent path traversal
+        if (str_contains($filename, '..') || str_contains($filename, '/') || str_contains($filename, '\\')) {
+            return new JsonResponse(['success' => false, 'error' => 'Invalid filename'], 400);
+        }
+
+        $safeFilename = basename($filename);
+        if ($safeFilename !== $filename || empty($safeFilename)) {
+            return new JsonResponse(['success' => false, 'error' => 'Invalid filename'], 400);
+        }
+
         $projectDir = $this->getParameter('kernel.project_dir');
-        if (!is_string($projectDir)) {
+        if (! is_string($projectDir)) {
             throw new \RuntimeException('Project directory parameter must be a string');
         }
-        $uploadPath = $projectDir . '/var/uploads';
-        $filePath = $uploadPath . '/' . $filename;
-        
-        if (!file_exists($filePath)) {
+
+        $uploadPath = realpath($projectDir.'/var/uploads');
+        if (false === $uploadPath) {
+            return new JsonResponse(['success' => false, 'error' => 'Upload directory not found'], 500);
+        }
+
+        $filePath = $uploadPath.DIRECTORY_SEPARATOR.$safeFilename;
+        $realFilePath = realpath($filePath);
+
+        if (false === $realFilePath || ! str_starts_with($realFilePath, $uploadPath.DIRECTORY_SEPARATOR)) {
             return new JsonResponse(['success' => false, 'error' => 'File not found'], 404);
         }
-        
-        if (unlink($filePath)) {
+
+        if (! file_exists($realFilePath)) {
+            return new JsonResponse(['success' => false, 'error' => 'File not found'], 404);
+        }
+
+        if (unlink($realFilePath)) {
             return new JsonResponse(['success' => true]);
         }
-        
+
+        $this->logger->error('Failed to delete legacy file', [
+            'filename' => $safeFilename,
+            'path' => $realFilePath,
+        ]);
+
         return new JsonResponse(['success' => false, 'error' => 'Failed to delete file'], 500);
     }
-    
+
     #[Route('/preview/{filename}', name: 'app_file_preview', methods: ['GET'])]
     public function preview(string $filename): Response
     {
-        $projectDir = $this->getParameter('kernel.project_dir');
-        if (!is_string($projectDir)) {
-            throw new \RuntimeException('Project directory parameter must be a string');
-        }
-        $uploadPath = $projectDir . '/var/uploads';
-        $filePath = $uploadPath . '/' . $filename;
-        
-        if (!file_exists($filePath)) {
+        // Ensure filename is a string and normalize it
+        if (! is_string($filename) || empty($filename)) {
             return new Response('<p class="text-red-500">File not found</p>');
         }
-        
-        $mimeType = mime_content_type($filePath);
-        $fileContents = file_get_contents($filePath);
-        
-        if ($fileContents === false) {
+
+        // Reject filenames containing directory separators or traversal patterns
+        if (str_contains($filename, '..') || str_contains($filename, '/') || str_contains($filename, '\\')) {
+            return new Response('<p class="text-red-500">File not found</p>');
+        }
+
+        // Use basename to strip any directory components
+        $safeFilename = basename($filename);
+        if ($safeFilename !== $filename) {
+            return new Response('<p class="text-red-500">File not found</p>');
+        }
+
+        $projectDir = $this->getParameter('kernel.project_dir');
+        if (! is_string($projectDir)) {
+            throw new \RuntimeException('Project directory parameter must be a string');
+        }
+
+        // Build the uploads directory path and resolve it
+        $uploadsDir = $projectDir.'/var/uploads';
+        $uploadPath = realpath($uploadsDir);
+        if (false === $uploadPath) {
+            return new Response('<p class="text-red-500">File not found</p>');
+        }
+
+        // Build full path by joining uploads directory with sanitized filename
+        $filePath = $uploadPath.DIRECTORY_SEPARATOR.$safeFilename;
+        $realFilePath = realpath($filePath);
+
+        // Verify the resolved path starts with the uploads directory realpath
+        if (false === $realFilePath || ! str_starts_with($realFilePath, $uploadPath.DIRECTORY_SEPARATOR)) {
+            return new Response('<p class="text-red-500">File not found</p>');
+        }
+
+        if (! file_exists($realFilePath)) {
+            return new Response('<p class="text-red-500">File not found</p>');
+        }
+
+        $mimeType = mime_content_type($realFilePath);
+        $fileContents = file_get_contents($realFilePath);
+
+        if (false === $fileContents) {
             return new Response('<p class="text-red-500">File could not be read</p>');
         }
-        
+
         $mimeTypeString = $mimeType ?: '';
-        
-        if ($mimeTypeString === 'text/markdown' || str_ends_with($filename, '.md')) {
+
+        if ('text/markdown' === $mimeTypeString || str_ends_with($safeFilename, '.md')) {
             // Basic markdown rendering (you may want to use a proper markdown parser)
             $content = htmlspecialchars($fileContents);
-            $content = '<pre class="whitespace-pre-wrap text-sm font-mono bg-gray-50 p-4 rounded border">' . $content . '</pre>';
+            $content = '<pre class="whitespace-pre-wrap text-sm font-mono bg-gray-50 p-4 rounded border">'.$content.'</pre>';
         } elseif (str_starts_with($mimeTypeString, 'text/')) {
             $content = htmlspecialchars($fileContents);
-            $content = '<pre class="whitespace-pre-wrap text-sm font-mono bg-gray-50 p-4 rounded border">' . $content . '</pre>';
+            $content = '<pre class="whitespace-pre-wrap text-sm font-mono bg-gray-50 p-4 rounded border">'.$content.'</pre>';
         } else {
             $content = '<p class="text-gray-500">Preview not available for this file type</p>';
         }
-        
+
         return new Response($content);
     }
-    
+
     private function validateFile(UploadedFile $file): array
     {
         if ($file->getSize() > self::MAX_FILE_SIZE) {
             return [
                 'valid' => false,
-                'error' => 'File size exceeds 10MB limit'
+                'error' => 'File size exceeds 10MB limit',
             ];
         }
-        
-        if (!in_array($file->getMimeType(), self::ALLOWED_MIME_TYPES, true)) {
+
+        if (! in_array($file->getMimeType(), self::ALLOWED_MIME_TYPES, true)) {
             return [
                 'valid' => false,
-                'error' => 'File type not allowed'
+                'error' => 'File type not allowed',
             ];
         }
-        
+
         return ['valid' => true];
     }
-    
+
+    private function checkFileAccess(File $file, ?User $user): void
+    {
+        if (! $user) {
+            throw new AccessDeniedHttpException('Authentication required');
+        }
+
+        $entityType = $file->getEntityType();
+        $entityId = $file->getEntityId();
+
+        if ('project' === $entityType) {
+            $project = $this->projectRepository->find($entityId);
+            if (! $project || $project->getUser() !== $user) {
+                throw new AccessDeniedHttpException('Access denied to this file');
+            }
+        } elseif ('task' === $entityType) {
+            $task = $this->taskRepository->find($entityId);
+            if (! $task) {
+                throw new AccessDeniedHttpException('Access denied to this file');
+            }
+            $project = $task->getProject();
+            if (! $project || $project->getUser() !== $user) {
+                throw new AccessDeniedHttpException('Access denied to this file');
+            }
+        } else {
+            throw new AccessDeniedHttpException('Invalid file entity type');
+        }
+    }
 }

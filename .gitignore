@@ -56,7 +56,6 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
 yarn.lock
 
 # Environment files
@@ -96,3 +95,7 @@ CLAUDE.md
 
 # Playwright MCP
 .playwright-mcp/
+
+# PID files
+.server.pid
+backend/.server.pid

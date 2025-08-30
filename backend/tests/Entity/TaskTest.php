@@ -3,6 +3,7 @@
 namespace App\Tests\Entity;
 
 use App\Entity\Task;
+use App\Enum\TaskStatusEnum;
 use App\Tests\AbstractKernelTestCase;
 
 class TaskTest extends AbstractKernelTestCase
@@ -15,7 +16,7 @@ class TaskTest extends AbstractKernelTestCase
         $task = new Task();
         $task->setTitle('Test Task');
         $task->setDescription('This is a test task');
-        $task->setStatus('pending');
+        $task->setStatus(TaskStatusEnum::TODO);
         $task->setProject($project);
 
         $this->entityManager->persist($task);
@@ -24,7 +25,7 @@ class TaskTest extends AbstractKernelTestCase
         $this->assertNotNull($task->getId());
         $this->assertEquals('Test Task', $task->getTitle());
         $this->assertEquals('This is a test task', $task->getDescription());
-        $this->assertEquals('pending', $task->getStatus());
+        $this->assertEquals(TaskStatusEnum::TODO, $task->getStatus());
         $this->assertEquals($project, $task->getProject());
         $this->assertInstanceOf(\DateTimeInterface::class, $task->getCreatedAt());
         $this->assertInstanceOf(\DateTimeInterface::class, $task->getUpdatedAt());
@@ -35,7 +36,7 @@ class TaskTest extends AbstractKernelTestCase
         $task = new Task();
         $task->setTitle('Test Task');
         $task->setDescription('This is a test task');
-        $task->setStatus('pending');
+        $task->setStatus(TaskStatusEnum::TODO);
         // Not setting project - this should fail
 
         $this->entityManager->persist($task);
@@ -49,11 +50,18 @@ class TaskTest extends AbstractKernelTestCase
         $user = $this->createTestUser();
         $project = $this->createTestProject($user);
 
-        $validStatuses = ['pending', 'in_progress', 'completed', 'cancelled'];
+        $validStatuses = [
+            TaskStatusEnum::BACKLOG,
+            TaskStatusEnum::TODO,
+            TaskStatusEnum::IN_PROGRESS,
+            TaskStatusEnum::REVIEW,
+            TaskStatusEnum::COMPLETED,
+            TaskStatusEnum::OBSOLETE,
+        ];
 
         foreach ($validStatuses as $status) {
             $task = new Task();
-            $task->setTitle("Test Task - {$status}");
+            $task->setTitle("Test Task - {$status->value}");
             $task->setDescription('Testing status validation');
             $task->setStatus($status);
             $task->setProject($project);
@@ -115,13 +123,13 @@ class TaskTest extends AbstractKernelTestCase
         $task = $this->createTestTask($project, [
             'title' => 'Properties Test',
             'description' => 'Testing task properties',
-            'status' => 'in_progress',
+            'status' => TaskStatusEnum::IN_PROGRESS,
         ]);
 
         $this->assertNotNull($task->getId());
         $this->assertEquals('Properties Test', $task->getTitle());
         $this->assertEquals('Testing task properties', $task->getDescription());
-        $this->assertEquals('in_progress', $task->getStatus());
+        $this->assertEquals(TaskStatusEnum::IN_PROGRESS, $task->getStatus());
         $this->assertEquals($project, $task->getProject());
         $this->assertInstanceOf(\DateTimeInterface::class, $task->getCreatedAt());
         $this->assertInstanceOf(\DateTimeInterface::class, $task->getUpdatedAt());

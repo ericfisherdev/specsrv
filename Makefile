@@ -1,6 +1,6 @@
 # SpecSrv - Task Management System Makefile
 
-.PHONY: help install start stop restart build clean test lint fix-cs analyze db-create db-migrate db-seed db-reset docker-build docker-up docker-down docker-logs dev prod
+.PHONY: help install start stop restart build clean test lint fix-cs analyze db-create db-migrate db-seed db-reset docker-build docker-up docker-down docker-logs dev prod devup devdown
 
 # Colors for output
 YELLOW := \033[33m
@@ -23,15 +23,24 @@ install: ## Install project dependencies
 # Development Commands
 start: ## Start development server
 	@echo "$(YELLOW)Starting development server...$(RESET)"
-	cd backend && symfony server:start -d
+	cd backend && php -S localhost:8000 -t public/ > /dev/null 2>&1 & echo $$! > .server.pid
 	@echo "$(GREEN)Development server started at http://localhost:8000$(RESET)"
 
 stop: ## Stop development server
 	@echo "$(YELLOW)Stopping development server...$(RESET)"
-	cd backend && symfony server:stop
+	@if [ -f backend/.server.pid ]; then \
+		kill `cat backend/.server.pid` 2>/dev/null || true; \
+		rm -f backend/.server.pid; \
+	else \
+		pkill -f "php -S localhost:8000" 2>/dev/null || true; \
+	fi
 	@echo "$(GREEN)Development server stopped$(RESET)"
 
 restart: stop start ## Restart development server
+
+devup: start ## Alias for starting development server (same as start)
+
+devdown: stop ## Alias for stopping development server (same as stop)
 
 # Code Quality
 test: ## Run all tests

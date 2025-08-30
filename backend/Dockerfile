@@ -2,7 +2,7 @@
 # Optimized for production deployment with minimal image size
 
 # Stage 1: Frontend Assets Build
-FROM node:20-alpine as frontend
+FROM node:20-alpine AS frontend
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ COPY tailwind.config.js ./
 RUN npm run build
 
 # Stage 2: Composer dependencies
-FROM composer:2.7 as composer
+FROM composer:2.7 AS composer
 
 WORKDIR /app
 
@@ -44,13 +44,14 @@ COPY . .
 RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 
 # Stage 3: PHP Runtime with Nginx
-FROM php:8.2-fpm-alpine as runtime
+FROM php:8.2-fpm-alpine AS runtime
 
 # Install system dependencies and PHP extensions
 RUN apk add --no-cache \
     nginx \
     supervisor \
     sqlite \
+    sqlite-dev \
     curl \
     && docker-php-ext-install \
     pdo \
@@ -116,16 +117,19 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 # Stage 4: Development image (extends runtime)
-FROM runtime as development
+FROM runtime AS development
 
 # Switch back to root for installations
 USER root
 
-# Install development dependencies
+# Install development dependencies including build tools for Xdebug
 RUN apk add --no-cache \
     git \
     unzip \
-    curl
+    curl \
+    autoconf \
+    g++ \
+    make
 
 # Install Xdebug for development
 RUN pecl install xdebug \
@@ -146,7 +150,7 @@ ENV APP_ENV=dev
 ENV APP_DEBUG=1
 
 # Stage 5: Testing image (extends development)
-FROM development as testing
+FROM development AS testing
 
 # Switch to root for test setup
 USER root

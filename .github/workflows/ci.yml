@@ -120,7 +120,7 @@ jobs:
     - name: Build Docker image
       working-directory: backend
       run: |
-        docker build -t specsrv-backend:test .
+        docker build --target runtime -t specsrv-backend:test .
 
     - name: Test Docker image
       working-directory: backend

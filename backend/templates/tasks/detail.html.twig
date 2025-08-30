@@ -70,18 +70,9 @@
         <!-- Status Badge -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                {% if task.status == 'completed' or task.status == 'done' %}
-                    bg-green-100 text-green-800
-                {% elseif task.status == 'in_progress' or task.status == 'working' %}
-                    bg-blue-100 text-blue-800
-                {% elseif task.status == 'review' %}
-                    bg-purple-100 text-purple-800
-                {% else %}
-                    bg-gray-100 text-gray-800
-                {% endif %}
-            ">
-                {{ task.status|replace({'_': ' '})|title }}
+            {% set statusEnum = task.status %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-{{ statusEnum.color }}-100 text-{{ statusEnum.color }}-800">
+                {{ statusEnum.label }}
             </span>
         </div>
 

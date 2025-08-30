@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Project;
 use App\Entity\Task;
 use App\Entity\User;
+use App\Enum\TaskStatusEnum;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -22,7 +23,7 @@ class TaskService
         Project $project,
         string $title,
         ?string $description = null,
-        string $status = Task::STATUS_TODO
+        TaskStatusEnum $status = TaskStatusEnum::TODO
     ): Task {
         $task = new Task();
         $task->setProject($project);
@@ -55,7 +56,8 @@ class TaskService
         }
 
         if (isset($data['status']) && in_array($data['status'], Task::getAvailableStatuses())) {
-            $task->setStatus($data['status']);
+            $statusEnum = TaskStatusEnum::from($data['status']);
+            $task->setStatus($statusEnum);
         }
 
         $errors = $this->validator->validate($task);
@@ -66,12 +68,8 @@ class TaskService
         $this->entityManager->flush();
     }
 
-    public function updateTaskStatus(Task $task, string $status): void
+    public function updateTaskStatus(Task $task, TaskStatusEnum $status): void
     {
-        if (! in_array($status, Task::getAvailableStatuses())) {
-            throw new \InvalidArgumentException('Invalid task status: '.$status);
-        }
-
         $task->setStatus($status);
         $this->entityManager->flush();
     }
@@ -99,27 +97,38 @@ class TaskService
         return $project && $project->getUser() === $user;
     }
 
-    public function getTasksByStatus(Project $project, string $status): array
+    public function getTasksByStatus(Project $project, TaskStatusEnum $status): array
     {
-        return $this->taskRepository->findByProjectAndStatus($project, $status);
+        return $this->taskRepository->findByProjectAndStatus($project, $status->value);
     }
 
     public function getTaskStatistics(Project $project): array
     {
-        $totalTasks = count($this->getTasksForProject($project));
-        $todoTasks = count($this->getTasksByStatus($project, Task::STATUS_TODO));
-        $inProgressTasks = count($this->getTasksByStatus($project, Task::STATUS_IN_PROGRESS));
-        $completedTasks = count($this->getTasksByStatus($project, Task::STATUS_COMPLETED));
-        $cancelledTasks = count($this->getTasksByStatus($project, Task::STATUS_CANCELLED));
+        $activeTasks = $this->getActiveTasksForProject($project);
+        $totalActiveTasks = count($activeTasks);
+        $backlogTasks = count($this->getTasksByStatus($project, TaskStatusEnum::BACKLOG));
+        $todoTasks = count($this->getTasksByStatus($project, TaskStatusEnum::TODO));
+        $inProgressTasks = count($this->getTasksByStatus($project, TaskStatusEnum::IN_PROGRESS));
+        $reviewTasks = count($this->getTasksByStatus($project, TaskStatusEnum::REVIEW));
+        $completedTasks = count($this->getTasksByStatus($project, TaskStatusEnum::COMPLETED));
+        $obsoleteTasks = count($this->getTasksByStatus($project, TaskStatusEnum::OBSOLETE));
 
         return [
-            'total' => $totalTasks,
+            'total_active' => $totalActiveTasks,
+            'total_all' => $totalActiveTasks + $obsoleteTasks,
+            'backlog' => $backlogTasks,
             'todo' => $todoTasks,
             'in_progress' => $inProgressTasks,
+            'review' => $reviewTasks,
             'completed' => $completedTasks,
-            'cancelled' => $cancelledTasks,
-            'completion_rate' => $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 2) : 0,
+            'obsolete' => $obsoleteTasks,
+            'completion_rate' => $totalActiveTasks > 0 ? round(($completedTasks / $totalActiveTasks) * 100, 2) : 0,
         ];
+    }
+
+    public function getActiveTasksForProject(Project $project): array
+    {
+        return $this->taskRepository->findActiveByProject($project);
     }
 
     private function formatValidationErrors(\Symfony\Component\Validator\ConstraintViolationListInterface $errors): string

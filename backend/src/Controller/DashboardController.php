@@ -12,7 +12,7 @@ class DashboardController extends AbstractController
     public function dashboard(): Response
     {
         // Check if user is authenticated
-        if (!$this->getUser()) {
+        if (! $this->getUser()) {
             return $this->redirectToRoute('app_login');
         }
 

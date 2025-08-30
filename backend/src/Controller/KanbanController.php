@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Task;
+use App\Entity\User;
+use App\Enum\TaskStatusEnum;
 use App\Repository\ProjectRepository;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,21 +31,15 @@ class KanbanController extends AbstractController
         $projectId = $request->query->get('project');
         $projectIdString = is_string($projectId) ? $projectId : null;
         $projects = $this->projectRepository->findAll();
-        
+
         // Get tasks grouped by status
         $tasksByStatus = $this->getTasksByStatus($projectIdString);
-        
+
         return $this->render('kanban/index.html.twig', [
             'projects' => $projects,
             'selectedProject' => $projectId,
             'tasksByStatus' => $tasksByStatus,
-            'statuses' => [
-                'backlog' => ['label' => 'Backlog', 'color' => 'gray'],
-                Task::STATUS_TODO => ['label' => 'Todo', 'color' => 'blue'],
-                Task::STATUS_IN_PROGRESS => ['label' => 'Working', 'color' => 'yellow'],
-                'review' => ['label' => 'Review', 'color' => 'purple'],
-                Task::STATUS_COMPLETED => ['label' => 'Done', 'color' => 'green'],
-            ]
+            'statuses' => $this->getStatusConfig(),
         ]);
     }
 
@@ -56,16 +52,28 @@ class KanbanController extends AbstractController
         $taskId = $data['taskId'] ?? null;
         $newStatus = $data['status'] ?? null;
 
-        if (!$taskId || !$newStatus) {
+        if (! $taskId || ! $newStatus) {
             return new JsonResponse(['error' => 'Invalid request'], 400);
         }
 
         $task = $this->taskRepository->find($taskId);
-        if (!$task) {
+        if (! $task) {
             return new JsonResponse(['error' => 'Task not found'], 404);
         }
 
-        $task->setStatus($newStatus);
+        // Check ownership - verify task belongs to current user
+        $currentUser = $this->getUser();
+        if (! $currentUser instanceof User || ! $task->getProject() || $task->getProject()->getUser() !== $currentUser) {
+            return new JsonResponse(['error' => 'Access denied'], 403);
+        }
+
+        // Validate status with safer enum handling
+        $statusEnum = TaskStatusEnum::tryFrom($newStatus);
+        if (! $statusEnum) {
+            return new JsonResponse(['error' => 'Invalid status'], 400);
+        }
+
+        $task->setStatus($statusEnum);
         $this->entityManager->flush();
 
         return new JsonResponse(['success' => true]);
@@ -85,25 +93,36 @@ class KanbanController extends AbstractController
 
     private function getTasksByStatus(?string $projectId): array
     {
+        $currentUser = $this->getUser();
+        if (! $currentUser instanceof User) {
+            return [];
+        }
+
         $queryBuilder = $this->taskRepository->createQueryBuilder('t')
             ->leftJoin('t.project', 'p')
-            ->addSelect('p');
+            ->leftJoin('p.user', 'u')  // Join project owner
+            ->addSelect('p')
+            ->addSelect('u')
+            ->where('t.status != :obsolete')
+            ->andWhere('u.id = :userId')  // Filter by project owner
+            ->setParameter('obsolete', TaskStatusEnum::OBSOLETE->value)
+            ->setParameter('userId', $currentUser->getId());
 
         if ($projectId) {
-            $queryBuilder->where('p.id = :projectId')
+            $queryBuilder->andWhere('p.id = :projectId')
                 ->setParameter('projectId', $projectId);
         }
 
         // Order by priority to ensure highest priority tasks are selected first
         // when limiting to 6 per project
         $queryBuilder->orderBy(
-            "CASE 
+            'CASE 
                 WHEN t.priority = :critical THEN 1
                 WHEN t.priority = :high THEN 2
                 WHEN t.priority = :medium THEN 3
                 WHEN t.priority = :low THEN 4
                 ELSE 5
-            END",
+            END',
             'ASC'
         )
         ->setParameter('critical', Task::PRIORITY_CRITICAL)
@@ -116,30 +135,30 @@ class KanbanController extends AbstractController
 
         // Group tasks by status
         $tasksByStatus = [
-            'backlog' => [],
-            Task::STATUS_TODO => [],
-            Task::STATUS_IN_PROGRESS => [],
-            'review' => [],
-            Task::STATUS_COMPLETED => [],
+            TaskStatusEnum::BACKLOG->value => [],
+            TaskStatusEnum::TODO->value => [],
+            TaskStatusEnum::IN_PROGRESS->value => [],
+            TaskStatusEnum::REVIEW->value => [],
+            TaskStatusEnum::COMPLETED->value => [],
         ];
 
         $projectTaskCount = [];
 
         foreach ($tasks as $task) {
-            $status = $task->getStatus();
+            $status = $task->getStatusValue();
             $taskProjectId = $task->getProject() ? $task->getProject()->getId() : null;
-            
+
             // If no specific project is selected, limit to 6 highest priority tasks per project
-            if (!$projectId && $taskProjectId) {
-                if (!isset($projectTaskCount[$taskProjectId])) {
+            if (! $projectId && $taskProjectId) {
+                if (! isset($projectTaskCount[$taskProjectId])) {
                     $projectTaskCount[$taskProjectId] = 0;
                 }
-                
+
                 if ($projectTaskCount[$taskProjectId] >= 6) {
                     continue;
                 }
-                
-                $projectTaskCount[$taskProjectId]++;
+
+                ++$projectTaskCount[$taskProjectId];
             }
 
             if (isset($tasksByStatus[$status])) {
@@ -147,6 +166,7 @@ class KanbanController extends AbstractController
                     'id' => $task->getId(),
                     'title' => $task->getTitle(),
                     'description' => $task->getDescription(),
+                    'status' => $status,
                     'priority' => $task->getPriority(),
                     'priority_value' => $this->getPriorityValue($task->getPriority()),
                     'project' => $task->getProject() ? [
@@ -169,5 +189,18 @@ class KanbanController extends AbstractController
             Task::PRIORITY_LOW => 4,
             default => 5,
         };
+    }
+
+    private function getStatusConfig(): array
+    {
+        $config = [];
+        foreach (TaskStatusEnum::getActiveStatuses() as $status) {
+            $config[$status->value] = [
+                'label' => $status->getLabel(),
+                'color' => $status->getColor(),
+            ];
+        }
+
+        return $config;
     }
 }

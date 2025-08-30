@@ -25,12 +25,14 @@ class ApiKeyAuthenticator extends AbstractAuthenticator
 
     public function supports(Request $request): ?bool
     {
-        return $request->headers->has('X-API-Key') || $request->query->has('api_key');
+        // Only support this authenticator if API key is provided via header
+        // Removed query parameter support to prevent secret leakage via logs, caches, and Referer headers
+        return $request->headers->has('X-API-Key');
     }
 
     public function authenticate(Request $request): Passport
     {
-        $apiKey = $request->headers->get('X-API-Key') ?? $request->query->get('api_key');
+        $apiKey = $request->headers->get('X-API-Key');
 
         if (null === $apiKey || ! is_string($apiKey)) {
             throw new CustomUserMessageAuthenticationException('No API key provided');

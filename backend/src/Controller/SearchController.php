@@ -56,7 +56,7 @@ class SearchController extends AbstractController
 
         // Get filter options for the form
         $userProjects = $this->projectRepository->findByUser($user);
-        
+
         return $this->render('search/results.html.twig', [
             'query' => $query,
             'tasks' => $tasks,
@@ -67,11 +67,11 @@ class SearchController extends AbstractController
             'statuses' => ['backlog', 'todo', 'in_progress', 'review', 'completed'],
             'date_ranges' => [
                 'today' => 'Today',
-                'week' => 'This Week', 
+                'week' => 'This Week',
                 'month' => 'This Month',
                 'quarter' => 'This Quarter',
-                'year' => 'This Year'
-            ]
+                'year' => 'This Year',
+            ],
         ]);
     }
 
@@ -83,7 +83,7 @@ class SearchController extends AbstractController
         assert($user instanceof User);
 
         $data = $request->request->all();
-        
+
         $searchCriteria = [
             'query' => trim((string) ($data['query'] ?? '')),
             'project_id' => $data['project_id'] ?? null,
@@ -94,12 +94,12 @@ class SearchController extends AbstractController
 
         // Get filtered results
         $tasks = $this->taskRepository->searchWithFilters($user, $searchCriteria);
-        
+
         // Transform tasks for JSON response
         $tasksData = array_map(function ($task) {
             $project = $task->getProject();
             $createdAt = $task->getCreatedAt();
-            
+
             return [
                 'id' => $task->getId(),
                 'title' => $task->getTitle(),
@@ -109,14 +109,14 @@ class SearchController extends AbstractController
                 'project' => $project ? $project->getTitle() : 'No Project',
                 'project_id' => $project ? $project->getId() : null,
                 'created_at' => $createdAt ? $createdAt->format('Y-m-d H:i:s') : 'Unknown',
-                'url' => $this->generateUrl('app_task_detail', ['id' => $task->getId()])
+                'url' => $this->generateUrl('app_task_detail', ['id' => $task->getId()]),
             ];
         }, $tasks);
 
         return new JsonResponse([
             'success' => true,
             'tasks' => $tasksData,
-            'count' => count($tasksData)
+            'count' => count($tasksData),
         ]);
     }
 }

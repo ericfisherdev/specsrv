@@ -39,25 +39,25 @@ class GitLinkApiController extends BaseApiController
         }
 
         $taskId = $data['task_id'] ?? null;
-        if (!$taskId) {
+        if (! $taskId) {
             return $this->errorResponse('Task ID is required', 'TASK_ID_REQUIRED', null, 400);
         }
 
         $task = $this->taskRepository->find($taskId);
-        if (!$task) {
+        if (! $task) {
             return $this->errorResponse('Task not found', 'TASK_NOT_FOUND', null, 404);
         }
 
         // Check if user owns the task's project
         $project = $task->getProject();
-        if (!$project || $project->getUser() !== $user) {
+        if (! $project || $project->getUser() !== $user) {
             return $this->errorResponse('Access denied', 'ACCESS_DENIED', null, 403);
         }
 
         $commitHash = $data['commit_hash'] ?? null;
         $prReference = $data['pr_reference'] ?? null;
 
-        if (!$commitHash && !$prReference) {
+        if (! $commitHash && ! $prReference) {
             return $this->errorResponse('Either commit hash or PR reference is required', 'INVALID_DATA', null, 400);
         }
 
@@ -89,14 +89,14 @@ class GitLinkApiController extends BaseApiController
         assert($user instanceof User);
 
         $gitLink = $this->gitLinkRepository->find($id);
-        if (!$gitLink) {
+        if (! $gitLink) {
             return $this->errorResponse('Git link not found', 'GIT_LINK_NOT_FOUND', null, 404);
         }
 
         // Check if user owns the git link's task's project
         $task = $gitLink->getTask();
         $project = $task?->getProject();
-        if (!$task || !$project || $project->getUser() !== $user) {
+        if (! $task || ! $project || $project->getUser() !== $user) {
             return $this->errorResponse('Access denied', 'ACCESS_DENIED', null, 403);
         }
 
@@ -114,14 +114,14 @@ class GitLinkApiController extends BaseApiController
         assert($user instanceof User);
 
         $gitLink = $this->gitLinkRepository->find($id);
-        if (!$gitLink) {
+        if (! $gitLink) {
             return $this->errorResponse('Git link not found', 'GIT_LINK_NOT_FOUND', null, 404);
         }
 
         // Check if user owns the git link's task's project
         $task = $gitLink->getTask();
         $project = $task?->getProject();
-        if (!$task || !$project || $project->getUser() !== $user) {
+        if (! $task || ! $project || $project->getUser() !== $user) {
             return $this->errorResponse('Access denied', 'ACCESS_DENIED', null, 403);
         }
 
