@@ -56,7 +56,7 @@ class TaskTest extends AbstractKernelTestCase
             TaskStatusEnum::IN_PROGRESS,
             TaskStatusEnum::REVIEW,
             TaskStatusEnum::COMPLETED,
-            TaskStatusEnum::OBSOLETE
+            TaskStatusEnum::OBSOLETE,
         ];
 
         foreach ($validStatuses as $status) {
