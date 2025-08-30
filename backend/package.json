@@ -24,6 +24,7 @@
         "dev-server": "encore dev-server",
         "dev": "encore dev",
         "watch": "encore dev --watch",
+        "watch-quiet": "./scripts/webpack-watch-quiet.sh",
         "build": "encore production --progress"
     },
     "name": "backend",

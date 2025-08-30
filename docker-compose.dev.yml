@@ -1,0 +1,79 @@
+services:
+  # Main PHP application with hot reloading support
+  specsrv-app-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.new
+      target: development
+    container_name: specsrv-app-dev
+    ports:
+      - "8001:8080"  # PHP application port
+    environment:
+      - APP_ENV=dev
+      - APP_DEBUG=1
+      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/db.sqlite
+      - TRUSTED_PROXIES=127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+    volumes:
+      # Mount source code for hot reloading
+      - ./backend:/app
+      # Persistent data volumes
+      - specsrv-dev-data:/app/var/data
+      - specsrv-dev-logs:/app/var/log
+      - specsrv-dev-uploads:/app/var/uploads
+      # Exclude node_modules and vendor to avoid conflicts
+      - /app/node_modules
+      - /app/vendor
+    networks:
+      - specsrv-dev-network
+    depends_on:
+      - specsrv-webpack-dev
+    healthcheck:
+      test: ["CMD", "php-fpm", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  # Webpack dev server for hot module replacement
+  specsrv-webpack-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.new
+      target: development
+    container_name: specsrv-webpack-dev
+    ports:
+      - "8000:8080"  # Webpack dev server - this will be the main development URL
+    environment:
+      - NODE_ENV=development
+      - WEBPACK_DEV_SERVER=true
+    volumes:
+      # Mount source code for hot reloading
+      - ./backend:/app
+      # Exclude node_modules to avoid conflicts
+      - /app/node_modules
+    networks:
+      - specsrv-dev-network
+    command: |
+      sh -c "
+        echo 'Installing dependencies if needed...' &&
+        npm ci &&
+        echo 'Starting webpack dev server...' &&
+        npm run dev-server
+      "
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+volumes:
+  specsrv-dev-data:
+    driver: local
+  specsrv-dev-logs:
+    driver: local
+  specsrv-dev-uploads:
+    driver: local
+
+networks:
+  specsrv-dev-network:
+    driver: bridge
+    name: specsrv-dev-network

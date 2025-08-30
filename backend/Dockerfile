@@ -37,7 +37,7 @@ RUN composer install \
     --prefer-dist \
     --optimize-autoloader
 
-# Copy application source
+# Copy application source (including all PHP files, templates, config, etc)
 COPY . .
 
 # Generate optimized autoloader
@@ -61,13 +61,9 @@ RUN apk add --no-cache \
 # Create application user
 RUN addgroup -g 1000 app && adduser -u 1000 -G app -s /bin/sh -D app
 
-# Configure PHP-FPM
+# Configure PHP-FPM to use TCP instead of socket
 RUN sed -i 's/user = www-data/user = app/g' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/group = www-data/group = app/g' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/listen = 127.0.0.1:9000/listen = \/run\/php-fpm.sock/g' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/;listen.owner = www-data/listen.owner = app/g' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/;listen.group = www-data/listen.group = app/g' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /usr/local/etc/php-fpm.d/www.conf
+    && sed -i 's/group = www-data/group = app/g' /usr/local/etc/php-fpm.d/www.conf
 
 # Configure Nginx
 COPY --chown=app:app scripts/nginx.conf /etc/nginx/nginx.conf
@@ -91,6 +87,10 @@ COPY --from=frontend --chown=app:app /app/public/build ./public/build
 COPY --chown=app:app scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/healthcheck.sh
 
+# Copy entrypoint script
+COPY --chown=app:app scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Create required directories with proper permissions
 RUN mkdir -p \
     var/cache \
@@ -99,8 +99,13 @@ RUN mkdir -p \
     var/sessions \
     var/uploads \
     public \
-    && chown -R app:app var/ \
-    && chmod -R 755 var/ \
+    /tmp/nginx_client_temp \
+    /tmp/nginx_proxy_temp \
+    /tmp/nginx_fastcgi_temp \
+    /tmp/nginx_uwsgi_temp \
+    /tmp/nginx_scgi_temp \
+    && chown -R app:app var/ /tmp/nginx_* \
+    && chmod -R 755 var/ /tmp/nginx_* \
     && chmod -R 777 var/cache var/log var/sessions var/uploads
 
 # Switch to application user
@@ -113,8 +118,8 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh readiness
 
-# Use supervisor to manage processes
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Use entrypoint script to manage processes
+CMD ["/usr/local/bin/entrypoint.sh"]
 
 # Stage 4: Development image (extends runtime)
 FROM runtime AS development
@@ -129,7 +134,8 @@ RUN apk add --no-cache \
     curl \
     autoconf \
     g++ \
-    make
+    make \
+    linux-headers
 
 # Install Xdebug for development
 RUN pecl install xdebug \
@@ -138,9 +144,12 @@ RUN pecl install xdebug \
 # Copy Xdebug configuration
 COPY --chown=app:app scripts/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
+# Copy composer binary from composer stage
+COPY --from=composer /usr/bin/composer /usr/bin/composer
+
 # Install dev composer dependencies
 COPY composer.json composer.lock ./
-RUN composer install --prefer-dist
+RUN composer install --prefer-dist --no-scripts
 
 # Switch back to app user
 USER app

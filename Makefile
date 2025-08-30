@@ -1,6 +1,6 @@
 # SpecSrv - Task Management System Makefile
 
-.PHONY: help install start stop restart build clean test lint fix-cs analyze db-create db-migrate db-seed db-reset docker-build docker-up docker-down docker-logs dev prod devup devdown
+.PHONY: help install start stop restart build clean test lint fix-cs analyze db-create db-migrate db-seed db-reset docker-build docker-up docker-down docker-logs dev prod devup devdown hot-reload hot-reload-simple hot-reload-advanced hot-reload-dev hot-reload-stop hot-reload-logs webpack-watch webpack-watch-verbose
 
 # Colors for output
 YELLOW := \033[33m
@@ -162,3 +162,118 @@ health: ## Check application health
 	@echo "$(YELLOW)Checking application health...$(RESET)"
 	@curl -s http://localhost:8080/api/health || echo "Application not responding"
 	@echo "$(GREEN)Health check completed$(RESET)"
+
+# Hot Reloading Development Environment
+hot-reload: hot-reload-simple ## Start hot reloading development (default: simple method)
+
+hot-reload-simple: ## Start simple hot reloading (production container + local webpack watch)
+	@echo "$(YELLOW)Starting simple hot reloading development...$(RESET)"
+	@echo "$(BLUE)Step 1: Starting production Docker container...$(RESET)"
+	docker-compose -f docker-compose.fixed.yml up specsrv-app -d
+	@echo "$(BLUE)Step 2: Starting webpack in watch mode...$(RESET)"
+	@echo "$(YELLOW)Note: Webpack will run in the foreground. Press Ctrl+C to stop.$(RESET)"
+	@echo "$(GREEN)🔥 Hot reloading ready!$(RESET)"
+	@echo "$(BLUE)Frontend: Auto-compiles CSS/JS on changes$(RESET)"
+	@echo "$(BLUE)Backend: PHP/Twig changes reflect immediately$(RESET)"
+	@echo "$(BLUE)URL: http://localhost:8080$(RESET)"
+	@echo ""
+	@echo "$(GREEN)=== WEBPACK WATCH OUTPUT ====$(RESET)"
+	cd backend && npm run watch-quiet
+
+hot-reload-advanced: ## Start advanced hot reloading (full dev environment with webpack dev server)
+	@echo "$(YELLOW)Starting advanced hot reloading development...$(RESET)"
+	@echo "$(BLUE)Building and starting full development environment...$(RESET)"
+	docker-compose -f docker-compose.dev.yml up -d --build
+	@echo "$(GREEN)🔥 Advanced hot reloading ready!$(RESET)"
+	@echo "$(BLUE)Main URL (Webpack Dev Server): http://localhost:8000$(RESET)"
+	@echo "$(BLUE)PHP Direct Access: http://localhost:8001$(RESET)"
+	@echo "$(BLUE)Features: Hot Module Replacement, Proxying, Source Maps$(RESET)"
+
+hot-reload-dev: ## Start development profile hot reloading
+	@echo "$(YELLOW)Starting development profile hot reloading...$(RESET)"
+	docker-compose -f docker-compose.fixed.yml --profile dev up specsrv-dev-simple -d --build
+	@echo "$(GREEN)🔥 Development profile hot reloading ready!$(RESET)"
+	@echo "$(BLUE)URL: http://localhost:8001$(RESET)"
+	@echo "$(YELLOW)Run 'make webpack-watch' in another terminal for frontend hot reloading$(RESET)"
+
+webpack-watch: ## Start webpack in watch mode (run in separate terminal)
+	@echo "$(YELLOW)Starting webpack watch mode (quiet)...$(RESET)"
+	@echo "$(BLUE)Watching for changes in assets/ directory...$(RESET)"
+	@echo "$(BLUE)Note: Using quiet mode to reduce console spam. Use 'make webpack-watch-verbose' for full output.$(RESET)"
+	@echo "$(GREEN)=== WEBPACK WATCH OUTPUT ====$(RESET)"
+	cd backend && npm run watch-quiet
+
+webpack-watch-verbose: ## Start webpack in watch mode with verbose output
+	@echo "$(YELLOW)Starting webpack watch mode (verbose)...$(RESET)"
+	@echo "$(BLUE)Watching for changes in assets/ directory...$(RESET)"
+	@echo "$(GREEN)=== WEBPACK WATCH OUTPUT (VERBOSE) ====$(RESET)"
+	cd backend && npm run watch
+
+hot-reload-stop: ## Stop all hot reloading development environments
+	@echo "$(YELLOW)Stopping hot reloading environments...$(RESET)"
+	@echo "$(BLUE)Stopping simple hot reload containers...$(RESET)"
+	-docker-compose -f docker-compose.fixed.yml down 2>/dev/null
+	@echo "$(BLUE)Stopping advanced hot reload containers...$(RESET)"
+	-docker-compose -f docker-compose.dev.yml down 2>/dev/null
+	@echo "$(BLUE)Stopping development profile containers...$(RESET)"
+	-docker-compose -f docker-compose.fixed.yml --profile dev down 2>/dev/null
+	@echo "$(BLUE)Killing any remaining webpack processes...$(RESET)"
+	-pkill -f "npm run watch" 2>/dev/null || true
+	-pkill -f "webpack" 2>/dev/null || true
+	@echo "$(GREEN)All hot reloading environments stopped$(RESET)"
+
+hot-reload-logs: ## Show logs from hot reloading containers
+	@echo "$(YELLOW)Available log options:$(RESET)"
+	@echo "$(BLUE)1. Simple method logs:$(RESET) make hot-reload-logs-simple"
+	@echo "$(BLUE)2. Advanced method logs:$(RESET) make hot-reload-logs-advanced" 
+	@echo "$(BLUE)3. Development profile logs:$(RESET) make hot-reload-logs-dev"
+
+hot-reload-logs-simple: ## Show logs from simple hot reloading setup
+	@echo "$(YELLOW)Showing simple hot reload logs...$(RESET)"
+	docker-compose -f docker-compose.fixed.yml logs -f specsrv-app
+
+hot-reload-logs-advanced: ## Show logs from advanced hot reloading setup
+	@echo "$(YELLOW)Showing advanced hot reload logs...$(RESET)"
+	docker-compose -f docker-compose.dev.yml logs -f
+
+hot-reload-logs-dev: ## Show logs from development profile hot reloading
+	@echo "$(YELLOW)Showing development profile logs...$(RESET)"
+	docker-compose -f docker-compose.fixed.yml --profile dev logs -f
+
+# Hot Reloading Help
+hot-reload-help: ## Show detailed hot reloading help
+	@echo "$(BLUE)🔥 SpecSrv Hot Reloading Guide$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)Available Methods:$(RESET)"
+	@echo "$(GREEN)1. Simple (Recommended):$(RESET)"
+	@echo "   make hot-reload-simple"
+	@echo "   - Production container + local webpack watch"
+	@echo "   - Fastest setup, most reliable"
+	@echo "   - URL: http://localhost:8080"
+	@echo ""
+	@echo "$(GREEN)2. Advanced:$(RESET)"
+	@echo "   make hot-reload-advanced"
+	@echo "   - Full webpack dev server with HMR"
+	@echo "   - Complete development environment"
+	@echo "   - URL: http://localhost:8000 (webpack dev server)"
+	@echo ""
+	@echo "$(GREEN)3. Development Profile:$(RESET)"
+	@echo "   make hot-reload-dev"
+	@echo "   - Docker development profile"
+	@echo "   - URL: http://localhost:8001"
+	@echo ""
+	@echo "$(YELLOW)Management:$(RESET)"
+	@echo "   make hot-reload-stop     # Stop all environments"
+	@echo "   make hot-reload-logs     # View logs options"
+	@echo "   make webpack-watch       # Start webpack watch separately (quiet mode)"
+	@echo "   make webpack-watch-verbose # Start webpack watch with full output"
+	@echo ""
+	@echo "$(YELLOW)Features:$(RESET)"
+	@echo "   ✅ Frontend: Auto-compile CSS/JS on file changes"
+	@echo "   ✅ Backend: PHP/Twig changes reflect immediately"
+	@echo "   ✅ Database: Persistent across restarts"
+	@echo "   ✅ Debugging: Source maps and dev tools available"
+	@echo ""
+	@echo "$(BLUE)For detailed setup instructions, see:$(RESET)"
+	@echo "   - HOT-RELOADING-SETUP.md"
+	@echo "   - DOCKER-DEV-README.md"
