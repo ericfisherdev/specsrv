@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\File;
+use App\Entity\Project;
+use App\Entity\Task;
+use App\Entity\User;
 use App\Repository\FileRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\TaskRepository;
@@ -146,7 +150,9 @@ class FileController extends AbstractController
             throw $this->createNotFoundException('File not found');
         }
 
-        $this->checkFileAccess($file, $this->getUser());
+        /** @var User|null $user */
+        $user = $this->getUser();
+        $this->checkFileAccess($file, $user);
 
         if (! $this->fileUploadService->fileExists($file)) {
             throw $this->createNotFoundException('File not found on disk');
@@ -158,10 +164,12 @@ class FileController extends AbstractController
         $response = new Response();
         $response->setContent($fileContent);
         $response->headers->set('Content-Type', $file->getType() ?: 'application/octet-stream');
+        $filename = $file->getFilename() ?? 'download';
+        $safeFilename = preg_replace('/[^\x20-\x7E]/', '', $filename) ?: 'download';
         $disposition = HeaderUtils::makeDisposition(
             HeaderUtils::DISPOSITION_ATTACHMENT,
-            $file->getFilename() ?? 'download',
-            preg_replace('/[^\x20-\x7E]/', '', $file->getFilename() ?? 'download')
+            $filename,
+            $safeFilename
         );
         $response->headers->set('Content-Disposition', $disposition);
         $response->headers->set('Content-Length', (string) $fileSize);
@@ -211,10 +219,11 @@ class FileController extends AbstractController
         $response = new Response();
         $response->setContent($fileContents);
         $response->headers->set('Content-Type', mime_content_type($realFilePath) ?: 'application/octet-stream');
+        $fallbackFilename = preg_replace('/[^\x20-\x7E]/', '', $safeFilename) ?: 'download';
         $disposition = HeaderUtils::makeDisposition(
             HeaderUtils::DISPOSITION_ATTACHMENT,
             $safeFilename,
-            preg_replace('/[^\x20-\x7E]/', '', $safeFilename)
+            $fallbackFilename
         );
         $response->headers->set('Content-Disposition', $disposition);
 
@@ -231,7 +240,9 @@ class FileController extends AbstractController
             return new JsonResponse(['success' => false, 'error' => 'File not found'], 404);
         }
 
-        $this->checkFileAccess($file, $this->getUser());
+        /** @var User|null $user */
+        $user = $this->getUser();
+        $this->checkFileAccess($file, $user);
 
         try {
             $this->fileUploadService->deleteFile($file);
@@ -370,7 +381,7 @@ class FileController extends AbstractController
         return ['valid' => true];
     }
 
-    private function checkFileAccess($file, $user): void
+    private function checkFileAccess(File $file, ?User $user): void
     {
         if (! $user) {
             throw new AccessDeniedHttpException('Authentication required');
@@ -386,7 +397,11 @@ class FileController extends AbstractController
             }
         } elseif ('task' === $entityType) {
             $task = $this->taskRepository->find($entityId);
-            if (! $task || $task->getProject()->getUser() !== $user) {
+            if (! $task) {
+                throw new AccessDeniedHttpException('Access denied to this file');
+            }
+            $project = $task->getProject();
+            if (! $project || $project->getUser() !== $user) {
                 throw new AccessDeniedHttpException('Access denied to this file');
             }
         } else {
