@@ -111,7 +111,7 @@
                 <h2 class="text-lg font-semibold {% if status == 'in_progress' %}text-blue-800{% else %}text-gray-800{% endif %}" x-show="!collapsed_{{ status|replace({'_': ''}) }}">{{ statusInfo.label }}</h2>
                 <h2 class="text-sm font-semibold {% if status == 'in_progress' %}text-blue-800{% else %}text-gray-800{% endif %} transform -rotate-90 whitespace-nowrap" x-show="collapsed_{{ status|replace({'_': ''}) }}">{{ statusInfo.label }}</h2>
                 <div class="flex items-center space-x-2">
-                    <span class="bg-{{ statusInfo.color }}-200 text-{{ statusInfo.color }}-700 text-xs px-2 py-1 rounded-full" x-show="!collapsed_{{ status|replace({'_': ''}) }}">{{ tasksByStatus[status]|length }}</span>
+                    <span class="bg-{{ statusInfo.color }}-200 text-{{ statusInfo.color }}-700 text-xs px-2 py-1 rounded-full" data-column="{{ status }}" data-column-count="{{ status }}" x-show="!collapsed_{{ status|replace({'_': ''}) }}">{{ tasksByStatus[status]|length }}</span>
                     <button @click="collapsed_{{ status|replace({'_': ''}) }} = !collapsed_{{ status|replace({'_': ''}) }}" class="text-{{ statusInfo.color }}-500 hover:text-{{ statusInfo.color }}-700">
                         <svg class="w-4 h-4 transform transition-transform" :class="collapsed_{{ status|replace({'_': ''}) }} ? 'rotate-0' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -576,11 +576,12 @@ function kanbanBoard() {
         },
         
         updateColumnCounts() {
-            // Update the count badges for each column
+            // Update the count badges for each column using stable data attributes
             for (const [status, tasks] of Object.entries(this.tasks)) {
                 const columnElement = document.querySelector(`[data-status="${status}"]`);
                 if (columnElement) {
-                    const countBadge = columnElement.parentElement.querySelector('.bg-gray-200, .bg-blue-200, .bg-green-200, .bg-yellow-200, .bg-red-200');
+                    // Search within the column element for the count badge using data attribute
+                    const countBadge = columnElement.querySelector('[data-column-count]');
                     if (countBadge) {
                         countBadge.textContent = tasks.length;
                     }

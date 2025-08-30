@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\File;
-use App\Entity\Project;
-use App\Entity\Task;
 use App\Entity\User;
 use App\Repository\FileRepository;
 use App\Repository\ProjectRepository;
@@ -123,9 +121,9 @@ class FileController extends AbstractController
                 $this->logger->error('File upload failed', [
                     'filename' => $file->getClientOriginalName(),
                     'exception' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
+                    'trace' => $e->getTraceAsString(),
                 ]);
-                
+
                 $errors[] = [
                     'filename' => $file->getClientOriginalName(),
                     'error' => 'Failed to upload file.',
@@ -194,15 +192,15 @@ class FileController extends AbstractController
         if (! is_string($projectDir)) {
             throw new \RuntimeException('Project directory parameter must be a string');
         }
-        
+
         $uploadPath = realpath($projectDir.'/var/uploads');
         if (false === $uploadPath) {
             throw $this->createNotFoundException('Upload directory not found');
         }
-        
+
         $filePath = $uploadPath.DIRECTORY_SEPARATOR.$safeFilename;
         $realFilePath = realpath($filePath);
-        
+
         if (false === $realFilePath || ! str_starts_with($realFilePath, $uploadPath.DIRECTORY_SEPARATOR)) {
             throw $this->createNotFoundException('File not found');
         }
@@ -252,9 +250,9 @@ class FileController extends AbstractController
             $this->logger->error('File deletion failed', [
                 'file_id' => $id,
                 'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return new JsonResponse(['success' => false, 'error' => 'Failed to delete file'], 500);
         }
     }
@@ -276,15 +274,15 @@ class FileController extends AbstractController
         if (! is_string($projectDir)) {
             throw new \RuntimeException('Project directory parameter must be a string');
         }
-        
+
         $uploadPath = realpath($projectDir.'/var/uploads');
         if (false === $uploadPath) {
             return new JsonResponse(['success' => false, 'error' => 'Upload directory not found'], 500);
         }
-        
+
         $filePath = $uploadPath.DIRECTORY_SEPARATOR.$safeFilename;
         $realFilePath = realpath($filePath);
-        
+
         if (false === $realFilePath || ! str_starts_with($realFilePath, $uploadPath.DIRECTORY_SEPARATOR)) {
             return new JsonResponse(['success' => false, 'error' => 'File not found'], 404);
         }
@@ -299,7 +297,7 @@ class FileController extends AbstractController
 
         $this->logger->error('Failed to delete legacy file', [
             'filename' => $safeFilename,
-            'path' => $realFilePath
+            'path' => $realFilePath,
         ]);
 
         return new JsonResponse(['success' => false, 'error' => 'Failed to delete file'], 500);
@@ -308,29 +306,39 @@ class FileController extends AbstractController
     #[Route('/preview/{filename}', name: 'app_file_preview', methods: ['GET'])]
     public function preview(string $filename): Response
     {
-        // Validate filename to prevent path traversal
-        if (str_contains($filename, '..') || str_contains($filename, '/') || str_contains($filename, '\\')) {
-            return new Response('<p class="text-red-500">Invalid filename</p>');
+        // Ensure filename is a string and normalize it
+        if (! is_string($filename) || empty($filename)) {
+            return new Response('<p class="text-red-500">File not found</p>');
         }
 
+        // Reject filenames containing directory separators or traversal patterns
+        if (str_contains($filename, '..') || str_contains($filename, '/') || str_contains($filename, '\\')) {
+            return new Response('<p class="text-red-500">File not found</p>');
+        }
+
+        // Use basename to strip any directory components
         $safeFilename = basename($filename);
-        if ($safeFilename !== $filename || empty($safeFilename)) {
-            return new Response('<p class="text-red-500">Invalid filename</p>');
+        if ($safeFilename !== $filename) {
+            return new Response('<p class="text-red-500">File not found</p>');
         }
 
         $projectDir = $this->getParameter('kernel.project_dir');
         if (! is_string($projectDir)) {
             throw new \RuntimeException('Project directory parameter must be a string');
         }
-        
-        $uploadPath = realpath($projectDir.'/var/uploads');
+
+        // Build the uploads directory path and resolve it
+        $uploadsDir = $projectDir.'/var/uploads';
+        $uploadPath = realpath($uploadsDir);
         if (false === $uploadPath) {
-            return new Response('<p class="text-red-500">Upload directory not found</p>');
+            return new Response('<p class="text-red-500">File not found</p>');
         }
-        
+
+        // Build full path by joining uploads directory with sanitized filename
         $filePath = $uploadPath.DIRECTORY_SEPARATOR.$safeFilename;
         $realFilePath = realpath($filePath);
-        
+
+        // Verify the resolved path starts with the uploads directory realpath
         if (false === $realFilePath || ! str_starts_with($realFilePath, $uploadPath.DIRECTORY_SEPARATOR)) {
             return new Response('<p class="text-red-500">File not found</p>');
         }

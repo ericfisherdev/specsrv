@@ -92,7 +92,20 @@ class Task
 
     public function getStatus(): ?TaskStatusEnum
     {
-        return $this->status ? TaskStatusEnum::from($this->status) : null;
+        if (! $this->status) {
+            return null;
+        }
+
+        // Use tryFrom to avoid fatal errors on unknown/unmigrated DB values
+        $statusEnum = TaskStatusEnum::tryFrom($this->status);
+        if (! $statusEnum) {
+            // Log unexpected values for debugging but don't throw
+            error_log('Warning: Unknown task status value: '.$this->status);
+
+            return null;
+        }
+
+        return $statusEnum;
     }
 
     public function setStatus(TaskStatusEnum $status): static

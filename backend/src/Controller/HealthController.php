@@ -144,12 +144,13 @@ class HealthController extends AbstractController
 
             foreach ($assetDirs as $type => $dir) {
                 if (is_dir($dir)) {
-                    $files = glob($dir.'/**/*', GLOB_BRACE);
-                    if (false === $files) {
-                        $files = [];
+                    try {
+                        $assetCount = $this->countFilesRecursively($dir);
+                        $totalAssets += $assetCount;
+                    } catch (\Exception $e) {
+                        // If directory is unreadable, treat it as having 0 files
+                        $totalAssets += 0;
                     }
-                    $assetCount = count(array_filter($files, 'is_file'));
-                    $totalAssets += $assetCount;
                 } else {
                     $missingAssets[] = $type;
                 }
@@ -241,6 +242,35 @@ class HealthController extends AbstractController
                 'healthy' => false,
                 'message' => 'Cache check failed: '.$e->getMessage(),
             ];
+        }
+    }
+
+    private function countFilesRecursively(string $dir): int
+    {
+        if (! is_dir($dir)) {
+            return 0;
+        }
+
+        try {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::LEAVES_ONLY
+            );
+
+            $count = 0;
+            foreach ($iterator as $fileInfo) {
+                if ($fileInfo->isFile()) {
+                    // Optionally skip dotfiles
+                    if (! str_starts_with($fileInfo->getFilename(), '.')) {
+                        ++$count;
+                    }
+                }
+            }
+
+            return $count;
+        } catch (\Exception $e) {
+            // Return 0 for unreadable directories or other errors
+            return 0;
         }
     }
 }

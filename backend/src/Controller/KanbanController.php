@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Task;
+use App\Entity\User;
 use App\Enum\TaskStatusEnum;
 use App\Repository\ProjectRepository;
 use App\Repository\TaskRepository;
@@ -60,7 +61,18 @@ class KanbanController extends AbstractController
             return new JsonResponse(['error' => 'Task not found'], 404);
         }
 
-        $statusEnum = TaskStatusEnum::from($newStatus);
+        // Check ownership - verify task belongs to current user
+        $currentUser = $this->getUser();
+        if (! $currentUser instanceof User || ! $task->getProject() || $task->getProject()->getUser() !== $currentUser) {
+            return new JsonResponse(['error' => 'Access denied'], 403);
+        }
+
+        // Validate status with safer enum handling
+        $statusEnum = TaskStatusEnum::tryFrom($newStatus);
+        if (! $statusEnum) {
+            return new JsonResponse(['error' => 'Invalid status'], 400);
+        }
+
         $task->setStatus($statusEnum);
         $this->entityManager->flush();
 
@@ -81,11 +93,20 @@ class KanbanController extends AbstractController
 
     private function getTasksByStatus(?string $projectId): array
     {
+        $currentUser = $this->getUser();
+        if (! $currentUser instanceof User) {
+            return [];
+        }
+
         $queryBuilder = $this->taskRepository->createQueryBuilder('t')
             ->leftJoin('t.project', 'p')
+            ->leftJoin('p.user', 'u')  // Join project owner
             ->addSelect('p')
+            ->addSelect('u')
             ->where('t.status != :obsolete')
-            ->setParameter('obsolete', TaskStatusEnum::OBSOLETE->value);
+            ->andWhere('u.id = :userId')  // Filter by project owner
+            ->setParameter('obsolete', TaskStatusEnum::OBSOLETE->value)
+            ->setParameter('userId', $currentUser->getId());
 
         if ($projectId) {
             $queryBuilder->andWhere('p.id = :projectId')

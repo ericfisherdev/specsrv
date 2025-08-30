@@ -54,7 +54,12 @@ class TaskController extends AbstractController
         $task->setDescription($description);
         $task->setProject($project);
         $task->setPriority($priority);
-        $statusEnum = TaskStatusEnum::from($status);
+
+        // Validate status with safer enum handling
+        $statusEnum = TaskStatusEnum::tryFrom($status);
+        if (! $statusEnum) {
+            return $this->json(['error' => 'Invalid status'], 400);
+        }
         $task->setStatus($statusEnum);
 
         $violations = $this->validator->validate($task);
@@ -162,7 +167,12 @@ class TaskController extends AbstractController
             $task->setTitle($title);
             $task->setDescription($description);
             $task->setPriority($priority);
-            $statusEnum = TaskStatusEnum::from($status);
+
+            // Validate status with safer enum handling
+            $statusEnum = TaskStatusEnum::tryFrom($status);
+            if (! $statusEnum) {
+                return $this->json(['error' => 'Invalid status'], 400);
+            }
             $task->setStatus($statusEnum);
 
             $violations = $this->validator->validate($task);
