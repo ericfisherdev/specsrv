@@ -25,6 +25,8 @@ class ApiKeyAuthenticator extends AbstractAuthenticator
 
     public function supports(Request $request): ?bool
     {
+        // Only support this authenticator if API key is provided
+        // If no API key is provided, fall back to session authentication
         return $request->headers->has('X-API-Key') || $request->query->has('api_key');
     }
 

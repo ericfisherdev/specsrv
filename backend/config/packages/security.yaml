@@ -19,7 +19,9 @@ security:
         
         api:
             pattern: ^/api
-            stateless: true
+            stateless: false
+            provider: app_user_provider
+            context: main
             custom_authenticators:
                 - App\Security\ApiKeyAuthenticator
             

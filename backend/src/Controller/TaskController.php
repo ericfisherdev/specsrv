@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Task;
 use App\Entity\User;
+use App\Enum\TaskStatusEnum;
 use App\Repository\ProjectRepository;
 use App\Repository\TaskRepository;
 use App\Service\FileUploadService;
@@ -53,7 +54,8 @@ class TaskController extends AbstractController
         $task->setDescription($description);
         $task->setProject($project);
         $task->setPriority($priority);
-        $task->setStatus($status);
+        $statusEnum = TaskStatusEnum::from($status);
+        $task->setStatus($statusEnum);
 
         $violations = $this->validator->validate($task);
         if (count($violations) > 0) {
@@ -159,7 +161,8 @@ class TaskController extends AbstractController
             $task->setTitle($title);
             $task->setDescription($description);
             $task->setPriority($priority);
-            $task->setStatus($status);
+            $statusEnum = TaskStatusEnum::from($status);
+            $task->setStatus($statusEnum);
 
             $violations = $this->validator->validate($task);
             if (count($violations) > 0) {
@@ -177,6 +180,7 @@ class TaskController extends AbstractController
 
         return $this->render('tasks/edit.html.twig', [
             'task' => $task,
+            'statusOptions' => $this->getStatusOptions(),
         ]);
     }
 
@@ -235,9 +239,19 @@ class TaskController extends AbstractController
             return $this->json(['error' => 'Invalid status'], 400);
         }
 
-        $task->setStatus($status);
+        $statusEnum = TaskStatusEnum::from($status);
+        $task->setStatus($statusEnum);
         $this->entityManager->flush();
 
         return $this->json(['success' => true]);
+    }
+
+    private function getStatusOptions(): array
+    {
+        $options = [];
+        foreach (TaskStatusEnum::cases() as $status) {
+            $options[$status->value] = $status->getLabel();
+        }
+        return $options;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Project;
 use App\Entity\Task;
+use App\Enum\TaskStatusEnum;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -246,5 +247,20 @@ class TaskRepository extends ServiceEntityRepository
         }
 
         return ['from' => $from, 'to' => $to];
+    }
+
+    /**
+     * @return Task[] Returns an array of active Task objects for a project (excludes obsolete)
+     */
+    public function findActiveByProject(Project $project): array
+    {
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.project = :project')
+            ->andWhere('t.status != :obsolete')
+            ->setParameter('project', $project)
+            ->setParameter('obsolete', TaskStatusEnum::OBSOLETE->value)
+            ->orderBy('t.updatedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }
