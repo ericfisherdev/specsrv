@@ -5,6 +5,7 @@ namespace App\Tests;
 use App\Entity\Project;
 use App\Entity\Task;
 use App\Entity\User;
+use App\Enum\TaskStatusEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -70,7 +71,7 @@ abstract class AbstractKernelTestCase extends KernelTestCase
         $task = new Task();
         $task->setTitle($data['title'] ?? 'Test Task');
         $task->setDescription($data['description'] ?? 'Test task description');
-        $task->setStatus($data['status'] ?? 'pending');
+        $task->setStatus($data['status'] ?? TaskStatusEnum::TODO);
         $task->setProject($project);
 
         $this->entityManager->persist($task);
