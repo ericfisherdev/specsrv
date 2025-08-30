@@ -93,3 +93,6 @@ Thumbs.db
 /planning
 CLAUDE.md
 .claude
+
+# Playwright MCP
+.playwright-mcp/

@@ -24,14 +24,10 @@
         "dev-server": "encore dev-server",
         "dev": "encore dev",
         "watch": "encore dev --watch",
-        "build": "encore production --progress",
-        "sync-version": "node scripts/sync-version.js",
-        "predev": "npm run sync-version",
-        "prewatch": "npm run sync-version",
-        "prebuild": "npm run sync-version"
+        "build": "encore production --progress"
     },
     "name": "backend",
-    "version": "0.1.31",
+    "version": "0.1.34",
     "description": "",
     "main": "webpack.config.js",
     "directories": {

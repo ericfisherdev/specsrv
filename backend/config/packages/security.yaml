@@ -30,6 +30,12 @@ security:
                 login_path: app_login
                 check_path: app_login
                 enable_csrf: true
+                csrf_parameter: _token
+                csrf_token_id: authenticate
+                username_parameter: _username
+                password_parameter: _password
+                default_target_path: /
+                failure_path: app_login
             logout:
                 path: app_logout
                 target: app_login
