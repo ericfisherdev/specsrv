@@ -16,7 +16,7 @@ if ! pgrep nginx > /dev/null; then
 fi
 
 # Check if the application responds with HTTP 200
-if ! wget --quiet --tries=1 --spider http://localhost/health; then
+if ! curl --silent --fail --show-error --head 127.0.0.1:8080/health > /dev/null 2>&1; then
     echo "Application is not responding"
     exit 1
 fi

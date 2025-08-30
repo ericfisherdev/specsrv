@@ -95,3 +95,7 @@ CLAUDE.md
 
 # Playwright MCP
 .playwright-mcp/
+
+# PID files
+.server.pid
+backend/.server.pid
