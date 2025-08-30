@@ -446,29 +446,40 @@ function kanbanBoard() {
         createDragPreview(task, event) {
             const dragPreview = document.createElement('div');
             dragPreview.className = 'drag-preview';
-            
-            // Create a simplified version of the task card for the drag preview
-            dragPreview.innerHTML = `
-                <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">📋 ${task.title}</div>
-                <div style="font-size: 12px; color: #6b7280;">Moving to new column...</div>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px;">
-                    <span style="font-size: 11px; color: #9ca3af;">${task.project?.name || 'No Project'}</span>
-                    <span style="background: #fbbf24; color: white; padding: 2px 6px; border-radius: 12px; font-size: 10px;">${task.priority}</span>
-                </div>
-            `;
-            
+
+            const titleEl = document.createElement('div');
+            titleEl.style.cssText = 'font-weight:600;color:#1f2937;margin-bottom:4px;';
+            titleEl.textContent = `📋 ${task.title || ''}`;
+            dragPreview.appendChild(titleEl);
+
+            const noteEl = document.createElement('div');
+            noteEl.style.cssText = 'font-size:12px;color:#6b7280;';
+            noteEl.textContent = 'Moving to new column...';
+            dragPreview.appendChild(noteEl);
+
+            const metaRow = document.createElement('div');
+            metaRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-top:8px;';
+            const projEl = document.createElement('span');
+            projEl.style.cssText = 'font-size:11px;color:#9ca3af;';
+            projEl.textContent = (task.project && task.project.name) ? task.project.name : 'No Project';
+            const prioEl = document.createElement('span');
+            prioEl.style.cssText = 'background:#fbbf24;color:white;padding:2px 6px;border-radius:12px;font-size:10px;';
+            prioEl.textContent = task.priority || '';
+            metaRow.append(projEl, prioEl);
+            dragPreview.appendChild(metaRow);
+
             // Position off-screen
             dragPreview.style.position = 'absolute';
             dragPreview.style.top = '-1000px';
             dragPreview.style.left = '-1000px';
             dragPreview.style.pointerEvents = 'none';
             dragPreview.style.zIndex = '9999';
-            
+
             document.body.appendChild(dragPreview);
-            
+
             // Set the custom drag image
             event.dataTransfer.setDragImage(dragPreview, 140, 40);
-            
+
             // Clean up the preview element
             setTimeout(() => {
                 if (document.body.contains(dragPreview)) {
