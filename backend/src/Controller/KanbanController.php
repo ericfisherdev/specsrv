@@ -27,10 +27,11 @@ class KanbanController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $projectId = $request->query->get('project');
+        $projectIdString = is_string($projectId) ? $projectId : null;
         $projects = $this->projectRepository->findAll();
         
         // Get tasks grouped by status
-        $tasksByStatus = $this->getTasksByStatus($projectId);
+        $tasksByStatus = $this->getTasksByStatus($projectIdString);
         
         return $this->render('kanban/index.html.twig', [
             'projects' => $projects,
@@ -76,7 +77,8 @@ class KanbanController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $projectId = $request->query->get('project');
-        $tasksByStatus = $this->getTasksByStatus($projectId);
+        $projectIdString = is_string($projectId) ? $projectId : null;
+        $tasksByStatus = $this->getTasksByStatus($projectIdString);
 
         return new JsonResponse($tasksByStatus);
     }

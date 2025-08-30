@@ -81,7 +81,7 @@ class TaskFixtures extends Fixture implements DependentFixtureInterface
             $task->setTitle($taskData['title']);
             $task->setDescription($taskData['description']);
             $task->setStatus($taskData['status']);
-            $task->setPriority($taskData['priority'] ?? Task::PRIORITY_MEDIUM);
+            $task->setPriority($taskData['priority']);
             $task->setProject($this->getReference(ProjectFixtures::DEMO_PROJECT_REFERENCE, Project::class));
             $manager->persist($task);
             $this->addReference("demo-task-{$index}", $task);
@@ -114,7 +114,7 @@ class TaskFixtures extends Fixture implements DependentFixtureInterface
             $task->setTitle($taskData['title']);
             $task->setDescription($taskData['description']);
             $task->setStatus($taskData['status']);
-            $task->setPriority($taskData['priority'] ?? Task::PRIORITY_MEDIUM);
+            $task->setPriority($taskData['priority']);
             $task->setProject($this->getReference(ProjectFixtures::TEST_PROJECT_REFERENCE, Project::class));
             $manager->persist($task);
             $this->addReference("test-task-{$index}", $task);
@@ -171,7 +171,7 @@ class TaskFixtures extends Fixture implements DependentFixtureInterface
             $task->setTitle($taskData['title']);
             $task->setDescription($taskData['description']);
             $task->setStatus($taskData['status']);
-            $task->setPriority($taskData['priority'] ?? Task::PRIORITY_MEDIUM);
+            $task->setPriority($taskData['priority']);
             $task->setProject($this->getReference($taskData['project'], Project::class));
             $manager->persist($task);
         }
