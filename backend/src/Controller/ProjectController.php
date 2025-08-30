@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Project;
 use App\Entity\Task;
 use App\Entity\User;
+use App\Enum\TaskStatusEnum;
 use App\Repository\ProjectRepository;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -125,11 +126,11 @@ class ProjectController extends AbstractController
 
         foreach ($tasks as $task) {
             $status = $task->getStatus();
-            if ($status === 'todo' || $status === 'backlog') {
+            if ($status === TaskStatusEnum::TODO || $status === TaskStatusEnum::BACKLOG) {
                 $taskStats['todo']++;
-            } elseif ($status === 'in_progress' || $status === 'working' || $status === 'review') {
+            } elseif ($status === TaskStatusEnum::IN_PROGRESS || $status === TaskStatusEnum::REVIEW) {
                 $taskStats['in_progress']++;
-            } elseif ($status === 'completed' || $status === 'done') {
+            } elseif ($status === TaskStatusEnum::COMPLETED) {
                 $taskStats['completed']++;
             }
         }
