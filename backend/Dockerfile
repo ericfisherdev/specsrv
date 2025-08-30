@@ -51,6 +51,7 @@ RUN apk add --no-cache \
     nginx \
     supervisor \
     sqlite \
+    sqlite-dev \
     curl \
     && docker-php-ext-install \
     pdo \
