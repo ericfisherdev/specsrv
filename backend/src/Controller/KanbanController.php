@@ -30,15 +30,15 @@ class KanbanController extends AbstractController
         $projectId = $request->query->get('project');
         $projectIdString = is_string($projectId) ? $projectId : null;
         $projects = $this->projectRepository->findAll();
-        
+
         // Get tasks grouped by status
         $tasksByStatus = $this->getTasksByStatus($projectIdString);
-        
+
         return $this->render('kanban/index.html.twig', [
             'projects' => $projects,
             'selectedProject' => $projectId,
             'tasksByStatus' => $tasksByStatus,
-            'statuses' => $this->getStatusConfig()
+            'statuses' => $this->getStatusConfig(),
         ]);
     }
 
@@ -51,12 +51,12 @@ class KanbanController extends AbstractController
         $taskId = $data['taskId'] ?? null;
         $newStatus = $data['status'] ?? null;
 
-        if (!$taskId || !$newStatus) {
+        if (! $taskId || ! $newStatus) {
             return new JsonResponse(['error' => 'Invalid request'], 400);
         }
 
         $task = $this->taskRepository->find($taskId);
-        if (!$task) {
+        if (! $task) {
             return new JsonResponse(['error' => 'Task not found'], 404);
         }
 
@@ -95,13 +95,13 @@ class KanbanController extends AbstractController
         // Order by priority to ensure highest priority tasks are selected first
         // when limiting to 6 per project
         $queryBuilder->orderBy(
-            "CASE 
+            'CASE 
                 WHEN t.priority = :critical THEN 1
                 WHEN t.priority = :high THEN 2
                 WHEN t.priority = :medium THEN 3
                 WHEN t.priority = :low THEN 4
                 ELSE 5
-            END",
+            END',
             'ASC'
         )
         ->setParameter('critical', Task::PRIORITY_CRITICAL)
@@ -126,18 +126,18 @@ class KanbanController extends AbstractController
         foreach ($tasks as $task) {
             $status = $task->getStatusValue();
             $taskProjectId = $task->getProject() ? $task->getProject()->getId() : null;
-            
+
             // If no specific project is selected, limit to 6 highest priority tasks per project
-            if (!$projectId && $taskProjectId) {
-                if (!isset($projectTaskCount[$taskProjectId])) {
+            if (! $projectId && $taskProjectId) {
+                if (! isset($projectTaskCount[$taskProjectId])) {
                     $projectTaskCount[$taskProjectId] = 0;
                 }
-                
+
                 if ($projectTaskCount[$taskProjectId] >= 6) {
                     continue;
                 }
-                
-                $projectTaskCount[$taskProjectId]++;
+
+                ++$projectTaskCount[$taskProjectId];
             }
 
             if (isset($tasksByStatus[$status])) {
@@ -179,6 +179,7 @@ class KanbanController extends AbstractController
                 'color' => $status->getColor(),
             ];
         }
+
         return $config;
     }
 }

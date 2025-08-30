@@ -43,12 +43,13 @@ class ProjectController extends AbstractController
 
         $search = (string) $request->query->get('search', '');
         $status = (string) $request->query->get('status', '');
-        
+
         $projects = $this->projectRepository->findByUserWithFilters($user, $search, $status);
-        
+
         // Add task count for each project
         $projectsWithStats = array_map(function (Project $project) {
             $taskCount = $this->taskRepository->countByProject($project);
+
             return [
                 'project' => $project,
                 'task_count' => $taskCount,
@@ -74,11 +75,11 @@ class ProjectController extends AbstractController
         $project = new Project();
         $project->setUser($user);
         $project->setTitle($name);
-        if (!empty($description)) {
+        if (! empty($description)) {
             $project->setDescription($description);
         }
-        
-        if (!empty($githubRepo)) {
+
+        if (! empty($githubRepo)) {
             $project->setGithubRepo($githubRepo);
         }
 
@@ -107,7 +108,7 @@ class ProjectController extends AbstractController
 
         $project = $this->projectRepository->find($id);
 
-        if (!$project) {
+        if (! $project) {
             throw $this->createNotFoundException('Project not found');
         }
 
@@ -126,12 +127,12 @@ class ProjectController extends AbstractController
 
         foreach ($tasks as $task) {
             $status = $task->getStatus();
-            if ($status === TaskStatusEnum::TODO || $status === TaskStatusEnum::BACKLOG) {
-                $taskStats['todo']++;
-            } elseif ($status === TaskStatusEnum::IN_PROGRESS || $status === TaskStatusEnum::REVIEW) {
-                $taskStats['in_progress']++;
-            } elseif ($status === TaskStatusEnum::COMPLETED) {
-                $taskStats['completed']++;
+            if (TaskStatusEnum::TODO === $status || TaskStatusEnum::BACKLOG === $status) {
+                ++$taskStats['todo'];
+            } elseif (TaskStatusEnum::IN_PROGRESS === $status || TaskStatusEnum::REVIEW === $status) {
+                ++$taskStats['in_progress'];
+            } elseif (TaskStatusEnum::COMPLETED === $status) {
+                ++$taskStats['completed'];
             }
         }
 
@@ -149,7 +150,7 @@ class ProjectController extends AbstractController
 
         $project = $this->projectRepository->find($id);
 
-        if (!$project) {
+        if (! $project) {
             throw $this->createNotFoundException('Project not found');
         }
 
@@ -164,11 +165,11 @@ class ProjectController extends AbstractController
             $githubRepo = (string) $request->request->get('github_repo', '');
 
             $project->setTitle($name);
-            if (!empty($description)) {
+            if (! empty($description)) {
                 $project->setDescription($description);
             }
-            
-            if (!empty($githubRepo)) {
+
+            if (! empty($githubRepo)) {
                 $project->setGithubRepo($githubRepo);
             } else {
                 $project->setGithubRepo(null);
@@ -196,7 +197,7 @@ class ProjectController extends AbstractController
 
         $project = $this->projectRepository->find($id);
 
-        if (!$project) {
+        if (! $project) {
             return new Response('', 404);
         }
 
@@ -210,31 +211,31 @@ class ProjectController extends AbstractController
 
         return new Response('', 200);
     }
-    
+
     #[Route('/search/autocomplete', name: 'app_search_autocomplete', methods: ['GET'])]
     public function autocomplete(Request $request): JsonResponse
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         $user = $this->getUser();
         assert($user instanceof User);
-        
+
         $query = (string) $request->query->get('q', '');
-        
+
         if (strlen($query) < 2) {
             return new JsonResponse(['tasks' => [], 'projects' => []]);
         }
-        
+
         // Search projects
         $projects = $this->projectRepository->createQueryBuilder('p')
             ->where('p.user = :user')
             ->andWhere('p.title LIKE :query OR p.description LIKE :query')
             ->setParameter('user', $user)
-            ->setParameter('query', '%' . $query . '%')
+            ->setParameter('query', '%'.$query.'%')
             ->orderBy('p.title', 'ASC')
             ->setMaxResults(5)
             ->getQuery()
             ->getResult();
-            
+
         // Search tasks
         $tasks = $this->entityManager->getRepository(Task::class)
             ->createQueryBuilder('t')
@@ -242,26 +243,26 @@ class ProjectController extends AbstractController
             ->where('p.user = :user')
             ->andWhere('t.title LIKE :query OR t.description LIKE :query')
             ->setParameter('user', $user)
-            ->setParameter('query', '%' . $query . '%')
+            ->setParameter('query', '%'.$query.'%')
             ->orderBy('t.title', 'ASC')
             ->setMaxResults(5)
             ->getQuery()
             ->getResult();
-            
+
         $projectResults = [];
         foreach ($projects as $project) {
             $projectResults[] = [
                 'id' => $project->getId(),
                 'title' => $project->getTitle(),
-                'description' => $project->getDescription() ? 
-                    (strlen($project->getDescription()) > 50 ? 
-                        substr($project->getDescription(), 0, 50) . '...' : 
+                'description' => $project->getDescription() ?
+                    (strlen($project->getDescription()) > 50 ?
+                        substr($project->getDescription(), 0, 50).'...' :
                         $project->getDescription()) : '',
                 'task_count' => count($project->getTasks()),
-                'url' => $this->generateUrl('app_project_detail', ['id' => $project->getId()])
+                'url' => $this->generateUrl('app_project_detail', ['id' => $project->getId()]),
             ];
         }
-        
+
         $taskResults = [];
         foreach ($tasks as $task) {
             $taskResults[] = [
@@ -270,13 +271,13 @@ class ProjectController extends AbstractController
                 'project_title' => $task->getProject()->getTitle(),
                 'priority' => $task->getPriority(),
                 'status' => $task->getStatus(),
-                'url' => $this->generateUrl('app_task_detail', ['id' => $task->getId()])
+                'url' => $this->generateUrl('app_task_detail', ['id' => $task->getId()]),
             ];
         }
-        
+
         return new JsonResponse([
             'tasks' => $taskResults,
-            'projects' => $projectResults
+            'projects' => $projectResults,
         ]);
     }
 }

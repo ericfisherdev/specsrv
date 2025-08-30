@@ -81,9 +81,9 @@ class ProjectRepository extends ServiceEntityRepository
             ->andWhere('p.user = :user')
             ->setParameter('user', $user);
 
-        if (!empty($search)) {
+        if (! empty($search)) {
             $qb->andWhere('p.title LIKE :search OR p.description LIKE :search')
-                ->setParameter('search', '%' . $search . '%');
+                ->setParameter('search', '%'.$search.'%');
         }
 
         // Note: Projects don't have status field, but we can filter by task counts later if needed
@@ -96,7 +96,7 @@ class ProjectRepository extends ServiceEntityRepository
 
     /**
      * Search projects by title for a user.
-     * 
+     *
      * @return Project[]
      */
     public function searchByTitle(User $user, string $query): array
@@ -105,7 +105,7 @@ class ProjectRepository extends ServiceEntityRepository
             ->andWhere('p.user = :user')
             ->andWhere('p.title LIKE :query OR p.description LIKE :query')
             ->setParameter('user', $user)
-            ->setParameter('query', '%' . $query . '%')
+            ->setParameter('query', '%'.$query.'%')
             ->orderBy('p.updatedAt', 'DESC')
             ->getQuery()
             ->getResult();

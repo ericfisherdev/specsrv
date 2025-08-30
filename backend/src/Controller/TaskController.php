@@ -40,12 +40,12 @@ class TaskController extends AbstractController
         $priority = (string) $request->request->get('priority', Task::PRIORITY_MEDIUM);
         $status = (string) $request->request->get('status', 'todo');
 
-        if ($projectId === 0) {
+        if (0 === $projectId) {
             return $this->json(['error' => 'Project is required'], 400);
         }
 
         $project = $this->projectRepository->find($projectId);
-        if (!$project || $project->getUser() !== $user) {
+        if (! $project || $project->getUser() !== $user) {
             return $this->json(['error' => 'Invalid project'], 400);
         }
 
@@ -63,6 +63,7 @@ class TaskController extends AbstractController
             foreach ($violations as $violation) {
                 $errors[] = $violation->getMessage();
             }
+
             return $this->json(['errors' => $errors], 400);
         }
 
@@ -71,7 +72,7 @@ class TaskController extends AbstractController
 
         // Handle file uploads
         $uploadedFiles = $request->files->get('files', []);
-        if (!is_array($uploadedFiles)) {
+        if (! is_array($uploadedFiles)) {
             $uploadedFiles = [$uploadedFiles];
         }
 
@@ -79,10 +80,10 @@ class TaskController extends AbstractController
             if ($uploadedFile instanceof UploadedFile && $uploadedFile->isValid()) {
                 try {
                     $taskId = $task->getId();
-                    if ($taskId === null) {
+                    if (null === $taskId) {
                         continue; // Skip if task ID is null
                     }
-                    
+
                     $file = $this->fileUploadService->uploadFile(
                         $uploadedFile,
                         'task',
@@ -91,12 +92,12 @@ class TaskController extends AbstractController
                     $task->addFile($file);
                 } catch (\Exception $e) {
                     // Log error but don't fail task creation
-                    error_log('File upload error: ' . $e->getMessage());
+                    error_log('File upload error: '.$e->getMessage());
                 }
             }
         }
 
-        if (!empty($uploadedFiles)) {
+        if (! empty($uploadedFiles)) {
             $this->entityManager->flush();
         }
 
@@ -112,12 +113,12 @@ class TaskController extends AbstractController
 
         $task = $this->taskRepository->find($id);
 
-        if (!$task) {
+        if (! $task) {
             throw $this->createNotFoundException('Task not found');
         }
 
         $project = $task->getProject();
-        if (!$project) {
+        if (! $project) {
             throw $this->createNotFoundException('Task project not found');
         }
 
@@ -138,12 +139,12 @@ class TaskController extends AbstractController
 
         $task = $this->taskRepository->find($id);
 
-        if (!$task) {
+        if (! $task) {
             return $this->json(['error' => 'Task not found'], 404);
         }
 
         $project = $task->getProject();
-        if (!$project) {
+        if (! $project) {
             return $this->json(['error' => 'Task project not found'], 404);
         }
 
@@ -170,6 +171,7 @@ class TaskController extends AbstractController
                 foreach ($violations as $violation) {
                     $errors[] = $violation->getMessage();
                 }
+
                 return $this->json(['errors' => $errors], 400);
             }
 
@@ -191,12 +193,12 @@ class TaskController extends AbstractController
 
         $task = $this->taskRepository->find($id);
 
-        if (!$task) {
+        if (! $task) {
             return new Response('', 404);
         }
 
         $project = $task->getProject();
-        if (!$project) {
+        if (! $project) {
             return new Response('', 404);
         }
 
@@ -218,12 +220,12 @@ class TaskController extends AbstractController
 
         $task = $this->taskRepository->find($id);
 
-        if (!$task) {
+        if (! $task) {
             return $this->json(['error' => 'Task not found'], 404);
         }
 
         $project = $task->getProject();
-        if (!$project) {
+        if (! $project) {
             return $this->json(['error' => 'Task project not found'], 404);
         }
 
@@ -235,7 +237,7 @@ class TaskController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $status = $data['status'] ?? '';
 
-        if (!in_array($status, Task::getAvailableStatuses())) {
+        if (! in_array($status, Task::getAvailableStatuses())) {
             return $this->json(['error' => 'Invalid status'], 400);
         }
 
@@ -252,6 +254,7 @@ class TaskController extends AbstractController
         foreach (TaskStatusEnum::cases() as $status) {
             $options[$status->value] = $status->getLabel();
         }
+
         return $options;
     }
 }

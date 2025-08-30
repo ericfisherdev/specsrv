@@ -13,7 +13,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'tasks')]
 class Task
 {
-    
     public const PRIORITY_LOW = 'low';
     public const PRIORITY_MEDIUM = 'medium';
     public const PRIORITY_HIGH = 'high';
@@ -219,7 +218,7 @@ class Task
 
     public static function getAvailableStatuses(): array
     {
-        return array_map(fn(TaskStatusEnum $status) => $status->value, TaskStatusEnum::cases());
+        return array_map(fn (TaskStatusEnum $status) => $status->value, TaskStatusEnum::cases());
     }
 
     public static function getAvailablePriorities(): array

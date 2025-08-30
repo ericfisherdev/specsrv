@@ -5,17 +5,17 @@ namespace App\Enum;
 enum TaskStatusEnum: string
 {
     case BACKLOG = 'backlog';
-    case TODO = 'todo'; 
+    case TODO = 'todo';
     case IN_PROGRESS = 'in_progress';
     case REVIEW = 'review';
     case COMPLETED = 'completed';
     case OBSOLETE = 'obsolete';
-    
+
     public static function getActiveStatuses(): array
     {
         return [self::BACKLOG, self::TODO, self::IN_PROGRESS, self::REVIEW, self::COMPLETED];
     }
-    
+
     public function getLabel(): string
     {
         return match($this) {
@@ -27,7 +27,7 @@ enum TaskStatusEnum: string
             self::OBSOLETE => 'Obsolete',
         };
     }
-    
+
     public function getColor(): string
     {
         return match($this) {

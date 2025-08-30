@@ -7,7 +7,6 @@ namespace App\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class HealthController extends AbstractController
@@ -16,6 +15,7 @@ class HealthController extends AbstractController
         private EntityManagerInterface $entityManager
     ) {
     }
+
     #[Route('/health', name: 'app_health_check', methods: ['GET'])]
     public function healthCheck(): JsonResponse
     {
@@ -23,10 +23,10 @@ class HealthController extends AbstractController
             'database' => $this->checkDatabase(),
             'filesystem' => $this->checkFilesystem(),
             'frontend_assets' => $this->checkFrontendAssets(),
-            'cache' => $this->checkCache()
+            'cache' => $this->checkCache(),
         ];
 
-        $allHealthy = array_reduce($checks, fn($carry, $check) => $carry && $check['healthy'], true);
+        $allHealthy = array_reduce($checks, fn ($carry, $check) => $carry && $check['healthy'], true);
         $status = $allHealthy ? 200 : 503;
 
         return new JsonResponse([
@@ -34,7 +34,7 @@ class HealthController extends AbstractController
             'timestamp' => date('c'),
             'checks' => $checks,
             'version' => $this->getParameter('app.version') ?? '1.0.0',
-            'environment' => $this->getParameter('kernel.environment')
+            'environment' => $this->getParameter('kernel.environment'),
         ], $status);
     }
 
@@ -43,16 +43,16 @@ class HealthController extends AbstractController
     {
         $checks = [
             'database' => $this->checkDatabase(),
-            'frontend_assets' => $this->checkFrontendAssets()
+            'frontend_assets' => $this->checkFrontendAssets(),
         ];
 
-        $ready = array_reduce($checks, fn($carry, $check) => $carry && $check['healthy'], true);
+        $ready = array_reduce($checks, fn ($carry, $check) => $carry && $check['healthy'], true);
         $status = $ready ? 200 : 503;
 
         return new JsonResponse([
             'status' => $ready ? 'ready' : 'not_ready',
             'timestamp' => date('c'),
-            'checks' => $checks
+            'checks' => $checks,
         ], $status);
     }
 
@@ -62,7 +62,7 @@ class HealthController extends AbstractController
         // Basic liveness check - just verify the application is responding
         return new JsonResponse([
             'status' => 'alive',
-            'timestamp' => date('c')
+            'timestamp' => date('c'),
         ]);
     }
 
@@ -71,15 +71,15 @@ class HealthController extends AbstractController
         try {
             $connection = $this->entityManager->getConnection();
             $connection->executeQuery('SELECT 1');
-            
+
             return [
                 'healthy' => true,
-                'message' => 'Database connection successful'
+                'message' => 'Database connection successful',
             ];
         } catch (\Exception $e) {
             return [
                 'healthy' => false,
-                'message' => 'Database connection failed: ' . $e->getMessage()
+                'message' => 'Database connection failed: '.$e->getMessage(),
             ];
         }
     }
@@ -88,36 +88,36 @@ class HealthController extends AbstractController
     {
         try {
             $uploadDir = $this->getParameter('uploads_directory');
-            
-            if (!is_string($uploadDir)) {
+
+            if (! is_string($uploadDir)) {
                 return [
                     'healthy' => false,
-                    'message' => 'Upload directory parameter is not properly configured'
+                    'message' => 'Upload directory parameter is not properly configured',
                 ];
             }
-            
-            if (!is_dir($uploadDir)) {
+
+            if (! is_dir($uploadDir)) {
                 return [
                     'healthy' => false,
-                    'message' => 'Upload directory does not exist'
+                    'message' => 'Upload directory does not exist',
                 ];
             }
-            
-            if (!is_writable($uploadDir)) {
+
+            if (! is_writable($uploadDir)) {
                 return [
                     'healthy' => false,
-                    'message' => 'Upload directory is not writable'
+                    'message' => 'Upload directory is not writable',
                 ];
             }
-            
+
             return [
                 'healthy' => true,
-                'message' => 'Filesystem checks passed'
+                'message' => 'Filesystem checks passed',
             ];
         } catch (\Exception $e) {
             return [
                 'healthy' => false,
-                'message' => 'Filesystem check failed: ' . $e->getMessage()
+                'message' => 'Filesystem check failed: '.$e->getMessage(),
             ];
         }
     }
@@ -126,17 +126,17 @@ class HealthController extends AbstractController
     {
         try {
             $projectDir = $this->getParameter('kernel.project_dir');
-            if (!is_string($projectDir)) {
+            if (! is_string($projectDir)) {
                 return [
                     'healthy' => false,
-                    'message' => 'Project directory parameter is not properly configured'
+                    'message' => 'Project directory parameter is not properly configured',
                 ];
             }
-            
-            $publicDir = $projectDir . '/public';
+
+            $publicDir = $projectDir.'/public';
             $assetDirs = [
-                'build' => $publicDir . '/build',
-                'assets' => $publicDir . '/assets'
+                'build' => $publicDir.'/build',
+                'assets' => $publicDir.'/assets',
             ];
 
             $missingAssets = [];
@@ -144,8 +144,8 @@ class HealthController extends AbstractController
 
             foreach ($assetDirs as $type => $dir) {
                 if (is_dir($dir)) {
-                    $files = glob($dir . '/**/*', GLOB_BRACE);
-                    if ($files === false) {
+                    $files = glob($dir.'/**/*', GLOB_BRACE);
+                    if (false === $files) {
                         $files = [];
                     }
                     $assetCount = count(array_filter($files, 'is_file'));
@@ -157,37 +157,37 @@ class HealthController extends AbstractController
 
             // Check for critical frontend files
             $criticalFiles = [
-                $publicDir . '/build/app.css',
-                $publicDir . '/build/app.js'
+                $publicDir.'/build/app.css',
+                $publicDir.'/build/app.js',
             ];
 
             $missingCritical = [];
             foreach ($criticalFiles as $file) {
-                if (!file_exists($file)) {
+                if (! file_exists($file)) {
                     $missingCritical[] = basename($file);
                 }
             }
 
-            if (!empty($missingCritical)) {
+            if (! empty($missingCritical)) {
                 return [
                     'healthy' => false,
-                    'message' => 'Missing critical frontend assets: ' . implode(', ', $missingCritical),
+                    'message' => 'Missing critical frontend assets: '.implode(', ', $missingCritical),
                     'details' => [
                         'missing_assets' => $missingAssets,
                         'missing_critical' => $missingCritical,
-                        'total_assets' => $totalAssets
-                    ]
+                        'total_assets' => $totalAssets,
+                    ],
                 ];
             }
 
-            if (!empty($missingAssets)) {
+            if (! empty($missingAssets)) {
                 return [
                     'healthy' => false,
-                    'message' => 'Missing asset directories: ' . implode(', ', $missingAssets),
+                    'message' => 'Missing asset directories: '.implode(', ', $missingAssets),
                     'details' => [
                         'missing_assets' => $missingAssets,
-                        'total_assets' => $totalAssets
-                    ]
+                        'total_assets' => $totalAssets,
+                    ],
                 ];
             }
 
@@ -195,13 +195,13 @@ class HealthController extends AbstractController
                 'healthy' => true,
                 'message' => 'Frontend assets are available',
                 'details' => [
-                    'total_assets' => $totalAssets
-                ]
+                    'total_assets' => $totalAssets,
+                ],
             ];
         } catch (\Exception $e) {
             return [
                 'healthy' => false,
-                'message' => 'Frontend asset check failed: ' . $e->getMessage()
+                'message' => 'Frontend asset check failed: '.$e->getMessage(),
             ];
         }
     }
@@ -210,36 +210,36 @@ class HealthController extends AbstractController
     {
         try {
             $cacheDir = $this->getParameter('kernel.cache_dir');
-            
-            if (!is_string($cacheDir)) {
+
+            if (! is_string($cacheDir)) {
                 return [
                     'healthy' => false,
-                    'message' => 'Cache directory parameter is not properly configured'
+                    'message' => 'Cache directory parameter is not properly configured',
                 ];
             }
-            
-            if (!is_dir($cacheDir)) {
+
+            if (! is_dir($cacheDir)) {
                 return [
                     'healthy' => false,
-                    'message' => 'Cache directory does not exist'
+                    'message' => 'Cache directory does not exist',
                 ];
             }
-            
-            if (!is_writable($cacheDir)) {
+
+            if (! is_writable($cacheDir)) {
                 return [
                     'healthy' => false,
-                    'message' => 'Cache directory is not writable'
+                    'message' => 'Cache directory is not writable',
                 ];
             }
-            
+
             return [
                 'healthy' => true,
-                'message' => 'Cache directory accessible'
+                'message' => 'Cache directory accessible',
             ];
         } catch (\Exception $e) {
             return [
                 'healthy' => false,
-                'message' => 'Cache check failed: ' . $e->getMessage()
+                'message' => 'Cache check failed: '.$e->getMessage(),
             ];
         }
     }
