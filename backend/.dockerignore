@@ -47,8 +47,6 @@ docs/
 .env.local
 .env.*.local
 
-# Composer lock (will be used but not copied early)
-composer.lock
 
 # Build artifacts
 build/
