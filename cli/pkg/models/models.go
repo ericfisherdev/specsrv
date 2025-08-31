@@ -2,8 +2,8 @@ package models
 
 import (
 	"time"
-	
-	"github.com/esfisher/specsrv/cli/pkg/enums"
+
+	"github.com/ericfisherdev/specsrv/cli/pkg/enums"
 )
 
 // Project represents a project in the system
@@ -19,16 +19,16 @@ type Project struct {
 
 // ProjectCreateRequest represents a request to create a new project
 type ProjectCreateRequest struct {
-	Name        string                `json:"name" validate:"required,min=1,max=100"`
-	Description string                `json:"description" validate:"max=500"`
-	Status      enums.ProjectStatus   `json:"status" validate:"omitempty"`
+	Name        string              `json:"name" validate:"required,min=1,max=100"`
+	Description string              `json:"description" validate:"max=500"`
+	Status      enums.ProjectStatus `json:"status" validate:"omitempty"`
 }
 
 // ProjectUpdateRequest represents a request to update a project
 type ProjectUpdateRequest struct {
-	Name        *string                `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
-	Description *string                `json:"description,omitempty" validate:"omitempty,max=500"`
-	Status      *enums.ProjectStatus   `json:"status,omitempty" validate:"omitempty"`
+	Name        *string              `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
+	Description *string              `json:"description,omitempty" validate:"omitempty,max=500"`
+	Status      *enums.ProjectStatus `json:"status,omitempty" validate:"omitempty"`
 }
 
 // Task represents a task in the system
@@ -51,26 +51,26 @@ type Task struct {
 
 // TaskCreateRequest represents a request to create a new task
 type TaskCreateRequest struct {
-	ProjectID   int                  `json:"project_id" validate:"required"`
-	Title       string               `json:"title" validate:"required,min=1,max=200"`
-	Description string               `json:"description" validate:"max=2000"`
-	Status      enums.TaskStatus     `json:"status" validate:"omitempty"`
-	Priority    enums.TaskPriority   `json:"priority" validate:"omitempty"`
-	AssigneeID  *int                 `json:"assignee_id,omitempty"`
-	DueDate     *time.Time           `json:"due_date,omitempty"`
-	Tags        []string             `json:"tags,omitempty"`
+	ProjectID   int                `json:"project_id" validate:"required"`
+	Title       string             `json:"title" validate:"required,min=1,max=200"`
+	Description string             `json:"description" validate:"max=2000"`
+	Status      enums.TaskStatus   `json:"status" validate:"omitempty"`
+	Priority    enums.TaskPriority `json:"priority" validate:"omitempty"`
+	AssigneeID  *int               `json:"assignee_id,omitempty"`
+	DueDate     *time.Time         `json:"due_date,omitempty"`
+	Tags        []string           `json:"tags,omitempty"`
 }
 
 // TaskUpdateRequest represents a request to update a task
 type TaskUpdateRequest struct {
-	Title       *string                `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
-	Description *string                `json:"description,omitempty" validate:"omitempty,max=2000"`
-	Status      *enums.TaskStatus      `json:"status,omitempty" validate:"omitempty"`
-	Priority    *enums.TaskPriority    `json:"priority,omitempty" validate:"omitempty"`
-	AssigneeID  *int                   `json:"assignee_id,omitempty"`
-	DueDate     *time.Time             `json:"due_date,omitempty"`
-	Tags        []string               `json:"tags,omitempty"`
-	AISummary   *string                `json:"ai_summary,omitempty"`
+	Title       *string             `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
+	Description *string             `json:"description,omitempty" validate:"omitempty,max=2000"`
+	Status      *enums.TaskStatus   `json:"status,omitempty" validate:"omitempty"`
+	Priority    *enums.TaskPriority `json:"priority,omitempty" validate:"omitempty"`
+	AssigneeID  *int                `json:"assignee_id,omitempty"`
+	DueDate     *time.Time          `json:"due_date,omitempty"`
+	Tags        []string            `json:"tags,omitempty"`
+	AISummary   *string             `json:"ai_summary,omitempty"`
 }
 
 // File represents a file attachment

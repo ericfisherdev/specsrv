@@ -2,7 +2,7 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 # PHP linting for backend
-(cd backend && composer lint && composer rector) &&
+(cd backend && composer lint && ./vendor/bin/rector process --dry-run) &&
 
 # Go linting for CLI (if CLI directory exists and has Go files)
 (

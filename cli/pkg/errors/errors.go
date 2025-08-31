@@ -142,7 +142,7 @@ func IsValidationError(err error) bool {
 	if stderrors.As(err, &cliErr) {
 		return cliErr.Type == ErrorTypeValidation
 	}
-	var validationErr *ValidationError
+	var validationErr *ValidationErrors
 	return stderrors.As(err, &validationErr)
 }
 

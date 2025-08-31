@@ -32,7 +32,7 @@ func (ts *TaskStatus) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
-	
+
 	switch s {
 	case "backlog", "todo", "working", "review", "done":
 		*ts = TaskStatus(s)
@@ -68,7 +68,7 @@ func (tp *TaskPriority) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
-	
+
 	switch s {
 	case "low", "medium", "high", "urgent":
 		*tp = TaskPriority(s)
@@ -103,7 +103,7 @@ func (ps *ProjectStatus) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
-	
+
 	switch s {
 	case "active", "inactive", "archived":
 		*ps = ProjectStatus(s)

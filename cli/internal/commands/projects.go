@@ -10,6 +10,7 @@ import (
 
 	"github.com/ericfisherdev/specsrv/cli/internal/client"
 	"github.com/ericfisherdev/specsrv/cli/internal/config"
+	"github.com/ericfisherdev/specsrv/cli/pkg/enums"
 	"github.com/ericfisherdev/specsrv/cli/pkg/models"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -150,7 +151,7 @@ func newProjectsCreateCommand() *cobra.Command {
 			req := models.ProjectCreateRequest{
 				Name:        name,
 				Description: description,
-				Status:      status,
+				Status:      enums.ProjectStatus(status),
 			}
 
 			// Make API call (placeholder - would connect to real API)
@@ -206,7 +207,8 @@ func newProjectsUpdateCommand() *cobra.Command {
 				req.Description = &description
 			}
 			if status != "" {
-				req.Status = &status
+				statusEnum := enums.ProjectStatus(status)
+				req.Status = &statusEnum
 			}
 
 			// Make API call (placeholder - would connect to real API)

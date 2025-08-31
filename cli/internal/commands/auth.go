@@ -193,14 +193,14 @@ func testAuthentication(cfg *config.Config) error {
 			fmt.Println("✓ Authentication is valid (mock)")
 			return nil
 		}
-		
+
 		// Fallback to health check but label it as a weak check
 		fmt.Println("Protected endpoint unavailable, falling back to weak check...")
 		if healthErr := apiClient.HealthCheck(); healthErr != nil {
 			fmt.Println("✗ Authentication test failed (weak check)")
 			return fmt.Errorf("authentication may be invalid: %w", healthErr)
 		}
-		
+
 		fmt.Println("⚠ Authentication weak check passed (does not guarantee token validity)")
 		return nil
 	}
