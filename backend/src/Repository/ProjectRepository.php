@@ -82,8 +82,14 @@ class ProjectRepository extends ServiceEntityRepository
             ->setParameter('user', $user);
 
         if (! empty($search)) {
-            $qb->andWhere('p.title LIKE :search OR p.description LIKE :search')
-                ->setParameter('search', '%'.$search.'%');
+            // Use PostgreSQL full-text search if available, fallback to LIKE
+            if ($this->getEntityManager()->getConnection()->getDatabasePlatform()->getName() === 'postgresql') {
+                $qb->andWhere("to_tsvector('english', COALESCE(p.title, '') || ' ' || COALESCE(p.description, '')) @@ plainto_tsquery('english', :search)")
+                   ->setParameter('search', $search);
+            } else {
+                $qb->andWhere('p.title LIKE :search OR p.description LIKE :search')
+                   ->setParameter('search', '%'.$search.'%');
+            }
         }
 
         // Note: Projects don't have status field, but we can filter by task counts later if needed
@@ -101,11 +107,20 @@ class ProjectRepository extends ServiceEntityRepository
      */
     public function searchByTitle(User $user, string $query): array
     {
-        return $this->createQueryBuilder('p')
+        $qb = $this->createQueryBuilder('p')
             ->andWhere('p.user = :user')
-            ->andWhere('p.title LIKE :query OR p.description LIKE :query')
-            ->setParameter('user', $user)
-            ->setParameter('query', '%'.$query.'%')
+            ->setParameter('user', $user);
+
+        // Use PostgreSQL full-text search if available, fallback to LIKE
+        if ($this->getEntityManager()->getConnection()->getDatabasePlatform()->getName() === 'postgresql') {
+            $qb->andWhere("to_tsvector('english', COALESCE(p.title, '') || ' ' || COALESCE(p.description, '')) @@ plainto_tsquery('english', :query)")
+               ->setParameter('query', $query);
+        } else {
+            $qb->andWhere('p.title LIKE :query OR p.description LIKE :query')
+               ->setParameter('query', '%'.$query.'%');
+        }
+
+        return $qb
             ->orderBy('p.updatedAt', 'DESC')
             ->getQuery()
             ->getResult();

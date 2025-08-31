@@ -81,8 +81,14 @@ class TaskRepository extends ServiceEntityRepository
         }
 
         if (null !== $search) {
-            $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
-               ->setParameter('search', '%'.$search.'%');
+            // Use PostgreSQL full-text search if available, fallback to LIKE
+            if ($this->getEntityManager()->getConnection()->getDatabasePlatform()->getName() === 'postgresql') {
+                $qb->andWhere("to_tsvector('english', COALESCE(t.title, '') || ' ' || COALESCE(t.description, '')) @@ plainto_tsquery('english', :search)")
+                   ->setParameter('search', $search);
+            } else {
+                $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
+                   ->setParameter('search', '%'.$search.'%');
+            }
         }
 
         return $qb->orderBy('t.updatedAt', 'DESC')
@@ -109,8 +115,14 @@ class TaskRepository extends ServiceEntityRepository
         }
 
         if (null !== $search) {
-            $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
-               ->setParameter('search', '%'.$search.'%');
+            // Use PostgreSQL full-text search if available, fallback to LIKE
+            if ($this->getEntityManager()->getConnection()->getDatabasePlatform()->getName() === 'postgresql') {
+                $qb->andWhere("to_tsvector('english', COALESCE(t.title, '') || ' ' || COALESCE(t.description, '')) @@ plainto_tsquery('english', :search)")
+                   ->setParameter('search', $search);
+            } else {
+                $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
+                   ->setParameter('search', '%'.$search.'%');
+            }
         }
 
         return (int) $qb->getQuery()->getSingleScalarResult();
