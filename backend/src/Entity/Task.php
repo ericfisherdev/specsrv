@@ -58,10 +58,15 @@ class Task
     #[ORM\OneToMany(targetEntity: GitLink::class, mappedBy: 'task', orphanRemoval: true)]
     private Collection $gitLinks;
 
+    #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'tasks')]
+    #[ORM\JoinTable(name: 'task_tags')]
+    private Collection $tags;
+
     public function __construct()
     {
         $this->files = new ArrayCollection();
         $this->gitLinks = new ArrayCollection();
+        $this->tags = new ArrayCollection();
         $this->createdAt = new \DateTime();
         $this->updatedAt = new \DateTime();
     }
@@ -232,6 +237,30 @@ class Task
                 $gitLink->setTask(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Tag>
+     */
+    public function getTags(): Collection
+    {
+        return $this->tags;
+    }
+
+    public function addTag(Tag $tag): static
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags->add($tag);
+        }
+
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): static
+    {
+        $this->tags->removeElement($tag);
 
         return $this;
     }

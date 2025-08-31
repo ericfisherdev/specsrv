@@ -42,9 +42,14 @@ class Project
     #[ORM\OneToMany(targetEntity: Task::class, mappedBy: 'project', orphanRemoval: true)]
     private Collection $tasks;
 
+    #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'projects')]
+    #[ORM\JoinTable(name: 'project_tags')]
+    private Collection $tags;
+
     public function __construct()
     {
         $this->tasks = new ArrayCollection();
+        $this->tags = new ArrayCollection();
         $this->createdAt = new \DateTime();
         $this->updatedAt = new \DateTime();
     }
@@ -154,6 +159,33 @@ class Project
             if ($task->getProject() === $this) {
                 $task->setProject(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Tag>
+     */
+    public function getTags(): Collection
+    {
+        return $this->tags;
+    }
+
+    public function addTag(Tag $tag): static
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags->add($tag);
+            $tag->addProject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): static
+    {
+        if ($this->tags->removeElement($tag)) {
+            $tag->removeProject($this);
         }
 
         return $this;
