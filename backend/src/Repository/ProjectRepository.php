@@ -82,9 +82,10 @@ class ProjectRepository extends ServiceEntityRepository
             ->setParameter('user', $user);
 
         if (! empty($search)) {
+            $platform = $this->getEntityManager()->getConnection()->getDatabasePlatform();
             // Use PostgreSQL full-text search if available, fallback to LIKE
-            if ('postgresql' === $this->getEntityManager()->getConnection()->getDatabasePlatform()->getName()) {
-                $qb->andWhere("to_tsvector('english', COALESCE(p.title, '') || ' ' || COALESCE(p.description, '')) @@ plainto_tsquery('english', :search)")
+            if ($platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
+                $qb->andWhere("FUNCTION('to_tsvector', 'english', CONCAT(COALESCE(p.title, ''), ' ', COALESCE(p.description, ''))) @@ FUNCTION('plainto_tsquery', 'english', :search)")
                    ->setParameter('search', $search);
             } else {
                 $qb->andWhere('p.title LIKE :search OR p.description LIKE :search')
@@ -111,9 +112,10 @@ class ProjectRepository extends ServiceEntityRepository
             ->andWhere('p.user = :user')
             ->setParameter('user', $user);
 
+        $platform = $this->getEntityManager()->getConnection()->getDatabasePlatform();
         // Use PostgreSQL full-text search if available, fallback to LIKE
-        if ('postgresql' === $this->getEntityManager()->getConnection()->getDatabasePlatform()->getName()) {
-            $qb->andWhere("to_tsvector('english', COALESCE(p.title, '') || ' ' || COALESCE(p.description, '')) @@ plainto_tsquery('english', :query)")
+        if ($platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
+            $qb->andWhere("FUNCTION('to_tsvector', 'english', CONCAT(COALESCE(p.title, ''), ' ', COALESCE(p.description, ''))) @@ FUNCTION('plainto_tsquery', 'english', :query)")
                ->setParameter('query', $query);
         } else {
             $qb->andWhere('p.title LIKE :query OR p.description LIKE :query')

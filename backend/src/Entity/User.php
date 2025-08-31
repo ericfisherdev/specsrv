@@ -59,7 +59,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setEmail(string $email): static
     {
-        $this->email = $email;
+        // Normalize email to lowercase for case-insensitive uniqueness
+        $this->email = strtolower($email);
         $this->setUpdatedAt(new \DateTime());
 
         return $this;

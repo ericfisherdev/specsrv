@@ -83,7 +83,7 @@ class TaskRepository extends ServiceEntityRepository
         if (null !== $search) {
             // Use PostgreSQL full-text search if available, fallback to LIKE
             if ('postgresql' === $this->getEntityManager()->getConnection()->getDatabasePlatform()->getName()) {
-                $qb->andWhere("to_tsvector('english', COALESCE(t.title, '') || ' ' || COALESCE(t.description, '')) @@ plainto_tsquery('english', :search)")
+                $qb->andWhere("FUNCTION('to_tsvector', 'english', CONCAT(COALESCE(t.title, ''), ' ', COALESCE(t.description, ''))) @@ FUNCTION('plainto_tsquery', 'english', :search)")
                    ->setParameter('search', $search);
             } else {
                 $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
@@ -117,7 +117,7 @@ class TaskRepository extends ServiceEntityRepository
         if (null !== $search) {
             // Use PostgreSQL full-text search if available, fallback to LIKE
             if ('postgresql' === $this->getEntityManager()->getConnection()->getDatabasePlatform()->getName()) {
-                $qb->andWhere("to_tsvector('english', COALESCE(t.title, '') || ' ' || COALESCE(t.description, '')) @@ plainto_tsquery('english', :search)")
+                $qb->andWhere("FUNCTION('to_tsvector', 'english', CONCAT(COALESCE(t.title, ''), ' ', COALESCE(t.description, ''))) @@ FUNCTION('plainto_tsquery', 'english', :search)")
                    ->setParameter('search', $search);
             } else {
                 $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')

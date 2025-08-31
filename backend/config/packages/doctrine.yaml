@@ -8,8 +8,8 @@ doctrine:
                 charset: utf8
                 profiling_collect_backtrace: '%kernel.debug%'
                 use_savepoints: true
-                options:
-                    1002: "SET search_path TO public"  # PDO::PGSQL_ATTR_INIT_COMMAND
+                # PostgreSQL search_path should be set at database/role level or via event listener
+                # Removed PDO::MYSQL_ATTR_INIT_COMMAND (1002) which is MySQL-specific
     orm:
         auto_generate_proxy_classes: true
         enable_lazy_ghost_objects: true
