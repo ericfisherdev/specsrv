@@ -2,9 +2,6 @@
 
 namespace App\Tests\Integration;
 
-use App\Entity\User;
-use App\Entity\Task;
-use App\Entity\Project;
 use App\Tests\AbstractKernelTestCase;
 use Doctrine\DBAL\Connection;
 
@@ -26,7 +23,7 @@ class PostgreSQLMigrationIntegrationTest extends AbstractKernelTestCase
 
     public function testPostgreSQLSpecificFeaturesWhenAvailable(): void
     {
-        if ($this->connection->getDatabasePlatform()->getName() !== 'postgresql') {
+        if ('postgresql' !== $this->connection->getDatabasePlatform()->getName()) {
             $this->markTestSkipped('PostgreSQL-specific tests require PostgreSQL database');
         }
 
@@ -48,7 +45,7 @@ class PostgreSQLMigrationIntegrationTest extends AbstractKernelTestCase
     private function testJsonbQueries(): void
     {
         $user = $this->createTestUser([
-            'email' => 'jsonb-integration@example.com'
+            'email' => 'jsonb-integration@example.com',
         ]);
 
         $user->setRoles(['ROLE_USER', 'ROLE_ADMIN', 'ROLE_PROJECT_MANAGER']);
@@ -56,7 +53,7 @@ class PostgreSQLMigrationIntegrationTest extends AbstractKernelTestCase
 
         // Test JSONB containment query
         $result = $this->connection->fetchAssociative(
-            "SELECT id, email, roles FROM users WHERE roles @> ? AND email = ?",
+            'SELECT id, email, roles FROM users WHERE roles @> ? AND email = ?',
             [json_encode(['ROLE_ADMIN']), 'jsonb-integration@example.com']
         );
 
@@ -69,12 +66,12 @@ class PostgreSQLMigrationIntegrationTest extends AbstractKernelTestCase
         $user = $this->createTestUser(['email' => 'fts-integration@example.com']);
         $project = $this->createTestProject($user, [
             'title' => 'PostgreSQL Advanced Features',
-            'description' => 'Implementation of full-text search with tsvector and tsquery'
+            'description' => 'Implementation of full-text search with tsvector and tsquery',
         ]);
 
         $task = $this->createTestTask($project, [
             'title' => 'Implement GIN indexes',
-            'description' => 'Create optimized indexes for full-text search performance'
+            'description' => 'Create optimized indexes for full-text search performance',
         ]);
 
         // Test full-text search query
@@ -126,7 +123,7 @@ class PostgreSQLMigrationIntegrationTest extends AbstractKernelTestCase
         // Test that foreign key constraints prevent orphaned records
         $this->entityManager->remove($user);
 
-        if ($this->connection->getDatabasePlatform()->getName() === 'postgresql') {
+        if ('postgresql' === $this->connection->getDatabasePlatform()->getName()) {
             // PostgreSQL should cascade delete
             $this->entityManager->flush();
 
@@ -148,12 +145,12 @@ class PostgreSQLMigrationIntegrationTest extends AbstractKernelTestCase
         $user = $this->createTestUser(['email' => 'workflow-test@example.com']);
         $project = $this->createTestProject($user, [
             'title' => 'Complete Workflow Test',
-            'description' => 'Testing the complete application workflow'
+            'description' => 'Testing the complete application workflow',
         ]);
 
         $task = $this->createTestTask($project, [
             'title' => 'Workflow Task',
-            'description' => 'Task for testing complete workflow'
+            'description' => 'Task for testing complete workflow',
         ]);
 
         // Verify everything was created correctly

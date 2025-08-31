@@ -3,8 +3,6 @@
 namespace App\Tests\Repository;
 
 use App\Entity\Task;
-use App\Entity\Project;
-use App\Entity\User;
 use App\Enum\TaskStatusEnum;
 use App\Repository\TaskRepository;
 use App\Tests\AbstractKernelTestCase;
@@ -27,17 +25,17 @@ class TaskRepositoryTest extends AbstractKernelTestCase
         // Create tasks with searchable content
         $task1 = $this->createTestTask($project, [
             'title' => 'Database Migration Task',
-            'description' => 'PostgreSQL full-text search implementation'
+            'description' => 'PostgreSQL full-text search implementation',
         ]);
 
         $task2 = $this->createTestTask($project, [
             'title' => 'Frontend Development',
-            'description' => 'React component optimization'
+            'description' => 'React component optimization',
         ]);
 
         $task3 = $this->createTestTask($project, [
             'title' => 'Advanced Search',
-            'description' => 'Implementing database search functionality'
+            'description' => 'Implementing database search functionality',
         ]);
 
         // Test search functionality
@@ -72,7 +70,7 @@ class TaskRepositoryTest extends AbstractKernelTestCase
 
         $this->createTestTask($project, [
             'title' => 'Search Test Task',
-            'description' => 'Testing search functionality'
+            'description' => 'Testing search functionality',
         ]);
 
         $count = $this->taskRepository->countByUser($user, null, 'search');
@@ -109,13 +107,13 @@ class TaskRepositoryTest extends AbstractKernelTestCase
         $this->createTestTask($project, [
             'title' => 'High Priority Task',
             'description' => 'Critical database optimization',
-            'status' => TaskStatusEnum::TODO
+            'status' => TaskStatusEnum::TODO,
         ]);
 
         $criteria = [
             'search' => 'database',
             'status' => 'todo',
-            'priority' => 'high'
+            'priority' => 'high',
         ];
 
         $results = $this->taskRepository->searchWithFilters($user, $criteria);

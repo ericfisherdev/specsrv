@@ -2,9 +2,9 @@
 
 namespace App\Tests\Entity;
 
-use App\Entity\Task;
 use App\Entity\File;
 use App\Entity\GitLink;
+use App\Entity\Task;
 use App\Enum\TaskStatusEnum;
 use App\Tests\AbstractKernelTestCase;
 

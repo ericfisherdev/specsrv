@@ -23,12 +23,12 @@ class ProjectRepositoryTest extends AbstractKernelTestCase
 
         $this->createTestProject($user, [
             'title' => 'PostgreSQL Database Project',
-            'description' => 'Advanced database features implementation'
+            'description' => 'Advanced database features implementation',
         ]);
 
         $this->createTestProject($user, [
             'title' => 'API Development',
-            'description' => 'REST API with PostgreSQL backend'
+            'description' => 'REST API with PostgreSQL backend',
         ]);
 
         // Test search functionality
@@ -48,12 +48,12 @@ class ProjectRepositoryTest extends AbstractKernelTestCase
 
         $this->createTestProject($user, [
             'title' => 'PostgreSQL Migration Project',
-            'description' => 'Database migration and optimization'
+            'description' => 'Database migration and optimization',
         ]);
 
         $this->createTestProject($user, [
             'title' => 'Frontend Development',
-            'description' => 'React application development'
+            'description' => 'React application development',
         ]);
 
         $searchResults = $this->projectRepository->searchByTitle($user, 'PostgreSQL');
@@ -97,7 +97,7 @@ class ProjectRepositoryTest extends AbstractKernelTestCase
         $user = $this->createTestUser();
 
         // Create multiple projects
-        for ($i = 1; $i <= 5; $i++) {
+        for ($i = 1; $i <= 5; ++$i) {
             $this->createTestProject($user, ['title' => "Project {$i}"]);
         }
 
@@ -137,7 +137,7 @@ class ProjectRepositoryTest extends AbstractKernelTestCase
         $this->assertIsArray($userProjects);
         $this->assertCount(2, $userProjects);
 
-        $projectIds = array_map(fn($p) => $p->getId(), $userProjects);
+        $projectIds = array_map(fn ($p) => $p->getId(), $userProjects);
         $this->assertContains($project1->getId(), $projectIds);
         $this->assertContains($project2->getId(), $projectIds);
     }

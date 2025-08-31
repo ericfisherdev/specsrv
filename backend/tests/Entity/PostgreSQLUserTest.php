@@ -2,8 +2,8 @@
 
 namespace App\Tests\Entity;
 
-use App\Entity\User;
 use App\Entity\ApiKey;
+use App\Entity\User;
 use App\Tests\AbstractKernelTestCase;
 
 class PostgreSQLUserTest extends AbstractKernelTestCase
@@ -19,7 +19,7 @@ class PostgreSQLUserTest extends AbstractKernelTestCase
             'ROLE_USER',
             'ROLE_ADMIN',
             'ROLE_PROJECT_MANAGER',
-            'ROLE_DEVELOPER'
+            'ROLE_DEVELOPER',
         ];
 
         $user->setRoles($complexRoles);
@@ -111,7 +111,7 @@ class PostgreSQLUserTest extends AbstractKernelTestCase
         $complexRoles = [
             'ROLE_USER',
             'ROLE_ADMIN',
-            'ROLE_PROJECT_MANAGER'
+            'ROLE_PROJECT_MANAGER',
         ];
 
         $user->setRoles($complexRoles);
@@ -136,12 +136,12 @@ class PostgreSQLUserTest extends AbstractKernelTestCase
         $this->entityManager->persist($user);
         $this->entityManager->flush();
         $this->entityManager->refresh($user); // Refresh to get DB timestamp with proper precision
-        
+
         $originalUpdatedAt = $user->getUpdatedAt();
 
         // Add a delay to ensure different timestamp
         sleep(1); // 1 second delay to ensure timestamp difference
-        
+
         // Update user and test that updated_at changes
         $user->setEmail('timestamp-updated@example.com');
         $this->entityManager->flush();
