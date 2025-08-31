@@ -59,10 +59,15 @@ jobs:
       run: |
         composer install --no-progress --prefer-dist --optimize-autoloader
 
-    - name: Setup PostgreSQL extensions
+    - name: Setup PostgreSQL databases and extensions
       run: |
+        # Create test database (Doctrine will append _test to base name 'specsrv')
+        PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv -c 'CREATE DATABASE specsrv_test;'
+        # Add extensions to both databases
         PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
         PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv -c 'CREATE EXTENSION IF NOT EXISTS "pg_trgm";'
+        PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv_test -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+        PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv_test -c 'CREATE EXTENSION IF NOT EXISTS "pg_trgm";'
 
     - name: Setup test environment and database
       working-directory: backend
