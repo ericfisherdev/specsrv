@@ -83,7 +83,7 @@ class ProjectRepository extends ServiceEntityRepository
 
         if (! empty($search)) {
             // Use PostgreSQL full-text search if available, fallback to LIKE
-            if ($this->getEntityManager()->getConnection()->getDatabasePlatform()->getName() === 'postgresql') {
+            if ('postgresql' === $this->getEntityManager()->getConnection()->getDatabasePlatform()->getName()) {
                 $qb->andWhere("to_tsvector('english', COALESCE(p.title, '') || ' ' || COALESCE(p.description, '')) @@ plainto_tsquery('english', :search)")
                    ->setParameter('search', $search);
             } else {
@@ -112,7 +112,7 @@ class ProjectRepository extends ServiceEntityRepository
             ->setParameter('user', $user);
 
         // Use PostgreSQL full-text search if available, fallback to LIKE
-        if ($this->getEntityManager()->getConnection()->getDatabasePlatform()->getName() === 'postgresql') {
+        if ('postgresql' === $this->getEntityManager()->getConnection()->getDatabasePlatform()->getName()) {
             $qb->andWhere("to_tsvector('english', COALESCE(p.title, '') || ' ' || COALESCE(p.description, '')) @@ plainto_tsquery('english', :query)")
                ->setParameter('query', $query);
         } else {

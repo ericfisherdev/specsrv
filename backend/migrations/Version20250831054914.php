@@ -9,7 +9,7 @@ use Doctrine\Migrations\AbstractMigration;
 
 /**
  * PostgreSQL Migration: Complete schema migration from SQLite to PostgreSQL
- * This migration recreates the entire specsrv database schema optimized for PostgreSQL
+ * This migration recreates the entire specsrv database schema optimized for PostgreSQL.
  */
 final class Version20250831054914 extends AbstractMigration
 {
@@ -36,7 +36,7 @@ final class Version20250831054914 extends AbstractMigration
 
         // Create unique index on email
         $this->addSql('CREATE UNIQUE INDEX UNIQ_1483A5E9E7927C74 ON users (email)');
-        
+
         // Create GIN index for roles JSON queries
         $this->addSql('CREATE INDEX IDX_1483A5E9ROLES_GIN ON users USING GIN (roles)');
 
@@ -55,7 +55,7 @@ final class Version20250831054914 extends AbstractMigration
         // Indexes for projects
         $this->addSql('CREATE INDEX IDX_5C93B3A4A76ED395 ON projects (user_id)');
         $this->addSql('CREATE INDEX IDX_5C93B3A4_CREATED_AT ON projects (created_at DESC)');
-        
+
         // Full-text search index for project titles and descriptions
         $this->addSql('CREATE INDEX IDX_5C93B3A4_FTS ON projects USING GIN (
             to_tsvector(\'english\', COALESCE(title, \'\') || \' \' || COALESCE(description, \'\'))
@@ -86,10 +86,10 @@ final class Version20250831054914 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_50586597_PRIORITY ON tasks (priority)');
         $this->addSql('CREATE INDEX IDX_50586597_CREATED_AT ON tasks (created_at DESC)');
         $this->addSql('CREATE INDEX IDX_50586597_UPDATED_AT ON tasks (updated_at DESC)');
-        
+
         // Composite index for common queries
         $this->addSql('CREATE INDEX IDX_50586597_PROJECT_STATUS ON tasks (project_id, status)');
-        
+
         // Full-text search index for task titles and descriptions
         $this->addSql('CREATE INDEX IDX_50586597_FTS ON tasks USING GIN (
             to_tsvector(\'english\', COALESCE(title, \'\') || \' \' || COALESCE(description, \'\'))

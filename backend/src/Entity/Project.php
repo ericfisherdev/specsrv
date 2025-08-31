@@ -5,7 +5,6 @@ namespace App\Entity;
 use App\Repository\ProjectRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
@@ -163,10 +162,10 @@ class Project
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
-        if ($this->createdAt === null) {
+        if (null === $this->createdAt) {
             $this->createdAt = new \DateTime();
         }
-        if ($this->updatedAt === null) {
+        if (null === $this->updatedAt) {
             $this->updatedAt = new \DateTime();
         }
     }
