@@ -11,27 +11,31 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\Table(name: 'users')]
+#[ORM\Table(name: 'users', indexes: [
+    new ORM\Index(name: 'idx_user_email', columns: ['email']),
+    new ORM\Index(name: 'idx_user_created_at', columns: ['created_at']),
+])]
+#[ORM\HasLifecycleCallbacks]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\GeneratedValue(strategy: 'IDENTITY')]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\Column(length: 180, unique: true)]
+    #[ORM\Column(type: 'string', length: 180, unique: true)]
     private ?string $email = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'json', options: ['jsonb' => true])]
     private array $roles = [];
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'string', length: 255)]
     private ?string $password = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private ?\DateTimeInterface $createdAt = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private ?\DateTimeInterface $updatedAt = null;
 
     #[ORM\OneToMany(targetEntity: Project::class, mappedBy: 'user', orphanRemoval: true)]
@@ -152,5 +156,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        if ($this->createdAt === null) {
+            $this->createdAt = new \DateTime();
+        }
+        if ($this->updatedAt === null) {
+            $this->updatedAt = new \DateTime();
+        }
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new \DateTime();
     }
 }
