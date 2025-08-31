@@ -99,3 +99,12 @@ CLAUDE.md
 # PID files
 .server.pid
 backend/.server.pid
+
+# CLI build artifacts
+cli/build/
+cli/dist/
+cli/docs/
+cli/specsrv
+cli/specsrv.exe
+cli/coverage.out
+cli/coverage.html
