@@ -81,14 +81,9 @@ class TaskRepository extends ServiceEntityRepository
         }
 
         if (null !== $search) {
-            // Use PostgreSQL full-text search if available, fallback to LIKE
-            if ('postgresql' === $this->getEntityManager()->getConnection()->getDatabasePlatform()->getName()) {
-                $qb->andWhere("FUNCTION('to_tsvector', 'english', CONCAT(COALESCE(t.title, ''), ' ', COALESCE(t.description, ''))) @@ FUNCTION('plainto_tsquery', 'english', :search)")
-                   ->setParameter('search', $search);
-            } else {
-                $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
-                   ->setParameter('search', '%'.$search.'%');
-            }
+            // Use LIKE for both platforms as FUNCTION() is not supported in DQL
+            $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
+               ->setParameter('search', '%'.$search.'%');
         }
 
         return $qb->orderBy('t.updatedAt', 'DESC')
@@ -115,14 +110,9 @@ class TaskRepository extends ServiceEntityRepository
         }
 
         if (null !== $search) {
-            // Use PostgreSQL full-text search if available, fallback to LIKE
-            if ('postgresql' === $this->getEntityManager()->getConnection()->getDatabasePlatform()->getName()) {
-                $qb->andWhere("FUNCTION('to_tsvector', 'english', CONCAT(COALESCE(t.title, ''), ' ', COALESCE(t.description, ''))) @@ FUNCTION('plainto_tsquery', 'english', :search)")
-                   ->setParameter('search', $search);
-            } else {
-                $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
-                   ->setParameter('search', '%'.$search.'%');
-            }
+            // Use LIKE for both platforms as FUNCTION() is not supported in DQL
+            $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
+               ->setParameter('search', '%'.$search.'%');
         }
 
         return (int) $qb->getQuery()->getSingleScalarResult();

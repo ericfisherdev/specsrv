@@ -82,15 +82,9 @@ class ProjectRepository extends ServiceEntityRepository
             ->setParameter('user', $user);
 
         if (! empty($search)) {
-            $platform = $this->getEntityManager()->getConnection()->getDatabasePlatform();
-            // Use PostgreSQL full-text search if available, fallback to LIKE
-            if ($platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
-                $qb->andWhere("FUNCTION('to_tsvector', 'english', CONCAT(COALESCE(p.title, ''), ' ', COALESCE(p.description, ''))) @@ FUNCTION('plainto_tsquery', 'english', :search)")
-                   ->setParameter('search', $search);
-            } else {
-                $qb->andWhere('p.title LIKE :search OR p.description LIKE :search')
-                   ->setParameter('search', '%'.$search.'%');
-            }
+            // Use LIKE for both platforms as FUNCTION() is not supported in DQL
+            $qb->andWhere('p.title LIKE :search OR p.description LIKE :search')
+               ->setParameter('search', '%'.$search.'%');
         }
 
         // Note: Projects don't have status field, but we can filter by task counts later if needed
@@ -112,15 +106,9 @@ class ProjectRepository extends ServiceEntityRepository
             ->andWhere('p.user = :user')
             ->setParameter('user', $user);
 
-        $platform = $this->getEntityManager()->getConnection()->getDatabasePlatform();
-        // Use PostgreSQL full-text search if available, fallback to LIKE
-        if ($platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
-            $qb->andWhere("FUNCTION('to_tsvector', 'english', CONCAT(COALESCE(p.title, ''), ' ', COALESCE(p.description, ''))) @@ FUNCTION('plainto_tsquery', 'english', :query)")
-               ->setParameter('query', $query);
-        } else {
-            $qb->andWhere('p.title LIKE :query OR p.description LIKE :query')
-               ->setParameter('query', '%'.$query.'%');
-        }
+        // Use LIKE for both platforms as FUNCTION() is not supported in DQL
+        $qb->andWhere('p.title LIKE :query OR p.description LIKE :query')
+           ->setParameter('query', '%'.$query.'%');
 
         return $qb
             ->orderBy('p.updatedAt', 'DESC')

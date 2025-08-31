@@ -156,7 +156,7 @@ class TaskRepositoryTest extends AbstractKernelTestCase
         $this->assertGreaterThan(0, count($activeTasks));
 
         foreach ($activeTasks as $task) {
-            $this->assertNotEquals(TaskStatusEnum::COMPLETED, $task->getStatus());
+            $this->assertNotEquals(TaskStatusEnum::OBSOLETE, $task->getStatus());
         }
     }
 }

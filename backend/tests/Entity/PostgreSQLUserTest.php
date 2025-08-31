@@ -135,9 +135,13 @@ class PostgreSQLUserTest extends AbstractKernelTestCase
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();
-
+        $this->entityManager->refresh($user); // Refresh to get DB timestamp with proper precision
+        
         $originalUpdatedAt = $user->getUpdatedAt();
 
+        // Add a delay to ensure different timestamp
+        sleep(1); // 1 second delay to ensure timestamp difference
+        
         // Update user and test that updated_at changes
         $user->setEmail('timestamp-updated@example.com');
         $this->entityManager->flush();

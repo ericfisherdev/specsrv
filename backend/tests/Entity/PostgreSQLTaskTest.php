@@ -23,21 +23,21 @@ class PostgreSQLTaskTest extends AbstractKernelTestCase
         $this->assertContains('high', $availablePriorities);
         $this->assertContains('critical', $availablePriorities);
 
-        // Test priority colors
+        // Test priority colors (using Tailwind classes)
         $task->setPriority('critical');
-        $this->assertEquals('#dc3545', $task->getPriorityColor());
+        $this->assertEquals('text-red-600 bg-red-100', $task->getPriorityColor());
         $this->assertEquals('Critical', $task->getPriorityLabel());
 
         $task->setPriority('high');
-        $this->assertEquals('#dc3545', $task->getPriorityColor());
+        $this->assertEquals('text-orange-600 bg-orange-100', $task->getPriorityColor());
         $this->assertEquals('High', $task->getPriorityLabel());
 
         $task->setPriority('medium');
-        $this->assertEquals('#ffc107', $task->getPriorityColor());
+        $this->assertEquals('text-yellow-600 bg-yellow-100', $task->getPriorityColor());
         $this->assertEquals('Medium', $task->getPriorityLabel());
 
         $task->setPriority('low');
-        $this->assertEquals('#28a745', $task->getPriorityColor());
+        $this->assertEquals('text-green-600 bg-green-100', $task->getPriorityColor());
         $this->assertEquals('Low', $task->getPriorityLabel());
     }
 
