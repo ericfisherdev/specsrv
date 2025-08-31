@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/specsrv/specsrv-cli/internal/config"
+	"github.com/ericfisherdev/specsrv/cli/internal/config"
 )
 
 // Client represents the HTTP client for API communication
@@ -230,8 +230,28 @@ func (c *Client) Patch(path string, body interface{}, result interface{}) error 
 
 // HealthCheck checks if the API server is healthy
 func (c *Client) HealthCheck() error {
-	var response Response
-	return c.Get("/health", &response)
+	resp, err := c.httpClient.Get(c.baseURL + "/health")
+	if err != nil {
+		return fmt.Errorf("failed to connect to health endpoint: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read and discard the response body to avoid resource leaks
+	_, _ = io.ReadAll(resp.Body)
+
+	// Check if status code is in 2xx range
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		return nil
+	}
+
+	return fmt.Errorf("health check failed with status %d: %s", resp.StatusCode, resp.Status)
+}
+
+// Me gets the current authenticated user info
+func (c *Client) Me() (map[string]interface{}, error) {
+	var user map[string]interface{}
+	err := c.Get("/api/auth/me", &user)
+	return user, err
 }
 
 // GetWithQuery performs a GET request with query parameters

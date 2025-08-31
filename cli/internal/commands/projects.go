@@ -8,12 +8,23 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/specsrv/specsrv-cli/internal/client"
-	"github.com/specsrv/specsrv-cli/internal/config"
-	"github.com/specsrv/specsrv-cli/pkg/models"
+	"github.com/ericfisherdev/specsrv/cli/internal/client"
+	"github.com/ericfisherdev/specsrv/cli/internal/config"
+	"github.com/ericfisherdev/specsrv/cli/pkg/models"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
+
+// getOutputFormat resolves the output format from both flag and config
+func getOutputFormat() string {
+	// First check the output flag
+	if format := viper.GetString("output"); format != "" {
+		return format
+	}
+	// Fallback to output.format config key
+	return viper.GetString("output.format")
+}
 
 // NewProjectsCommand creates a new projects command
 func NewProjectsCommand() *cobra.Command {
@@ -67,7 +78,7 @@ func newProjectsListCommand() *cobra.Command {
 			projects := getMockProjects() // In real implementation, this would be apiClient.GetProjects(query)
 
 			// Format output based on --output flag
-			outputFormat := viper.GetString("output")
+			outputFormat := getOutputFormat()
 			return formatProjectsOutput(projects, outputFormat)
 		},
 	}
@@ -106,7 +117,7 @@ func newProjectsShowCommand() *cobra.Command {
 			}
 
 			// Format output
-			outputFormat := viper.GetString("output")
+			outputFormat := getOutputFormat()
 			return formatProjectOutput(*project, outputFormat)
 		},
 	}
@@ -148,7 +159,7 @@ func newProjectsCreateCommand() *cobra.Command {
 			fmt.Printf("✓ Project created successfully (ID: %d)\n", project.ID)
 
 			// Show the created project
-			outputFormat := viper.GetString("output")
+			outputFormat := getOutputFormat()
 			return formatProjectOutput(project, outputFormat)
 		},
 	}
@@ -207,7 +218,7 @@ func newProjectsUpdateCommand() *cobra.Command {
 			fmt.Printf("✓ Project updated successfully (ID: %d)\n", project.ID)
 
 			// Show the updated project
-			outputFormat := viper.GetString("output")
+			outputFormat := getOutputFormat()
 			return formatProjectOutput(*project, outputFormat)
 		},
 	}
@@ -273,9 +284,7 @@ func formatProjectsOutput(projects []models.Project, format string) error {
 	case "json":
 		return json.NewEncoder(os.Stdout).Encode(projects)
 	case "yaml":
-		// Would implement YAML output
-		fmt.Println("YAML output not implemented yet")
-		return nil
+		return yaml.NewEncoder(os.Stdout).Encode(projects)
 	default: // table
 		return formatProjectsTable(projects)
 	}
@@ -286,9 +295,7 @@ func formatProjectOutput(project models.Project, format string) error {
 	case "json":
 		return json.NewEncoder(os.Stdout).Encode(project)
 	case "yaml":
-		// Would implement YAML output
-		fmt.Println("YAML output not implemented yet")
-		return nil
+		return yaml.NewEncoder(os.Stdout).Encode(project)
 	default: // table
 		return formatProjectTable(project)
 	}
@@ -327,9 +334,9 @@ func getMockProjects() []models.Project {
 
 func getMockProject(id int) *models.Project {
 	projects := getMockProjects()
-	for _, p := range projects {
-		if p.ID == id {
-			return &p
+	for i := range projects {
+		if projects[i].ID == id {
+			return &projects[i]
 		}
 	}
 	return nil

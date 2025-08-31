@@ -106,5 +106,8 @@ cli/dist/
 cli/docs/
 cli/specsrv
 cli/specsrv.exe
+cli/specsrv-*
+cli/specsrv_*
+cli/completions/
 cli/coverage.out
 cli/coverage.html

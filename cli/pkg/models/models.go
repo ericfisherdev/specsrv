@@ -1,78 +1,82 @@
 package models
 
-import "time"
+import (
+	"time"
+	
+	"github.com/esfisher/specsrv/cli/pkg/enums"
+)
 
 // Project represents a project in the system
 type Project struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	TaskCount   int       `json:"task_count,omitempty"`
+	ID          int                 `json:"id"`
+	Name        string              `json:"name"`
+	Description string              `json:"description"`
+	Status      enums.ProjectStatus `json:"status"`
+	CreatedAt   time.Time           `json:"created_at"`
+	UpdatedAt   time.Time           `json:"updated_at"`
+	TaskCount   int                 `json:"task_count,omitempty"`
 }
 
 // ProjectCreateRequest represents a request to create a new project
 type ProjectCreateRequest struct {
-	Name        string `json:"name" validate:"required,min=1,max=100"`
-	Description string `json:"description" validate:"max=500"`
-	Status      string `json:"status" validate:"omitempty,oneof=active inactive archived"`
+	Name        string                `json:"name" validate:"required,min=1,max=100"`
+	Description string                `json:"description" validate:"max=500"`
+	Status      enums.ProjectStatus   `json:"status" validate:"omitempty"`
 }
 
 // ProjectUpdateRequest represents a request to update a project
 type ProjectUpdateRequest struct {
-	Name        *string `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
-	Description *string `json:"description,omitempty" validate:"omitempty,max=500"`
-	Status      *string `json:"status,omitempty" validate:"omitempty,oneof=active inactive archived"`
+	Name        *string                `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
+	Description *string                `json:"description,omitempty" validate:"omitempty,max=500"`
+	Status      *enums.ProjectStatus   `json:"status,omitempty" validate:"omitempty"`
 }
 
 // Task represents a task in the system
 type Task struct {
-	ID          int        `json:"id"`
-	ProjectID   int        `json:"project_id"`
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
-	Status      string     `json:"status"`
-	Priority    string     `json:"priority"`
-	AssigneeID  *int       `json:"assignee_id,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	DueDate     *time.Time `json:"due_date,omitempty"`
-	Tags        []string   `json:"tags,omitempty"`
-	Files       []File     `json:"files,omitempty"`
-	GitLinks    []GitLink  `json:"git_links,omitempty"`
-	AISummary   string     `json:"ai_summary,omitempty"`
+	ID          int                `json:"id"`
+	ProjectID   int                `json:"project_id"`
+	Title       string             `json:"title"`
+	Description string             `json:"description"`
+	Status      enums.TaskStatus   `json:"status"`
+	Priority    enums.TaskPriority `json:"priority"`
+	AssigneeID  *int               `json:"assignee_id,omitempty"`
+	CreatedAt   time.Time          `json:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at"`
+	DueDate     *time.Time         `json:"due_date,omitempty"`
+	Tags        []string           `json:"tags,omitempty"`
+	Files       []File             `json:"files,omitempty"`
+	GitLinks    []GitLink          `json:"git_links,omitempty"`
+	AISummary   string             `json:"ai_summary,omitempty"`
 }
 
 // TaskCreateRequest represents a request to create a new task
 type TaskCreateRequest struct {
-	ProjectID   int        `json:"project_id" validate:"required"`
-	Title       string     `json:"title" validate:"required,min=1,max=200"`
-	Description string     `json:"description" validate:"max=2000"`
-	Status      string     `json:"status" validate:"omitempty,oneof=backlog todo working review done"`
-	Priority    string     `json:"priority" validate:"omitempty,oneof=low medium high urgent"`
-	AssigneeID  *int       `json:"assignee_id,omitempty"`
-	DueDate     *time.Time `json:"due_date,omitempty"`
-	Tags        []string   `json:"tags,omitempty"`
+	ProjectID   int                  `json:"project_id" validate:"required"`
+	Title       string               `json:"title" validate:"required,min=1,max=200"`
+	Description string               `json:"description" validate:"max=2000"`
+	Status      enums.TaskStatus     `json:"status" validate:"omitempty"`
+	Priority    enums.TaskPriority   `json:"priority" validate:"omitempty"`
+	AssigneeID  *int                 `json:"assignee_id,omitempty"`
+	DueDate     *time.Time           `json:"due_date,omitempty"`
+	Tags        []string             `json:"tags,omitempty"`
 }
 
 // TaskUpdateRequest represents a request to update a task
 type TaskUpdateRequest struct {
-	Title       *string    `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
-	Description *string    `json:"description,omitempty" validate:"omitempty,max=2000"`
-	Status      *string    `json:"status,omitempty" validate:"omitempty,oneof=backlog todo working review done"`
-	Priority    *string    `json:"priority,omitempty" validate:"omitempty,oneof=low medium high urgent"`
-	AssigneeID  *int       `json:"assignee_id,omitempty"`
-	DueDate     *time.Time `json:"due_date,omitempty"`
-	Tags        []string   `json:"tags,omitempty"`
-	AISummary   *string    `json:"ai_summary,omitempty"`
+	Title       *string                `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
+	Description *string                `json:"description,omitempty" validate:"omitempty,max=2000"`
+	Status      *enums.TaskStatus      `json:"status,omitempty" validate:"omitempty"`
+	Priority    *enums.TaskPriority    `json:"priority,omitempty" validate:"omitempty"`
+	AssigneeID  *int                   `json:"assignee_id,omitempty"`
+	DueDate     *time.Time             `json:"due_date,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
+	AISummary   *string                `json:"ai_summary,omitempty"`
 }
 
 // File represents a file attachment
 type File struct {
 	ID         int       `json:"id"`
-	EntityType string    `json:"entity_type"` // "project" or "task"
+	EntityType string    `json:"entity_type" validate:"oneof=project task"` // "project" or "task"
 	EntityID   int       `json:"entity_id"`
 	Name       string    `json:"name"`
 	Path       string    `json:"path"`
@@ -126,17 +130,17 @@ type AuthRequest struct {
 
 // AuthResponse represents an authentication response
 type AuthResponse struct {
-	Token     string `json:"token"`
-	ExpiresAt string `json:"expires_at"`
-	User      User   `json:"user"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+	User      User      `json:"user"`
 }
 
 // ListOptions represents common options for list operations
 type ListOptions struct {
-	Page     int    `json:"page"`
-	PerPage  int    `json:"per_page"`
-	Sort     string `json:"sort"`
-	Order    string `json:"order"`
+	Page     int    `json:"page" validate:"omitempty,min=1"`
+	PerPage  int    `json:"per_page" validate:"omitempty,min=1,max=200"`
+	Sort     string `json:"sort" validate:"omitempty"`
+	Order    string `json:"order" validate:"omitempty,oneof=asc desc"`
 	Search   string `json:"search"`
 	Status   string `json:"status"`
 	Priority string `json:"priority"`

@@ -2,18 +2,20 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 # PHP linting for backend
-cd backend && \
-composer lint && \
-cd .. && composer rector && \
+(cd backend && composer lint && composer rector) &&
 
 # Go linting for CLI (if CLI directory exists and has Go files)
-if [ -d "cli" ] && [ -n "$(find cli -name "*.go" -type f 2>/dev/null)" ]; then
-  echo "Running Go linting for CLI..."
-  cd cli && \
-  go fmt ./... && \
-  go vet ./... && \
-  cd ..
-fi && \
+(
+  if [ -d "cli" ] && [ -n "$(find cli -name "*.go" -type f 2>/dev/null)" ]; then
+    echo "Running Go linting for CLI..."
+    cd cli && \
+    go fmt ./... && \
+    go vet ./... && \
+    go mod tidy
+  fi
+) &&
 
-# GitHub Actions linting
-actionlint .github/workflows/*.yml 2>/dev/null || true
+# GitHub Actions linting (non-blocking)
+if command -v actionlint >/dev/null 2>&1; then
+  actionlint .github/workflows/*.yml || true
+fi

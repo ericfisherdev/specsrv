@@ -21,7 +21,9 @@ Download the latest release for your platform from the [releases page](../../rel
 
 ```bash
 # Linux/macOS
-curl -L https://github.com/specsrv/specsrv-cli/releases/latest/download/specsrv-$(uname -s)-$(uname -m).tar.gz | tar xz
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
+curl -L https://github.com/specsrv/specsrv-cli/releases/latest/download/specsrv-${OS}-${ARCH}.tar.gz | tar xz
 sudo mv specsrv /usr/local/bin/
 
 # Windows (PowerShell)
@@ -53,18 +55,13 @@ make install
 
 ### Package Managers
 
-```bash
-# Homebrew (macOS/Linux)
-brew install specsrv/tap/specsrv
+**Coming Soon** — Package manager formulas/manifests are pending publication:
 
-# Scoop (Windows)
-scoop bucket add specsrv https://github.com/specsrv/scoop-bucket.git
-scoop install specsrv
+- **Homebrew (macOS/Linux)**: Coming Soon — formula pending
+- **Scoop (Windows)**: Coming Soon — manifest pending  
+- **APT (Ubuntu/Debian)**: Coming Soon — package pending
 
-# APT (Ubuntu/Debian)
-curl -s https://packagecloud.io/install/repositories/specsrv/cli/script.deb.sh | sudo bash
-sudo apt-get install specsrv
-```
+Use build from source or pre-built binaries until packages are published.
 
 ## Quick Start
 
@@ -268,22 +265,13 @@ export SPECSRV_VERBOSE=true
 
 ### Configuration Profiles
 
-Manage multiple environments with profiles:
+**Coming Soon** — Profile and config management commands are not yet implemented.
 
-```bash
-# Create profiles for different environments
-specsrv profile create development
-specsrv config set server.url http://localhost:8000
-
-specsrv profile create staging  
-specsrv config set server.url https://staging.example.com
-
-specsrv profile create production
-specsrv config set server.url https://api.example.com
-
-# Switch between profiles
-specsrv profile switch production
-```
+The following commands will be available in a future release:
+- `specsrv profile create <name>` — Create a new profile
+- `specsrv profile switch <name>` — Switch to a profile  
+- `specsrv config set <key> <value>` — Set configuration values
+- `specsrv config get <key>` — Get configuration values
 
 ## Development
 

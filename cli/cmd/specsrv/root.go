@@ -3,8 +3,10 @@ package specsrv
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
-	"github.com/specsrv/specsrv-cli/internal/commands"
+	"github.com/ericfisherdev/specsrv/cli/internal/commands"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -77,8 +79,8 @@ func init() {
 
 	// Bind flags to viper
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
-	viper.BindPFlag("output", rootCmd.PersistentFlags().Lookup("output"))
-	viper.BindPFlag("server", rootCmd.PersistentFlags().Lookup("server"))
+	viper.BindPFlag("output.format", rootCmd.PersistentFlags().Lookup("output"))
+	viper.BindPFlag("server.url", rootCmd.PersistentFlags().Lookup("server"))
 
 	// Add subcommands
 	addSubcommands()
@@ -93,6 +95,7 @@ func addSubcommands() {
 	rootCmd.AddCommand(commands.setup)
 	rootCmd.AddCommand(commands.auth)
 	rootCmd.AddCommand(commands.projects)
+	rootCmd.AddCommand(commands.completion)
 	// We'll add more subcommands here as we create them
 	// rootCmd.AddCommand(commands.tasks)
 	// rootCmd.AddCommand(commands.files)
@@ -101,19 +104,21 @@ func addSubcommands() {
 
 // commandSet holds all available commands
 type commandSet struct {
-	version  *cobra.Command
-	projects *cobra.Command
-	auth     *cobra.Command
-	setup    *cobra.Command
+	version    *cobra.Command
+	projects   *cobra.Command
+	auth       *cobra.Command
+	setup      *cobra.Command
+	completion *cobra.Command
 }
 
 // getCommands returns all available commands
 func getCommands() *commandSet {
 	return &commandSet{
-		version:  commands.NewVersionCommand(),
-		projects: commands.NewProjectsCommand(),
-		auth:     commands.NewAuthCommand(),
-		setup:    commands.NewSetupCommand(),
+		version:    commands.NewVersionCommand(),
+		projects:   commands.NewProjectsCommand(),
+		auth:       commands.NewAuthCommand(),
+		setup:      commands.NewSetupCommand(),
+		completion: commands.NewCompletionCommand(),
 	}
 }
 
@@ -124,7 +129,7 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		configDir := home + "/.specsrv"
+		configDir := filepath.Join(home, ".specsrv")
 		if err := os.MkdirAll(configDir, 0755); err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: Could not create config directory: %v\n", err)
 		}
@@ -134,8 +139,9 @@ func initConfig() {
 		viper.SetConfigName("config")
 	}
 
-	viper.AutomaticEnv()
 	viper.SetEnvPrefix("SPECSRV")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
 
 	// Set default values
 	viper.SetDefault("server.url", "http://localhost:8000")

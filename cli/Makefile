@@ -14,9 +14,9 @@ GOPROXY = $(shell $(GO) env GOPROXY)
 
 # Build flags
 LDFLAGS = -ldflags "-s -w \
-	-X 'github.com/specsrv/specsrv-cli/internal/commands.version=$(VERSION)' \
-	-X 'github.com/specsrv/specsrv-cli/internal/commands.buildDate=$(BUILD_DATE)' \
-	-X 'github.com/specsrv/specsrv-cli/internal/commands.gitCommit=$(GIT_COMMIT)'"
+	-X 'github.com/ericfisherdev/specsrv/cli/internal/commands.version=$(VERSION)' \
+	-X 'github.com/ericfisherdev/specsrv/cli/internal/commands.buildDate=$(BUILD_DATE)' \
+	-X 'github.com/ericfisherdev/specsrv/cli/internal/commands.gitCommit=$(GIT_COMMIT)'"
 
 # Directories
 BUILD_DIR = build
@@ -41,7 +41,7 @@ all: clean build
 build:
 	@echo "Building $(APP_NAME) v$(VERSION) for $(GOOS)/$(GOARCH)..."
 	@mkdir -p $(BUILD_DIR)
-	$(GO) build $(LDFLAGS) -o $(BUILD_DIR)/$(APP_NAME) ./main.go
+	$(GO) build $(LDFLAGS) -o $(BUILD_DIR)/$(APP_NAME)$(GOEXE) ./main.go
 
 # Build for all platforms
 .PHONY: build-all
@@ -79,9 +79,15 @@ package: build-all
 # Install locally
 .PHONY: install
 install: build
-	@echo "Installing $(APP_NAME) to $(GOPATH)/bin/..."
-	@cp $(BUILD_DIR)/$(APP_NAME) $(GOPATH)/bin/
-	@echo "✓ $(APP_NAME) installed successfully"
+	@echo "Installing $(APP_NAME)..."
+	@GOBIN=$$(go env GOBIN); \
+	if [ -z "$$GOBIN" ]; then \
+		GOBIN=$$(go env GOPATH)/bin; \
+	fi; \
+	GOEXE=$$(go env GOEXE); \
+	DEST=$$GOBIN/$(APP_NAME)$$GOEXE; \
+	cp $(BUILD_DIR)/$(APP_NAME)$(GOEXE) $$DEST; \
+	echo "✓ $(APP_NAME) installed to $$DEST"
 
 # Clean build artifacts
 .PHONY: clean
@@ -134,10 +140,10 @@ deps:
 docs: build
 	@echo "Generating documentation..."
 	@mkdir -p $(DOCS_DIR)
-	@./$(BUILD_DIR)/$(APP_NAME) completion bash > $(DOCS_DIR)/$(APP_NAME)-completion.bash
-	@./$(BUILD_DIR)/$(APP_NAME) completion zsh > $(DOCS_DIR)/$(APP_NAME)-completion.zsh
-	@./$(BUILD_DIR)/$(APP_NAME) completion fish > $(DOCS_DIR)/$(APP_NAME)-completion.fish
-	@./$(BUILD_DIR)/$(APP_NAME) completion powershell > $(DOCS_DIR)/$(APP_NAME)-completion.ps1
+	@./$(BUILD_DIR)/$(APP_NAME)$(GOEXE) completion bash > $(DOCS_DIR)/$(APP_NAME)-completion.bash
+	@./$(BUILD_DIR)/$(APP_NAME)$(GOEXE) completion zsh > $(DOCS_DIR)/$(APP_NAME)-completion.zsh
+	@./$(BUILD_DIR)/$(APP_NAME)$(GOEXE) completion fish > $(DOCS_DIR)/$(APP_NAME)-completion.fish
+	@./$(BUILD_DIR)/$(APP_NAME)$(GOEXE) completion powershell > $(DOCS_DIR)/$(APP_NAME)-completion.ps1
 	@echo "✓ Documentation generated in $(DOCS_DIR)/"
 
 # Development build (with debug info)

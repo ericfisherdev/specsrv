@@ -76,6 +76,11 @@ func Save(cfg *Config) error {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
+	// Set secure file permissions to protect tokens
+	if err := os.Chmod(configPath, 0600); err != nil {
+		return fmt.Errorf("failed to set secure permissions on config file: %w", err)
+	}
+
 	return nil
 }
 
@@ -88,7 +93,7 @@ func GetConfigDir() (string, error) {
 
 	configDir := filepath.Join(home, ".specsrv")
 
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		return "", err
 	}
 
@@ -160,6 +165,11 @@ func SaveProfiles(profiles *Profiles) error {
 
 	if err := profileViper.WriteConfigAs(profilesPath); err != nil {
 		return fmt.Errorf("failed to write profiles config: %w", err)
+	}
+
+	// Set restrictive permissions (owner read/write only)
+	if err := os.Chmod(profilesPath, 0o600); err != nil {
+		return fmt.Errorf("failed to set secure permissions on profiles config: %w", err)
 	}
 
 	return nil

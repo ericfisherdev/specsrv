@@ -7,9 +7,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/specsrv/specsrv-cli/internal/client"
-	"github.com/specsrv/specsrv-cli/internal/config"
-	"github.com/specsrv/specsrv-cli/pkg/models"
+	"github.com/ericfisherdev/specsrv/cli/internal/client"
+	"github.com/ericfisherdev/specsrv/cli/internal/config"
+	"github.com/ericfisherdev/specsrv/cli/pkg/models"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -185,16 +185,24 @@ func testAuthentication(cfg *config.Config) error {
 
 	apiClient := client.NewClient(cfg)
 
-	// Try to make an authenticated request
-	// In real implementation, this would call a protected endpoint
-	if err := apiClient.HealthCheck(); err != nil {
+	// Try to call a protected endpoint to validate the token
+	_, err := apiClient.Me()
+	if err != nil {
 		// For now, we'll consider mock auth always valid
 		if strings.Contains(cfg.Auth.Token, "mock-token") {
 			fmt.Println("✓ Authentication is valid (mock)")
 			return nil
 		}
-		fmt.Println("✗ Authentication test failed")
-		return fmt.Errorf("authentication may be invalid: %w", err)
+		
+		// Fallback to health check but label it as a weak check
+		fmt.Println("Protected endpoint unavailable, falling back to weak check...")
+		if healthErr := apiClient.HealthCheck(); healthErr != nil {
+			fmt.Println("✗ Authentication test failed (weak check)")
+			return fmt.Errorf("authentication may be invalid: %w", healthErr)
+		}
+		
+		fmt.Println("⚠ Authentication weak check passed (does not guarantee token validity)")
+		return nil
 	}
 
 	fmt.Println("✓ Authentication is valid")

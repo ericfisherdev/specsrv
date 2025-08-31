@@ -7,9 +7,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/specsrv/specsrv-cli/internal/client"
-	"github.com/specsrv/specsrv-cli/internal/config"
-	"github.com/specsrv/specsrv-cli/pkg/models"
+	"github.com/ericfisherdev/specsrv/cli/internal/client"
+	"github.com/ericfisherdev/specsrv/cli/internal/config"
+	"github.com/ericfisherdev/specsrv/cli/pkg/models"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -30,6 +30,11 @@ func RunInteractiveSetup() error {
 }
 
 func runInteractiveSetup(cmd *cobra.Command, args []string) error {
+	// Check if stdin is a terminal before starting interactive setup
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		return fmt.Errorf("interactive setup requires a TTY; run with non-interactive flags or set environment variables - see documentation for details")
+	}
+
 	fmt.Println("Welcome to SpecSrv CLI Setup!")
 	fmt.Println("==============================")
 	fmt.Println("This wizard will help you configure the SpecSrv CLI.")
@@ -67,7 +72,7 @@ func runInteractiveSetup(cmd *cobra.Command, args []string) error {
 		cfg.Output.Format = "table"
 	}
 
-	// Step 3: Color output
+	// Step 2b: Color output
 	fmt.Printf("Enable colored output? (y/N) [default: y]: ")
 	colorChoice, _ := reader.ReadString('\n')
 	colorChoice = strings.TrimSpace(strings.ToLower(colorChoice))
@@ -156,7 +161,7 @@ func runInteractiveSetup(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Step 5: Advanced Options
+	// Step 4: Advanced Options
 	fmt.Println("\nStep 4: Advanced Options")
 	fmt.Println("------------------------")
 	fmt.Printf("Enable verbose output by default? (y/N) [default: n]: ")

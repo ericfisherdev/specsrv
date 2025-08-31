@@ -1,6 +1,7 @@
 package errors
 
 import (
+	stderrors "errors"
 	"fmt"
 	"strings"
 )
@@ -137,38 +138,42 @@ func (e *ValidationErrors) HasErrors() bool {
 
 // IsValidationError checks if an error is a validation error
 func IsValidationError(err error) bool {
-	cliErr, ok := err.(*CLIError)
-	return ok && cliErr.Type == ErrorTypeValidation
+	var cliErr *CLIError
+	if stderrors.As(err, &cliErr) {
+		return cliErr.Type == ErrorTypeValidation
+	}
+	var validationErr *ValidationError
+	return stderrors.As(err, &validationErr)
 }
 
 // IsNotFoundError checks if an error is a not found error
 func IsNotFoundError(err error) bool {
-	cliErr, ok := err.(*CLIError)
-	return ok && cliErr.Type == ErrorTypeNotFound
+	var cliErr *CLIError
+	return stderrors.As(err, &cliErr) && cliErr.Type == ErrorTypeNotFound
 }
 
 // IsUnauthorizedError checks if an error is an unauthorized error
 func IsUnauthorizedError(err error) bool {
-	cliErr, ok := err.(*CLIError)
-	return ok && cliErr.Type == ErrorTypeUnauthorized
+	var cliErr *CLIError
+	return stderrors.As(err, &cliErr) && cliErr.Type == ErrorTypeUnauthorized
 }
 
 // IsNetworkError checks if an error is a network error
 func IsNetworkError(err error) bool {
-	cliErr, ok := err.(*CLIError)
-	return ok && cliErr.Type == ErrorTypeNetwork
+	var cliErr *CLIError
+	return stderrors.As(err, &cliErr) && cliErr.Type == ErrorTypeNetwork
 }
 
 // IsConfigError checks if an error is a configuration error
 func IsConfigError(err error) bool {
-	cliErr, ok := err.(*CLIError)
-	return ok && cliErr.Type == ErrorTypeConfig
+	var cliErr *CLIError
+	return stderrors.As(err, &cliErr) && cliErr.Type == ErrorTypeConfig
 }
 
 // IsInternalError checks if an error is an internal error
 func IsInternalError(err error) bool {
-	cliErr, ok := err.(*CLIError)
-	return ok && cliErr.Type == ErrorTypeInternal
+	var cliErr *CLIError
+	return stderrors.As(err, &cliErr) && cliErr.Type == ErrorTypeInternal
 }
 
 // WrapError wraps an existing error with additional context
