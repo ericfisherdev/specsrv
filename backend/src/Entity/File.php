@@ -7,7 +7,11 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: FileRepository::class)]
-#[ORM\Table(name: 'files')]
+#[ORM\Table(name: 'files', indexes: [
+    new ORM\Index(name: 'idx_file_task', columns: ['task_id']),
+    new ORM\Index(name: 'idx_file_entity', columns: ['entity_type', 'entity_id']),
+])]
+#[ORM\HasLifecycleCallbacks]
 class File
 {
     public const TYPE_UPLOAD = 'upload';

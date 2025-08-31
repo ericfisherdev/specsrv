@@ -57,11 +57,13 @@ RUN apk add --no-cache \
     supervisor \
     sqlite \
     sqlite-dev \
+    postgresql-dev \
     curl \
     fcgi \
     && docker-php-ext-install \
     pdo \
     pdo_sqlite \
+    pdo_pgsql \
     opcache
 
 # Configure PHP for production

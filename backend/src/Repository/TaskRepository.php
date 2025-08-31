@@ -81,6 +81,7 @@ class TaskRepository extends ServiceEntityRepository
         }
 
         if (null !== $search) {
+            // Use LIKE for both platforms as FUNCTION() is not supported in DQL
             $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
                ->setParameter('search', '%'.$search.'%');
         }
@@ -109,6 +110,7 @@ class TaskRepository extends ServiceEntityRepository
         }
 
         if (null !== $search) {
+            // Use LIKE for both platforms as FUNCTION() is not supported in DQL
             $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
                ->setParameter('search', '%'.$search.'%');
         }

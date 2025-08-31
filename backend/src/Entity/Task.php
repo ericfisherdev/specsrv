@@ -6,11 +6,18 @@ use App\Enum\TaskStatusEnum;
 use App\Repository\TaskRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
-#[ORM\Table(name: 'tasks')]
+#[ORM\Table(name: 'tasks', indexes: [
+    new ORM\Index(name: 'idx_task_project', columns: ['project_id']),
+    new ORM\Index(name: 'idx_task_status', columns: ['status']),
+    new ORM\Index(name: 'idx_task_priority', columns: ['priority']),
+    new ORM\Index(name: 'idx_task_project_status', columns: ['project_id', 'status']),
+    new ORM\Index(name: 'idx_task_created_at', columns: ['created_at']),
+    new ORM\Index(name: 'idx_task_updated_at', columns: ['updated_at']),
+])]
+#[ORM\HasLifecycleCallbacks]
 class Task
 {
     public const PRIORITY_LOW = 'low';
@@ -19,30 +26,30 @@ class Task
     public const PRIORITY_CRITICAL = 'critical';
 
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\GeneratedValue(strategy: 'IDENTITY')]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: 'string', length: 255)]
     private ?string $title = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'todo'])]
     private ?string $status = 'todo';
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'medium'])]
     private ?string $priority = self::PRIORITY_MEDIUM;
 
-    #[ORM\ManyToOne(inversedBy: 'tasks')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: Project::class, inversedBy: 'tasks')]
+    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Project $project = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private ?\DateTimeInterface $createdAt = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private ?\DateTimeInterface $updatedAt = null;
 
     #[ORM\OneToMany(targetEntity: File::class, mappedBy: 'task', orphanRemoval: true)]
@@ -264,5 +271,22 @@ class Task
             self::PRIORITY_CRITICAL => 'Critical',
             default => 'Unknown',
         };
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        if (null === $this->createdAt) {
+            $this->createdAt = new \DateTime();
+        }
+        if (null === $this->updatedAt) {
+            $this->updatedAt = new \DateTime();
+        }
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new \DateTime();
     }
 }

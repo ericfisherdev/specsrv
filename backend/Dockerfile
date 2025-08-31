@@ -52,10 +52,12 @@ RUN apk add --no-cache \
     supervisor \
     sqlite \
     sqlite-dev \
+    postgresql-dev \
     curl \
     && docker-php-ext-install \
     pdo \
     pdo_sqlite \
+    pdo_pgsql \
     opcache
 
 # Create application user

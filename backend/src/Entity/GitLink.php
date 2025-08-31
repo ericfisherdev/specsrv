@@ -3,29 +3,32 @@
 namespace App\Entity;
 
 use App\Repository\GitLinkRepository;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: GitLinkRepository::class)]
-#[ORM\Table(name: 'git_links')]
+#[ORM\Table(name: 'git_links', indexes: [
+    new ORM\Index(name: 'idx_git_link_task', columns: ['task_id']),
+    new ORM\Index(name: 'idx_git_link_commit', columns: ['commit_hash']),
+    new ORM\Index(name: 'idx_git_link_pr', columns: ['pr_reference']),
+])]
 class GitLink
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\GeneratedValue(strategy: 'IDENTITY')]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'gitLinks')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: Task::class, inversedBy: 'gitLinks')]
+    #[ORM\JoinColumn(name: 'task_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Task $task = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $commitHash = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $prReference = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private ?\DateTimeInterface $createdAt = null;
 
     public function __construct()

@@ -11,7 +11,7 @@ services:
     environment:
       - APP_ENV=dev
       - APP_DEBUG=1
-      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/db.sqlite
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-specsrv-db-user}:${POSTGRES_PASSWORD:?set in .env}@specsrv-postgres-dev:5432/${POSTGRES_DB:-specsrv_dev}
       - TRUSTED_PROXIES=127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
     volumes:
       # Mount source code for hot reloading
@@ -26,7 +26,10 @@ services:
     networks:
       - specsrv-dev-network
     depends_on:
-      - specsrv-webpack-dev
+      specsrv-postgres-dev:
+        condition: service_healthy
+      specsrv-webpack-dev:
+        condition: service_started
     healthcheck:
       test: ["CMD", "php-fpm", "-t"]
       interval: 30s
@@ -34,6 +37,29 @@ services:
       retries: 3
       start_period: 60s
     restart: unless-stopped
+
+  specsrv-postgres-dev:
+    image: postgres:15
+    container_name: specsrv-postgres-dev
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-specsrv_dev}
+      - POSTGRES_USER=${POSTGRES_USER:-specsrv-db-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set in .env}
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 --auth-local=scram-sha-256
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts with main compose
+    volumes:
+      - specsrv-dev-postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-postgres.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-specsrv-db-user} -d ${POSTGRES_DB:-specsrv_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - specsrv-dev-network
 
   # Webpack dev server for hot module replacement
   specsrv-webpack-dev:
@@ -71,6 +97,8 @@ volumes:
   specsrv-dev-logs:
     driver: local
   specsrv-dev-uploads:
+    driver: local
+  specsrv-dev-postgres-data:
     driver: local
 
 networks:

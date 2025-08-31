@@ -82,8 +82,9 @@ class ProjectRepository extends ServiceEntityRepository
             ->setParameter('user', $user);
 
         if (! empty($search)) {
+            // Use LIKE for both platforms as FUNCTION() is not supported in DQL
             $qb->andWhere('p.title LIKE :search OR p.description LIKE :search')
-                ->setParameter('search', '%'.$search.'%');
+               ->setParameter('search', '%'.$search.'%');
         }
 
         // Note: Projects don't have status field, but we can filter by task counts later if needed
@@ -101,11 +102,15 @@ class ProjectRepository extends ServiceEntityRepository
      */
     public function searchByTitle(User $user, string $query): array
     {
-        return $this->createQueryBuilder('p')
+        $qb = $this->createQueryBuilder('p')
             ->andWhere('p.user = :user')
-            ->andWhere('p.title LIKE :query OR p.description LIKE :query')
-            ->setParameter('user', $user)
-            ->setParameter('query', '%'.$query.'%')
+            ->setParameter('user', $user);
+
+        // Use LIKE for both platforms as FUNCTION() is not supported in DQL
+        $qb->andWhere('p.title LIKE :query OR p.description LIKE :query')
+           ->setParameter('query', '%'.$query.'%');
+
+        return $qb
             ->orderBy('p.updatedAt', 'DESC')
             ->getQuery()
             ->getResult();

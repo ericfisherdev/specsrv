@@ -8,31 +8,35 @@ use App\Repository\ApiKeyRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ApiKeyRepository::class)]
-#[ORM\Table(name: 'api_keys')]
+#[ORM\Table(name: 'api_keys', indexes: [
+    new ORM\Index(name: 'idx_api_key_user', columns: ['user_id']),
+    new ORM\Index(name: 'idx_api_key_active', columns: ['is_active']),
+    new ORM\Index(name: 'idx_api_key_hash', columns: ['key_hash']),
+])]
 class ApiKey
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\GeneratedValue(strategy: 'IDENTITY')]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\Column(length: 64, unique: true)]
+    #[ORM\Column(type: 'string', length: 64, unique: true)]
     private string $keyHash;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: 'string', length: 255)]
     private string $name;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $lastUsedAt = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private bool $isActive = true;
 
     public function __construct()
