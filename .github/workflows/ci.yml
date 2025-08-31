@@ -75,6 +75,8 @@ jobs:
         mkdir -p var/data var/log var/cache var/coverage
         chmod -R 755 var/
         APP_ENV=test php bin/console cache:clear
+        # Initialize migration metadata storage
+        APP_ENV=test php bin/console doctrine:migrations:sync-metadata-storage
         # Mark SQLite-specific migrations as executed (they're incompatible with PostgreSQL)
         APP_ENV=test php bin/console doctrine:migrations:version --add --no-interaction DoctrineMigrations\\Version20250829000001
         APP_ENV=test php bin/console doctrine:migrations:version --add --no-interaction DoctrineMigrations\\Version20250829072001
