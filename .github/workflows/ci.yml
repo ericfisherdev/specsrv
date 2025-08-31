@@ -10,6 +10,21 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: specsrv1234
+          POSTGRES_USER: specsrv-db-user
+          POSTGRES_DB: specsrv_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+    
     strategy:
       matrix:
         php-version: [8.1, 8.2, 8.3]
@@ -21,11 +36,12 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php-version }}
+        extensions: pdo, pdo_pgsql, pgsql
         tools: composer:v2
         coverage: xdebug
 
     - name: Cache Composer dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /tmp/composer-cache
         key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -42,6 +58,11 @@ jobs:
       working-directory: backend
       run: |
         composer install --no-progress --prefer-dist --optimize-autoloader
+
+    - name: Setup PostgreSQL extensions
+      run: |
+        PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv_test -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+        PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv_test -c 'CREATE EXTENSION IF NOT EXISTS "pg_trgm";'
 
     - name: Setup test environment and database
       working-directory: backend
@@ -108,7 +129,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
 
     - name: Create minimal .env file for Docker build
       working-directory: backend
