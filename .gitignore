@@ -112,3 +112,7 @@ cli/completions/
 cli/coverage.out
 cli/coverage.html
 pgmigration-tasks.md
+
+# Planning and documentation directories
+planning/
+cli/planning/
