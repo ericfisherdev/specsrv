@@ -16,7 +16,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: specsrv1234
           POSTGRES_USER: specsrv-db-user
-          POSTGRES_DB: specsrv_test
+          POSTGRES_DB: specsrv
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -61,8 +61,8 @@ jobs:
 
     - name: Setup PostgreSQL extensions
       run: |
-        PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv_test -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
-        PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv_test -c 'CREATE EXTENSION IF NOT EXISTS "pg_trgm";'
+        PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+        PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv -c 'CREATE EXTENSION IF NOT EXISTS "pg_trgm";'
 
     - name: Setup test environment and database
       working-directory: backend
