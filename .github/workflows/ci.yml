@@ -61,7 +61,7 @@ jobs:
 
     - name: Setup PostgreSQL databases and extensions
       run: |
-        # Create test database (Doctrine will append _test to base name 'specsrv')
+        # Create test database (Doctrine will append _test to base name 'specsrv', so we need 'specsrv_test')
         PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv -c 'CREATE DATABASE specsrv_test;'
         # Add extensions to both databases
         PGPASSWORD=specsrv1234 psql -h localhost -p 5433 -U specsrv-db-user -d specsrv -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
