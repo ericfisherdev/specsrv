@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>SpecSrv - Task Management System</title>
+    
+    <!-- Preconnect to improve performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- Meta tags for SEO and social sharing -->
+    <meta name="description" content="SpecSrv - Professional task management and project collaboration system">
+    <meta name="keywords" content="task management, project management, collaboration, productivity">
+    <meta name="author" content="SpecSrv">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SpecSrv - Task Management System">
+    <meta property="og:description" content="Professional task management and project collaboration system">
+    <meta property="og:url" content="">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="SpecSrv - Task Management System">
+    <meta property="twitter:description" content="Professional task management and project collaboration system">
+    
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#0ea5e9">
+    
+    <!-- Prevent zoom on iOS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Style will be injected by webpack -->
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <!-- Loading spinner shown before JavaScript loads -->
+    <div id="initial-loading" class="fixed inset-0 flex items-center justify-center bg-white dark:bg-gray-900 z-50">
+        <div class="flex flex-col items-center space-y-4">
+            <div class="loading-spinner w-8 h-8 text-primary-500"></div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Loading SpecSrv...</p>
+        </div>
+    </div>
+    
+    <!-- Main application container -->
+    <div id="app" class="hidden">
+        <!-- Navigation will be injected here -->
+        <nav id="main-navigation"></nav>
+        
+        <!-- Main content area -->
+        <main id="main-content" class="min-h-screen">
+            <!-- Page content will be dynamically loaded here -->
+        </main>
+        
+        <!-- Global modals and overlays -->
+        <div id="modal-root"></div>
+        <div id="toast-root"></div>
+    </div>
+    
+    <!-- JavaScript will be injected by webpack -->
+    
+    <!-- Fallback for users with JavaScript disabled -->
+    <noscript>
+        <div class="fixed inset-0 flex items-center justify-center bg-white dark:bg-gray-900 p-8">
+            <div class="max-w-md text-center">
+                <h1 class="text-2xl font-bold mb-4">JavaScript Required</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">
+                    SpecSrv requires JavaScript to function properly. Please enable JavaScript in your browser and reload the page.
+                </p>
+                <a href="/" class="btn btn-primary">Reload Page</a>
+            </div>
+        </div>
+    </noscript>
+</body>
+</html>

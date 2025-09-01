@@ -58,6 +58,17 @@ yarn-debug.log*
 yarn-error.log*
 yarn.lock
 
+# Frontend build artifacts
+frontend/dist/
+frontend/node_modules/
+frontend/coverage/
+frontend/.cache/
+frontend/build/
+
+# Backend build artifacts (Symfony Encore)
+backend/public/build/
+backend/node_modules/
+
 # Environment files
 .env
 .env.local

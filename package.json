@@ -8,5 +8,8 @@
   },
   "devDependencies": {
     "husky": "^8.0.3"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.12"
   }
 }

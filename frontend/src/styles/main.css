@@ -1,0 +1,297 @@
+/* Main CSS entry point for SpecSrv Frontend */
+
+/* Import Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom base styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply font-sans antialiased;
+  }
+  
+  /* Focus styles for accessibility */
+  *:focus {
+    outline: none;
+  }
+  
+  *:focus-visible {
+    @apply focus-visible;
+  }
+  
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-800;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-500;
+  }
+  
+  /* Selection styles */
+  ::selection {
+    @apply bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100;
+  }
+  
+  /* Placeholder styles */
+  ::placeholder {
+    @apply text-gray-400 dark:text-gray-500;
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  /* Enhanced loading spinner */
+  .loading-spinner {
+    @apply inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin;
+  }
+  
+  .loading-spinner-lg {
+    @apply w-8 h-8 border-4;
+  }
+  
+  /* Toast notification styles */
+  .toast {
+    @apply fixed top-4 right-4 max-w-sm w-full bg-white dark:bg-surface-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50 transform transition-all duration-300;
+  }
+  
+  .toast-success {
+    @apply border-l-4 border-l-emerald-500;
+  }
+  
+  .toast-error {
+    @apply border-l-4 border-l-red-500;
+  }
+  
+  .toast-warning {
+    @apply border-l-4 border-l-amber-500;
+  }
+  
+  .toast-info {
+    @apply border-l-4 border-l-blue-500;
+  }
+  
+  /* Navigation styles */
+  .nav-link {
+    @apply flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200;
+  }
+  
+  .nav-link:hover {
+    @apply bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100;
+  }
+  
+  .nav-link.active {
+    @apply bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300;
+  }
+  
+  /* Page transitions */
+  .page-enter {
+    @apply opacity-0 translate-y-4;
+  }
+  
+  .page-enter-active {
+    @apply opacity-100 translate-y-0 transition-all duration-300 ease-out;
+  }
+  
+  .page-exit {
+    @apply opacity-100 translate-y-0;
+  }
+  
+  .page-exit-active {
+    @apply opacity-0 -translate-y-4 transition-all duration-200 ease-in;
+  }
+  
+  /* Fade transitions */
+  .fade-enter {
+    @apply opacity-0;
+  }
+  
+  .fade-enter-active {
+    @apply opacity-100 transition-opacity duration-200 ease-out;
+  }
+  
+  .fade-exit {
+    @apply opacity-100;
+  }
+  
+  .fade-exit-active {
+    @apply opacity-0 transition-opacity duration-150 ease-in;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  /* Text utilities */
+  .text-truncate-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .text-truncate-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+  
+  /* Glass morphism effect */
+  .glass {
+    backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.125);
+  }
+  
+  .glass-dark {
+    backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(17, 25, 40, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.125);
+  }
+  
+  /* Animation utilities */
+  .animate-slide-in-bottom {
+    animation: slideInBottom 0.3s ease-out;
+  }
+  
+  .animate-slide-out-bottom {
+    animation: slideOutBottom 0.2s ease-in;
+  }
+  
+  /* Custom keyframes */
+  @keyframes slideInBottom {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideOutBottom {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  }
+  
+  /* Layout utilities */
+  .sidebar-width {
+    width: 16rem; /* 256px */
+  }
+  
+  @media (max-width: 768px) {
+    .sidebar-width {
+      width: 100%;
+    }
+  }
+  
+  /* Print styles */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    
+    body {
+      background: white !important;
+      color: black !important;
+    }
+  }
+}
+
+/* Third-party library overrides */
+
+/* HTMX loading indicators */
+.htmx-indicator {
+  @apply opacity-0 transition-opacity duration-200;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  @apply opacity-100;
+}
+
+/* AlpineJS transition classes */
+[x-cloak] {
+  display: none !important;
+}
+
+/* Override AlpineJS default transitions with Tailwind classes */
+.x-transition-enter {
+  @apply transition-all ease-out duration-300;
+}
+
+.x-transition-enter-start {
+  @apply opacity-0 transform scale-95;
+}
+
+.x-transition-enter-end {
+  @apply opacity-100 transform scale-100;
+}
+
+.x-transition-leave {
+  @apply transition-all ease-in duration-200;
+}
+
+.x-transition-leave-start {
+  @apply opacity-100 transform scale-100;
+}
+
+.x-transition-leave-end {
+  @apply opacity-0 transform scale-95;
+}
+
+/* Dark mode specific overrides */
+@media (prefers-color-scheme: dark) {
+  /* Ensure proper dark mode defaults */
+  html {
+    color-scheme: dark;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card {
+    @apply border-2;
+  }
+  
+  .btn {
+    @apply border-2 border-current;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .loading-spinner {
+    animation: none;
+  }
+}
