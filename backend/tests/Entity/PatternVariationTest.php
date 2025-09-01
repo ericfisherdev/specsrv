@@ -37,7 +37,7 @@ class PatternVariationTest extends TestCase
     public function testOnPrePersist(): void
     {
         $variation = new PatternVariation();
-        
+
         // Use reflection to set properties to null for testing lifecycle callbacks
         $reflection = new \ReflectionClass($variation);
         $createdAtProperty = $reflection->getProperty('createdAt');

@@ -62,28 +62,29 @@ class KnowledgePatternTest extends TestCase
 
         // Create a mock that will be added and then removed
         $variation = $this->createMock(PatternVariation::class);
-        
+
         // For adding: expect setBasePattern to be called with the pattern
         $variation->expects($this->exactly(2))->method('setBasePattern')
             ->willReturnCallback(function ($arg) use ($pattern, $variation) {
                 // This will be called twice: once with $pattern, once with null
                 static $callCount = 0;
-                $callCount++;
-                if ($callCount === 1) {
+                ++$callCount;
+                if (1 === $callCount) {
                     $this->assertSame($pattern, $arg);
                 } else {
                     $this->assertNull($arg);
                 }
+
                 return $variation; // Return self for fluent interface
             });
-        
+
         // For removing: expect getBasePattern to return the pattern
         $variation->expects($this->once())->method('getBasePattern')->willReturn($pattern);
 
         // Add the variation
         $pattern->addVariation($variation);
         $this->assertCount(1, $pattern->getVariations());
-        
+
         // Remove the variation
         $pattern->removeVariation($variation);
         $this->assertFalse($pattern->getVariations()->contains($variation));
@@ -93,7 +94,7 @@ class KnowledgePatternTest extends TestCase
     public function testOnPrePersist(): void
     {
         $pattern = new KnowledgePattern();
-        
+
         // Use reflection to set properties to null for testing lifecycle callbacks
         $reflection = new \ReflectionClass($pattern);
         $createdAtProperty = $reflection->getProperty('createdAt');

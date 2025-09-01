@@ -56,7 +56,7 @@ class AgentInteractionTest extends TestCase
     public function testOnPrePersist(): void
     {
         $interaction = new AgentInteraction();
-        
+
         // Test that onPrePersist sets createdAt when it's null (constructor already sets it)
         // We need to use reflection to test the lifecycle callback properly
         $reflection = new \ReflectionClass($interaction);

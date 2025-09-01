@@ -133,12 +133,12 @@ class KnowledgePatternRepository extends ServiceEntityRepository
         }
 
         $conn = $this->getEntityManager()->getConnection();
-        
+
         $conditions = [];
         foreach ($tags as $index => $tag) {
             $conditions[] = "kp.tags::text LIKE '%\"".addslashes($tag)."\"%'";
         }
-        
+
         $sql = '
             SELECT kp.id
             FROM knowledge_patterns kp

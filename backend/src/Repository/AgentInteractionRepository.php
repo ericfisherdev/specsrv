@@ -104,7 +104,7 @@ class AgentInteractionRepository extends ServiceEntityRepository
             }
             $contextConditions = 'AND ('.implode(' AND ', $conditions).')';
         }
-        
+
         $sql = '
             SELECT ai.id
             FROM agent_interactions ai
@@ -176,7 +176,7 @@ class AgentInteractionRepository extends ServiceEntityRepository
     public function getInteractionTrends(\DateTimeInterface $from, \DateTimeInterface $to): array
     {
         $conn = $this->getEntityManager()->getConnection();
-        
+
         $sql = '
             SELECT 
                 DATE(created_at) as date,
@@ -191,7 +191,7 @@ class AgentInteractionRepository extends ServiceEntityRepository
         $stmt = $conn->prepare($sql);
         $stmt->bindValue('from', $from->format('Y-m-d H:i:s'));
         $stmt->bindValue('to', $to->format('Y-m-d H:i:s'));
-        
+
         return $stmt->executeQuery()->fetchAllAssociative();
     }
 }

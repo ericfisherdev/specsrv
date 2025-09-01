@@ -29,7 +29,7 @@ class AgentInteractionRepositoryTest extends AbstractKernelTestCase
     {
         // First check how many interactions already exist for this task
         $existingCount = count($this->repository->findByTask($this->testTask));
-        
+
         // Create test interactions
         $interaction1 = $this->createTestInteraction($this->testTask, 'agent_a', 0.8);
         $interaction2 = $this->createTestInteraction($this->testTask, 'agent_b', 0.9);
@@ -42,7 +42,7 @@ class AgentInteractionRepositoryTest extends AbstractKernelTestCase
 
         $this->assertCount($existingCount + 2, $results);
         // Find our new interactions in the results
-        $resultIds = array_map(fn($i) => $i->getId(), $results);
+        $resultIds = array_map(fn ($i) => $i->getId(), $results);
         $this->assertContains($interaction1->getId(), $resultIds);
         $this->assertContains($interaction2->getId(), $resultIds);
     }
