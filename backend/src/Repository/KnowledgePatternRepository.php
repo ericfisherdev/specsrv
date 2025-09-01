@@ -128,23 +128,45 @@ class KnowledgePatternRepository extends ServiceEntityRepository
      */
     public function findByTags(array $tags, int $limit = 20): array
     {
-        $qb = $this->createQueryBuilder('kp');
-
-        foreach ($tags as $index => $tag) {
-            $qb->andWhere("JSON_CONTAINS(kp.tags, :tag{$index}) = 1")
-               ->setParameter("tag{$index}", json_encode($tag));
+        if (empty($tags)) {
+            return [];
         }
 
-        return $qb->orderBy('kp.confidenceScore', 'DESC')
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+        $conn = $this->getEntityManager()->getConnection();
+        
+        $conditions = [];
+        foreach ($tags as $index => $tag) {
+            $conditions[] = "kp.tags::text LIKE '%\"".addslashes($tag)."\"%'";
+        }
+        
+        $sql = '
+            SELECT kp.id
+            FROM knowledge_patterns kp
+            WHERE '.implode(' AND ', $conditions).'
+            ORDER BY kp.confidence_score DESC
+            LIMIT '.(int) $limit.'
+        ';
+
+        $result = $conn->executeQuery($sql)->fetchAllAssociative();
+        $ids = array_column($result, 'id');
+
+        if (empty($ids)) {
+            return [];
+        }
+
+        // Bulk load by IDs to maintain order
+        $qb = $this->createQueryBuilder('kp');
+        $qb->where($qb->expr()->in('kp.id', ':ids'))
+           ->setParameter('ids', $ids)
+           ->orderBy('kp.confidenceScore', 'DESC');
+
+        return $qb->getQuery()->getResult();
     }
 
     public function getTopPerformingPatterns(int $limit = 10): array
     {
         return $this->createQueryBuilder('kp')
-            ->select('kp, (kp.confidenceScore * kp.usageCount) as performanceScore')
+            ->addSelect('(kp.confidenceScore * kp.usageCount) as HIDDEN performanceScore')
             ->orderBy('performanceScore', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()

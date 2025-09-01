@@ -94,22 +94,25 @@ class AgentInteractionRepository extends ServiceEntityRepository
         float $minSuccessScore = 0.7,
         int $limit = 10
     ): array {
-        // Native SQL for JSON querying (MySQL 8+). Ensure all provided keys exist in the JSON object.
+        // Native SQL for JSON querying (PostgreSQL compatible). Ensure all provided keys exist in the JSON object.
         $conn = $this->getEntityManager()->getConnection();
-        $pathParams = [];
-        foreach ($contextKeys as $idx => $key) {
-            // Quote JSON path keys to be safe: $.\"key\"
-            $pathParams[] = ':path'.$idx;
+        $contextConditions = '';
+        if ($contextKeys) {
+            $conditions = [];
+            foreach ($contextKeys as $idx => $key) {
+                $conditions[] = "ai.input_context->>'".addslashes($key)."' IS NOT NULL";
+            }
+            $contextConditions = 'AND ('.implode(' AND ', $conditions).')';
         }
-        $pathsExpr = $pathParams ? ', '.implode(', ', $pathParams) : '';
+        
         $sql = '
             SELECT ai.id
             FROM agent_interactions ai
             WHERE ai.agent_type = :agentType
               AND ai.success_score >= :minScore
               AND ai.input_context IS NOT NULL
-              AND JSON_VALID(ai.input_context)
-              '.($pathsExpr ? "AND JSON_CONTAINS_PATH(ai.input_context, 'all' {$pathsExpr})" : '').'
+              AND ai.input_context::text != \'null\'
+              '.$contextConditions.'
             ORDER BY ai.success_score DESC, ai.created_at DESC
             LIMIT :limit
         ';
@@ -118,9 +121,6 @@ class AgentInteractionRepository extends ServiceEntityRepository
         $stmt->bindValue('agentType', $agentType);
         $stmt->bindValue('minScore', $minSuccessScore);
         $stmt->bindValue('limit', $limit, \PDO::PARAM_INT);
-        foreach ($contextKeys as $idx => $key) {
-            $stmt->bindValue('path'.$idx, '$."'.str_replace('"', '\"', $key).'"');
-        }
         $result = $stmt->executeQuery()->fetchAllAssociative();
 
         // Avoid N+1: bulk-load by IDs and preserve order.
@@ -163,7 +163,7 @@ class AgentInteractionRepository extends ServiceEntityRepository
                 COUNT(ai.id) as totalInteractions,
                 AVG(ai.successScore) as avgSuccessScore,
                 AVG(ai.executionTimeMs) as avgExecutionTime,
-                COUNT(CASE WHEN ai.successScore >= 0.8 THEN 1 END) as successfulInteractions
+                SUM(CASE WHEN ai.successScore >= 0.8 THEN 1 ELSE 0 END) as successfulInteractions
             ')
             ->andWhere('ai.createdAt >= :dateFrom')
             ->setParameter('dateFrom', $dateFrom)
@@ -175,19 +175,23 @@ class AgentInteractionRepository extends ServiceEntityRepository
 
     public function getInteractionTrends(\DateTimeInterface $from, \DateTimeInterface $to): array
     {
-        return $this->createQueryBuilder('ai')
-            ->select('
-                DATE(ai.createdAt) as date,
-                COUNT(ai.id) as totalInteractions,
-                AVG(ai.successScore) as avgSuccessScore
-            ')
-            ->andWhere('ai.createdAt >= :from')
-            ->andWhere('ai.createdAt <= :to')
-            ->setParameter('from', $from)
-            ->setParameter('to', $to)
-            ->groupBy('date')
-            ->orderBy('date', 'ASC')
-            ->getQuery()
-            ->getResult();
+        $conn = $this->getEntityManager()->getConnection();
+        
+        $sql = '
+            SELECT 
+                DATE(created_at) as date,
+                COUNT(id) as totalInteractions,
+                AVG(success_score) as avgSuccessScore
+            FROM agent_interactions
+            WHERE created_at >= :from AND created_at <= :to
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        ';
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bindValue('from', $from->format('Y-m-d H:i:s'));
+        $stmt->bindValue('to', $to->format('Y-m-d H:i:s'));
+        
+        return $stmt->executeQuery()->fetchAllAssociative();
     }
 }

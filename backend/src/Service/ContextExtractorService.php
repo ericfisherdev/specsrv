@@ -18,7 +18,7 @@ class ContextExtractorService
                 : [$context['technologies']];
         }
 
-        if (isset($context['complexity'])) {
+        if (array_key_exists('complexity', $context)) {
             $signature['complexity'] = $this->categorizeComplexity($context['complexity']);
         }
 
