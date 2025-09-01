@@ -97,7 +97,7 @@ func addSubcommands() {
 	rootCmd.AddCommand(commands.projects)
 	rootCmd.AddCommand(commands.completion)
 	// We'll add more subcommands here as we create them
-	// rootCmd.AddCommand(commands.tasks)
+	rootCmd.AddCommand(commands.tasks)
 	// rootCmd.AddCommand(commands.files)
 	// rootCmd.AddCommand(commands.config)
 }
@@ -106,6 +106,7 @@ func addSubcommands() {
 type commandSet struct {
 	version    *cobra.Command
 	projects   *cobra.Command
+	tasks      *cobra.Command
 	auth       *cobra.Command
 	setup      *cobra.Command
 	completion *cobra.Command
@@ -116,6 +117,7 @@ func getCommands() *commandSet {
 	return &commandSet{
 		version:    commands.NewVersionCommand(),
 		projects:   commands.NewProjectsCommand(),
+		tasks:      commands.NewTasksCommand(),
 		auth:       commands.NewAuthCommand(),
 		setup:      commands.NewSetupCommand(),
 		completion: commands.NewCompletionCommand(),
