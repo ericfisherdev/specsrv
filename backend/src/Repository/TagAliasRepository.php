@@ -44,6 +44,6 @@ class TagAliasRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
 
-        return $count > 0;
+        return (int)$count > 0;
     }
 }

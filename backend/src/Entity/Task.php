@@ -253,6 +253,9 @@ class Task
     {
         if (!$this->tags->contains($tag)) {
             $this->tags->add($tag);
+            if (!$tag->getTasks()->contains($this)) {
+                $tag->addTask($this);
+            }
         }
 
         return $this;
@@ -260,7 +263,11 @@ class Task
 
     public function removeTag(Tag $tag): static
     {
-        $this->tags->removeElement($tag);
+        if ($this->tags->removeElement($tag)) {
+            if ($tag->getTasks()->contains($this)) {
+                $tag->removeTask($this);
+            }
+        }
 
         return $this;
     }

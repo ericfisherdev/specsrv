@@ -11,8 +11,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Table(name: 'tag_aliases', indexes: [
     new ORM\Index(name: 'idx_tag_alias_workspace', columns: ['workspace_id']),
     new ORM\Index(name: 'idx_tag_alias_tag', columns: ['tag_id']),
+], uniqueConstraints: [
+    new ORM\UniqueConstraint(name: 'uniq_tag_alias_workspace_alias', columns: ['workspace_id', 'alias'])
 ])]
-#[ORM\UniqueConstraint(name: 'uniq_tag_alias_workspace_alias', columns: ['workspace_id', 'alias'])]
 class TagAlias
 {
     #[ORM\Id]

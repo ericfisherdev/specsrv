@@ -16,8 +16,9 @@ use Symfony\Component\Validator\Constraints as Assert;
     new ORM\Index(name: 'idx_tags_parent', columns: ['parent_id']),
     new ORM\Index(name: 'idx_tags_usage_count', columns: ['usage_count']),
     new ORM\Index(name: 'idx_tags_created_at', columns: ['created_at']),
+], uniqueConstraints: [
+    new ORM\UniqueConstraint(name: 'uniq_tags_workspace_name', columns: ['workspace_id', 'name'])
 ])]
-#[ORM\UniqueConstraint(name: 'uniq_tags_workspace_name', columns: ['workspace_id', 'name'])]
 #[ORM\HasLifecycleCallbacks]
 class Tag
 {
@@ -163,7 +164,34 @@ class Tag
 
     public function setParent(?self $parent): self
     {
+        if ($parent === $this) {
+            throw new \InvalidArgumentException('A tag cannot be its own parent');
+        }
+        
+        if ($parent !== null) {
+            // Check for cycles by walking up the parent chain
+            $p = $parent;
+            while ($p !== null) {
+                if ($p === $this) {
+                    throw new \InvalidArgumentException('Setting this parent would create a cycle');
+                }
+                $p = $p->getParent();
+            }
+        }
+        
+        // Remove from previous parent's children collection if needed
+        if ($this->parent !== null && $this->parent !== $parent) {
+            $this->parent->children->removeElement($this);
+        }
+        
+        // Set the new parent
         $this->parent = $parent;
+        
+        // Add to new parent's children collection if needed
+        if ($parent !== null && !$parent->children->contains($this)) {
+            $parent->children->add($this);
+        }
+        
         return $this;
     }
 
@@ -289,13 +317,18 @@ class Tag
     {
         if (!$this->projects->contains($project)) {
             $this->projects->add($project);
+            if (!$project->getTags()->contains($this)) {
+                $project->addTag($this);
+            }
         }
         return $this;
     }
 
     public function removeProject(Project $project): self
     {
-        $this->projects->removeElement($project);
+        if ($this->projects->removeElement($project)) {
+            $project->removeTag($this);
+        }
         return $this;
     }
 
@@ -311,13 +344,18 @@ class Tag
     {
         if (!$this->files->contains($file)) {
             $this->files->add($file);
+            if (!$file->getTags()->contains($this)) {
+                $file->addTag($this);
+            }
         }
         return $this;
     }
 
     public function removeFile(File $file): self
     {
-        $this->files->removeElement($file);
+        if ($this->files->removeElement($file)) {
+            $file->removeTag($this);
+        }
         return $this;
     }
 

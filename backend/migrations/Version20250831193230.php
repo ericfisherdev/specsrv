@@ -19,6 +19,9 @@ final class Version20250831193230 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        // Ensure pgcrypto extension exists for gen_random_uuid()
+        $this->addSql('CREATE EXTENSION IF NOT EXISTS pgcrypto');
+        
         // Create tags table
         $this->addSql('CREATE TABLE tags (
             id UUID NOT NULL DEFAULT gen_random_uuid(),
@@ -170,7 +173,12 @@ final class Version20250831193230 extends AbstractMigration
             IF TG_OP = \'INSERT\' THEN
                 UPDATE tags SET usage_count = usage_count + 1 WHERE id = NEW.tag_id;
             ELSIF TG_OP = \'DELETE\' THEN
-                UPDATE tags SET usage_count = usage_count - 1 WHERE id = OLD.tag_id;
+                UPDATE tags SET usage_count = GREATEST(usage_count - 1, 0) WHERE id = OLD.tag_id;
+            ELSIF TG_OP = \'UPDATE\' THEN
+                IF NEW.tag_id IS DISTINCT FROM OLD.tag_id THEN
+                    UPDATE tags SET usage_count = GREATEST(usage_count - 1, 0) WHERE id = OLD.tag_id;
+                    UPDATE tags SET usage_count = usage_count + 1 WHERE id = NEW.tag_id;
+                END IF;
             END IF;
             RETURN NULL;
         END;
@@ -178,15 +186,15 @@ final class Version20250831193230 extends AbstractMigration
         
         // Create triggers for each junction table
         $this->addSql('CREATE TRIGGER update_tag_usage_task_tags
-            AFTER INSERT OR DELETE ON task_tags
+            AFTER INSERT OR DELETE OR UPDATE OF tag_id ON task_tags
             FOR EACH ROW EXECUTE FUNCTION update_tag_usage_count()');
             
         $this->addSql('CREATE TRIGGER update_tag_usage_project_tags
-            AFTER INSERT OR DELETE ON project_tags
+            AFTER INSERT OR DELETE OR UPDATE OF tag_id ON project_tags
             FOR EACH ROW EXECUTE FUNCTION update_tag_usage_count()');
             
         $this->addSql('CREATE TRIGGER update_tag_usage_file_tags
-            AFTER INSERT OR DELETE ON file_tags
+            AFTER INSERT OR DELETE OR UPDATE OF tag_id ON file_tags
             FOR EACH ROW EXECUTE FUNCTION update_tag_usage_count()');
     }
 

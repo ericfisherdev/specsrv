@@ -114,6 +114,7 @@ class TagRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('t')
             ->join('t.aliases', 'a')
             ->where('a.workspace = :workspace')
+            ->andWhere('t.workspace = :workspace')
             ->andWhere('LOWER(a.alias) = LOWER(:alias)')
             ->setParameter('workspace', $workspace)
             ->setParameter('alias', $alias)
@@ -238,40 +239,81 @@ class TagRepository extends ServiceEntityRepository
     {
         $em = $this->getEntityManager();
         
-        // Move all tasks from source to target
-        foreach ($source->getTasks() as $task) {
-            if (!$target->getTasks()->contains($task)) {
-                $target->addTask($task);
+        // Validate workspaces match
+        if ($source->getWorkspace()?->getId() !== $target->getWorkspace()?->getId()) {
+            throw new \InvalidArgumentException('Cannot merge tags across different workspaces.');
+        }
+        
+        // Prevent merging into self or descendant
+        if ($target->isDescendantOf($source) || $target->getId() === $source->getId()) {
+            throw new \InvalidArgumentException('Cannot merge into self or descendant.');
+        }
+        
+        // Use transaction for atomicity
+        $em->getConnection()->transactional(function () use ($em, $source, $target): void {
+            // Move all tasks (clone to avoid modification during iteration)
+            foreach (clone $source->getTasks() as $task) {
+                if (!$target->getTasks()->contains($task)) {
+                    $target->addTask($task);
+                }
+                $source->removeTask($task);
             }
-            $source->removeTask($task);
-        }
-        
-        // Move all projects from source to target
-        foreach ($source->getProjects() as $project) {
-            if (!$target->getProjects()->contains($project)) {
-                $target->addProject($project);
+            
+            // Move all projects (clone to avoid modification during iteration)
+            foreach (clone $source->getProjects() as $project) {
+                if (!$target->getProjects()->contains($project)) {
+                    $target->addProject($project);
+                }
+                $source->removeProject($project);
             }
-            $source->removeProject($project);
-        }
-        
-        // Move all files from source to target
-        foreach ($source->getFiles() as $file) {
-            if (!$target->getFiles()->contains($file)) {
-                $target->addFile($file);
+            
+            // Move all files (clone to avoid modification during iteration)
+            foreach (clone $source->getFiles() as $file) {
+                if (!$target->getFiles()->contains($file)) {
+                    $target->addFile($file);
+                }
+                $source->removeFile($file);
             }
-            $source->removeFile($file);
-        }
-        
-        // Move children to target
-        foreach ($source->getChildren() as $child) {
-            $child->setParent($target);
-        }
-        
-        // Update usage counts
-        $this->updateUsageCount($target);
-        
-        // Remove source tag
-        $em->remove($source);
-        $em->flush();
+            
+            // Move children (clone to avoid modification during iteration)
+            foreach (clone $source->getChildren() as $child) {
+                $child->setParent($target);
+            }
+            
+            // Move aliases with de-duplication (case-insensitive)
+            $existingAliases = [];
+            foreach ($target->getAliases() as $alias) {
+                $aliasName = $alias->getAlias();
+                if ($aliasName !== null) {
+                    $existingAliases[mb_strtolower($aliasName)] = true;
+                }
+            }
+            
+            foreach (clone $source->getAliases() as $alias) {
+                $aliasName = $alias->getAlias();
+                if ($aliasName === null) {
+                    continue;
+                }
+                $normalizedAlias = mb_strtolower($aliasName);
+                if (!isset($existingAliases[$normalizedAlias])) {
+                    // Alias doesn't exist on target, move it
+                    $alias->setTag($target);
+                    $target->addAlias($alias);
+                    $existingAliases[$normalizedAlias] = true;
+                } else {
+                    // Duplicate alias, remove it
+                    $source->removeAlias($alias);
+                    $em->remove($alias);
+                }
+            }
+            
+            // Note: If using database triggers for usage counts, this call can be removed
+            // to avoid drift between application and database counts
+            $this->updateUsageCount($target);
+            
+            // Remove source tag
+            $em->remove($source);
+            $em->flush();
+        });
     }
 }
