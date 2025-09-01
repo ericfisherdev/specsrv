@@ -208,7 +208,7 @@ class LearningEngineService
     ): KnowledgePattern {
         $pattern = new KnowledgePattern();
         $pattern->setPatternName($this->generatePatternName($contextSignature))
-            ->setPatternType($this->patternAnalyzer->identifyPatternType($interaction->getExecutionSteps()))
+            ->setPatternType($interaction->getAgentType())
             ->setContextSignature($contextSignature)
             ->setSolutionTemplate($this->patternAnalyzer->extractSolutionTemplate($interaction))
             ->setDescription($this->generatePatternDescription($interaction))
@@ -216,7 +216,10 @@ class LearningEngineService
             ->setUsageCount(1)
             ->setLastSuccessfulUse(new \DateTime())
             ->setPrerequisites($this->extractPrerequisites($interaction))
-            ->setTags($this->extractTags($interaction));
+            ->setTags(array_unique(array_merge(
+                $this->extractTags($interaction),
+                ['category:' . $this->patternAnalyzer->identifyPatternType($interaction->getExecutionSteps())]
+            )));
         
         $this->entityManager->persist($pattern);
         $this->entityManager->flush();
