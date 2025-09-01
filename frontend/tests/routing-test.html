@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPA Routing Test - SpecSrv Frontend</title>
+    <link rel="stylesheet" href="../dist/main.4a0c926b36b42caa0d8b.css">
+    
+    <!-- Theme preference script to prevent flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('specsrv-theme') || 'system';
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const effectiveTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+            
+            if (effectiveTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+            document.documentElement.setAttribute('data-theme', effectiveTheme);
+        })();
+    </script>
+</head>
+<body class="h-full bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    
+    <div class="min-h-screen flex flex-col">
+        <!-- Test Navigation -->
+        <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <h1 class="text-xl font-bold text-gray-900 dark:text-white">SpecSrv Router Test</h1>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <a href="/dashboard" class="nav-link text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Dashboard
+                        </a>
+                        <a href="/projects" class="nav-link text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Projects
+                        </a>
+                        <a href="/tasks" class="nav-link text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Tasks
+                        </a>
+                        <a href="/kanban" class="nav-link text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Kanban
+                        </a>
+                        <a href="/nonexistent" class="nav-link text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            404 Test
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Router Status -->
+        <div class="bg-blue-50 dark:bg-blue-900 border-b border-blue-200 dark:border-blue-700 px-4 py-3">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span class="text-sm font-medium text-blue-800 dark:text-blue-200">
+                            Router Status: <span id="router-status" class="font-normal">Initializing...</span>
+                        </span>
+                    </div>
+                    <div class="text-sm text-blue-700 dark:text-blue-300">
+                        Current Route: <span id="current-route" class="font-mono bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">/</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Controls -->
+        <div class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-4">
+            <div class="max-w-7xl mx-auto">
+                <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Router Test Controls</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Navigation Tests -->
+                    <div class="space-y-2">
+                        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Navigation</h3>
+                        <button onclick="testNavigation('/dashboard')" 
+                                class="w-full btn btn-sm btn-primary">
+                            Go to Dashboard
+                        </button>
+                        <button onclick="testNavigation('/projects')" 
+                                class="w-full btn btn-sm btn-secondary">
+                            Go to Projects
+                        </button>
+                        <button onclick="testNavigation('/tasks/123')" 
+                                class="w-full btn btn-sm btn-secondary">
+                            Task Detail (123)
+                        </button>
+                    </div>
+
+                    <!-- History API Tests -->
+                    <div class="space-y-2">
+                        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">History API</h3>
+                        <button onclick="window.router?.back()" 
+                                class="w-full btn btn-sm btn-outline">
+                            Go Back
+                        </button>
+                        <button onclick="window.router?.forward()" 
+                                class="w-full btn btn-sm btn-outline">
+                            Go Forward
+                        </button>
+                        <button onclick="testReplace('/kanban')" 
+                                class="w-full btn btn-sm btn-outline">
+                            Replace with Kanban
+                        </button>
+                    </div>
+
+                    <!-- 404 Tests -->
+                    <div class="space-y-2">
+                        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">404 Handling</h3>
+                        <button onclick="testNavigation('/nonexistent')" 
+                                class="w-full btn btn-sm btn-warning">
+                            Test 404 Route
+                        </button>
+                        <button onclick="testNavigation('/admin/secret')" 
+                                class="w-full btn btn-sm btn-warning">
+                            Another 404
+                        </button>
+                        <button onclick="testNavigation('/projects/invalid/edit')" 
+                                class="w-full btn btn-sm btn-warning">
+                            Deep 404
+                        </button>
+                    </div>
+
+                    <!-- Auth Tests -->
+                    <div class="space-y-2">
+                        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Authentication</h3>
+                        <button onclick="toggleAuth()" 
+                                class="w-full btn btn-sm btn-success" id="auth-toggle-btn">
+                            Toggle Auth
+                        </button>
+                        <button onclick="testNavigation('/login')" 
+                                class="w-full btn btn-sm btn-secondary">
+                            Go to Login
+                        </button>
+                        <button onclick="testNavigation('/profile')" 
+                                class="w-full btn btn-sm btn-secondary">
+                            Go to Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 bg-gray-50 dark:bg-gray-900">
+            <div id="main-content" class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <div class="text-center py-12">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <h2 class="text-xl font-medium text-gray-900 dark:text-white">Loading Router...</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">Initializing SPA routing system</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Router Events Log -->
+        <div class="bg-gray-800 text-white p-4 max-h-48 overflow-y-auto">
+            <h3 class="text-sm font-bold mb-2">Router Events Log</h3>
+            <div id="router-log" class="text-xs space-y-1 font-mono">
+                <div class="text-green-400">[INFO] Router test page loaded</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test functions
+        function testNavigation(path) {
+            log(`[TEST] Navigating to: ${path}`, 'info');
+            if (window.router) {
+                window.router.navigate(path);
+            } else {
+                log(`[ERROR] Router not available`, 'error');
+            }
+        }
+
+        function testReplace(path) {
+            log(`[TEST] Replacing current route with: ${path}`, 'info');
+            if (window.router) {
+                window.router.replace(path);
+            } else {
+                log(`[ERROR] Router not available`, 'error');
+            }
+        }
+
+        function toggleAuth() {
+            const token = localStorage.getItem('specsrv-token');
+            if (token) {
+                localStorage.removeItem('specsrv-token');
+                log(`[AUTH] Logged out`, 'warning');
+                document.getElementById('auth-toggle-btn').textContent = 'Login (Fake)';
+            } else {
+                localStorage.setItem('specsrv-token', 'fake-token-123');
+                log(`[AUTH] Logged in with fake token`, 'success');
+                document.getElementById('auth-toggle-btn').textContent = 'Logout';
+            }
+            updateAuthStatus();
+        }
+
+        function updateAuthStatus() {
+            const isAuth = !!localStorage.getItem('specsrv-token');
+            const btn = document.getElementById('auth-toggle-btn');
+            btn.textContent = isAuth ? 'Logout' : 'Login (Fake)';
+            btn.className = isAuth ? 
+                'w-full btn btn-sm btn-warning' : 
+                'w-full btn btn-sm btn-success';
+        }
+
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('router-log');
+            const colors = {
+                info: 'text-blue-400',
+                success: 'text-green-400',
+                warning: 'text-yellow-400',
+                error: 'text-red-400'
+            };
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = colors[type] || 'text-gray-400';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            log('[INIT] DOM loaded, waiting for router...', 'info');
+            updateAuthStatus();
+            
+            // Update router status
+            const checkRouter = () => {
+                const statusEl = document.getElementById('router-status');
+                const routeEl = document.getElementById('current-route');
+                
+                if (window.router) {
+                    statusEl.textContent = 'Ready';
+                    statusEl.className = 'font-normal text-green-700 dark:text-green-300';
+                    
+                    const currentPath = window.location.pathname || '/';
+                    routeEl.textContent = currentPath;
+                    
+                    log('[ROUTER] Router initialized and ready', 'success');
+                } else {
+                    setTimeout(checkRouter, 100);
+                }
+            };
+            
+            checkRouter();
+            
+            // Listen for route changes
+            document.addEventListener('route:change', (event) => {
+                const { route, path } = event.detail;
+                document.getElementById('current-route').textContent = path;
+                log(`[ROUTE] Changed to: ${path} (${route.component || 'no component'})`, 'success');
+            });
+            
+            // Listen for popstate (browser navigation)
+            window.addEventListener('popstate', (event) => {
+                log(`[HISTORY] Browser navigation detected`, 'info');
+            });
+        });
+    </script>
+    
+    <!-- Load frontend assets -->
+    <script src="../dist/vendors.04af287b3ac9f18a3f9f.js"></script>
+    <script src="../dist/main.8c13dc010a0f3f75f24a.js"></script>
+</body>
+</html>

@@ -24,7 +24,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 // Import theme management
 import ThemeManager from './js/theme-manager';
 
-// Import utility modules
+// Import router and utilities
+import { Router } from './utils/Router';
 import './js/keyboard-navigation';
 import './js/offline-detection';
 
@@ -224,9 +225,45 @@ window.animations = animations;
 // Initialize Alpine.js
 Alpine.start();
 
+// Initialize Router
+const router = new Router();
+window.router = router;
+
+// Add authentication middleware
+router.beforeEach((to, from) => {
+    const isAuthenticated = !!localStorage.getItem('specsrv-token');
+    const publicRoutes = ['/login', '/register', '/404'];
+    
+    if (!isAuthenticated && !publicRoutes.includes(to)) {
+        return '/login';
+    }
+    
+    if (isAuthenticated && (to === '/login' || to === '/register')) {
+        return '/dashboard';
+    }
+});
+
+// Add page title updates
+router.afterEach((to, from) => {
+    // Update page title based on route
+    const routeTitles = {
+        '/dashboard': 'Dashboard',
+        '/projects': 'Projects', 
+        '/kanban': 'Kanban Board',
+        '/tasks': 'Tasks',
+        '/profile': 'Profile',
+        '/search': 'Search',
+        '/login': 'Login',
+        '/register': 'Register'
+    };
+    
+    const title = routeTitles[to.path] || 'SpecSrv';
+    document.title = `${title} - SpecSrv`;
+});
+
 // Enhanced initialization
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Enhanced app initialized with HTMX, Alpine.js, GSAP, and Theme Management');
+    console.log('Enhanced SPA initialized with HTMX, Alpine.js, GSAP, Theme Management, and Router');
     
     // Initialize animations for existing elements
     gsap.from('.card', {
@@ -271,9 +308,58 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Initialize router after DOM is ready
+    router.init();
+    
+    // Add router event handlers
+    document.addEventListener('route:change', (event) => {
+        const { route, path, state } = event.detail;
+        console.log('Route changed:', { route: route.component, path, state });
+        
+        // Update navigation active states
+        updateNavigationState(path);
+        
+        // Trigger page animations
+        setTimeout(() => {
+            const pageElements = document.querySelectorAll('#main-content .card, #main-content .kanban-card');
+            if (pageElements.length > 0) {
+                animations.staggerFadeIn(pageElements, 0.3, 0.1);
+            }
+        }, 100);
+    });
+    
     // Performance monitoring
     if (window.performance && window.performance.mark) {
         performance.mark('app-initialized');
         performance.measure('app-load-time', 'navigationStart', 'app-initialized');
     }
 });
+
+// Helper function to update navigation active states
+function updateNavigationState(currentPath) {
+    // Remove active class from all nav links
+    document.querySelectorAll('.nav-link, [data-nav-link]').forEach(link => {
+        link.classList.remove('active', 'bg-primary-700', 'text-white');
+        link.classList.add('text-gray-300', 'hover:bg-gray-700', 'hover:text-white');
+    });
+    
+    // Add active class to current nav link
+    const currentLink = document.querySelector(`[href="${currentPath}"], [data-nav-path="${currentPath}"]`);
+    if (currentLink) {
+        currentLink.classList.add('active', 'bg-primary-700', 'text-white');
+        currentLink.classList.remove('text-gray-300', 'hover:bg-gray-700', 'hover:text-white');
+    }
+}
+
+// Add global navigation helper functions
+window.navigateTo = (path) => {
+    if (window.router) {
+        window.router.navigate(path);
+    }
+};
+
+window.goBack = () => {
+    if (window.router) {
+        window.router.back();
+    }
+};
