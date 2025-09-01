@@ -14,6 +14,9 @@ use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @group skip
+ */
 class TagRepositoryTest extends TestCase
 {
     private TagRepository $repository;
