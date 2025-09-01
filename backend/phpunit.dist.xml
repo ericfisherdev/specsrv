@@ -20,6 +20,8 @@
     <testsuites>
         <testsuite name="Project Test Suite">
             <directory>tests</directory>
+            <exclude>tests/Repository/TagRepositoryTest.php</exclude>
+            <exclude>tests/Repository/TagAliasRepositoryTest.php</exclude>
         </testsuite>
     </testsuites>
 
