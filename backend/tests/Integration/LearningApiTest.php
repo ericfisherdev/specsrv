@@ -8,15 +8,21 @@ use App\Tests\AbstractWebTestCase;
 
 class LearningApiTest extends AbstractWebTestCase
 {
-    private function getAuthenticatedClient(): object
+    private string $apiKey;
+
+    protected function setUp(): void
     {
-        $client = static::createClient();
+        parent::setUp();
 
-        // Create a test user and authenticate
+        // Create a test user and API key for authentication
         $user = $this->createTestUser(['email' => 'test@learning.com']);
-        $this->login($client, $user);
+        $apiKeyEntity = $this->createTestApiKey($user, ['keyHash' => 'test-learning-api-key']);
+        $this->apiKey = 'test-learning-api-key';
+    }
 
-        return $client;
+    private function makeRequest(string $method, string $uri, array $data = []): void
+    {
+        $this->makeAuthenticatedRequest($method, $uri, $this->apiKey, $data);
     }
 
     public function testRecordInteractionEndpoint(): void

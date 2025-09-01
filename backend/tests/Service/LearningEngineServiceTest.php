@@ -146,9 +146,9 @@ class LearningEngineServiceTest extends AbstractKernelTestCase
 
     public function testGetPatterns(): void
     {
-        // Create some patterns
+        // Create some patterns with different agent types to ensure distinctness
         $this->createSuccessfulPattern();
-        $this->createSuccessfulPattern(['task_type' => 'debug', 'complexity' => 'moderate']);
+        $this->createSuccessfulPatternWithAgentType('debugging', ['task_type' => 'debug', 'complexity' => 'moderate']);
 
         // Get all patterns
         $patterns = $this->learningEngine->getPatterns();
@@ -227,6 +227,11 @@ class LearningEngineServiceTest extends AbstractKernelTestCase
 
     private function createSuccessfulPattern(array $contextOverrides = []): AgentInteraction
     {
+        return $this->createSuccessfulPatternWithAgentType('implementation', $contextOverrides);
+    }
+
+    private function createSuccessfulPatternWithAgentType(string $agentType, array $contextOverrides = []): AgentInteraction
+    {
         $defaultContext = ['task_type' => 'feature', 'complexity' => 'simple'];
         $inputContext = array_merge($defaultContext, $contextOverrides);
 
@@ -235,7 +240,7 @@ class LearningEngineServiceTest extends AbstractKernelTestCase
 
         return $this->learningEngine->recordInteraction(
             $this->testTask,
-            'implementation',
+            $agentType,
             $inputContext,
             $executionSteps,
             $outputResult,

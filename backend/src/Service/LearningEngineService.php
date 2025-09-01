@@ -169,12 +169,13 @@ class LearningEngineService
             $interactionMetrics = $this->interactionRepo->getPerformanceMetrics($timeRange);
             $patternAnalytics = $this->patternRepo->getPatternAnalytics($timeRange);
             $variationStats = $this->variationRepo->getVariationPerformanceStats();
+            $learningEffectiveness = $this->calculateLearningEffectiveness($timeRange);
 
             return [
                 'interaction_metrics' => $interactionMetrics,
                 'pattern_analytics' => $patternAnalytics,
                 'variation_stats' => $variationStats,
-                'learning_effectiveness' => $this->calculateLearningEffectiveness($timeRange),
+                'learning_effectiveness' => $learningEffectiveness,
             ];
 
         } catch (\Exception $e) {
@@ -183,7 +184,13 @@ class LearningEngineService
                 'time_range' => $timeRange,
             ]);
 
-            return [];
+            // Return the expected structure even when there's an error
+            return [
+                'interaction_metrics' => [],
+                'pattern_analytics' => [],
+                'variation_stats' => [],
+                'learning_effectiveness' => [],
+            ];
         }
     }
 
