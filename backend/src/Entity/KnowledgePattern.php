@@ -37,7 +37,7 @@ class KnowledgePattern
     #[ORM\Column(type: 'text')]
     private ?string $description = null;
 
-    #[ORM\Column(type: 'decimal', precision: 3, scale: 2)]
+    #[ORM\Column(name: 'confidence_score', type: 'float')]
     private ?float $confidenceScore = null;
 
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
@@ -52,18 +52,22 @@ class KnowledgePattern
     #[ORM\Column(type: 'json')]
     private array $tags = [];
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(name: 'created_at', type: 'datetime')]
     private ?\DateTimeInterface $createdAt = null;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(name: 'updated_at', type: 'datetime')]
     private ?\DateTimeInterface $updatedAt = null;
 
     #[ORM\OneToMany(targetEntity: PatternVariation::class, mappedBy: 'basePattern', orphanRemoval: true)]
     private Collection $variations;
 
+    #[ORM\OneToMany(targetEntity: AgentInteraction::class, mappedBy: 'pattern')]
+    private Collection $interactions;
+
     public function __construct()
     {
         $this->variations = new ArrayCollection();
+        $this->interactions = new ArrayCollection();
         $this->createdAt = new \DateTime();
         $this->updatedAt = new \DateTime();
     }
@@ -82,6 +86,7 @@ class KnowledgePattern
     {
         $this->patternName = $patternName;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -94,6 +99,7 @@ class KnowledgePattern
     {
         $this->patternType = $patternType;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -106,6 +112,7 @@ class KnowledgePattern
     {
         $this->contextSignature = $contextSignature;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -118,6 +125,7 @@ class KnowledgePattern
     {
         $this->solutionTemplate = $solutionTemplate;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -130,6 +138,7 @@ class KnowledgePattern
     {
         $this->description = $description;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -142,6 +151,7 @@ class KnowledgePattern
     {
         $this->confidenceScore = $confidenceScore;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -154,13 +164,15 @@ class KnowledgePattern
     {
         $this->usageCount = $usageCount;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
     public function incrementUsageCount(): static
     {
-        $this->usageCount++;
+        ++$this->usageCount;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -173,6 +185,7 @@ class KnowledgePattern
     {
         $this->lastSuccessfulUse = $lastSuccessfulUse;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -185,6 +198,7 @@ class KnowledgePattern
     {
         $this->prerequisites = $prerequisites;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -197,6 +211,7 @@ class KnowledgePattern
     {
         $this->tags = $tags;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -208,6 +223,7 @@ class KnowledgePattern
     public function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -219,6 +235,7 @@ class KnowledgePattern
     public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
         return $this;
     }
 
@@ -232,7 +249,7 @@ class KnowledgePattern
 
     public function addVariation(PatternVariation $variation): static
     {
-        if (!$this->variations->contains($variation)) {
+        if (! $this->variations->contains($variation)) {
             $this->variations->add($variation);
             $variation->setBasePattern($this);
         }
@@ -245,6 +262,35 @@ class KnowledgePattern
         if ($this->variations->removeElement($variation)) {
             if ($variation->getBasePattern() === $this) {
                 $variation->setBasePattern(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, AgentInteraction>
+     */
+    public function getInteractions(): Collection
+    {
+        return $this->interactions;
+    }
+
+    public function addInteraction(AgentInteraction $interaction): static
+    {
+        if (! $this->interactions->contains($interaction)) {
+            $this->interactions->add($interaction);
+            $interaction->setPattern($this);
+        }
+
+        return $this;
+    }
+
+    public function removeInteraction(AgentInteraction $interaction): static
+    {
+        if ($this->interactions->removeElement($interaction)) {
+            if ($interaction->getPattern() === $this) {
+                $interaction->setPattern(null);
             }
         }
 

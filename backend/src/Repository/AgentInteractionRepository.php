@@ -75,38 +75,76 @@ class AgentInteractionRepository extends ServiceEntityRepository
     /**
      * @return AgentInteraction[]
      */
+    public function findByPatternId(int $patternId): array
+    {
+        return $this->createQueryBuilder('ai')
+            ->andWhere('ai.pattern = :patternId')
+            ->setParameter('patternId', $patternId)
+            ->orderBy('ai.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return AgentInteraction[]
+     */
     public function findSimilarInteractions(
         string $agentType,
         array $contextKeys,
         float $minSuccessScore = 0.7,
         int $limit = 10
     ): array {
-        // For JSON queries, we need to use native SQL for better performance
+        // Native SQL for JSON querying (MySQL 8+). Ensure all provided keys exist in the JSON object.
+        $conn = $this->getEntityManager()->getConnection();
+        $pathParams = [];
+        foreach ($contextKeys as $idx => $key) {
+            // Quote JSON path keys to be safe: $.\"key\"
+            $pathParams[] = ':path'.$idx;
+        }
+        $pathsExpr = $pathParams ? ', '.implode(', ', $pathParams) : '';
         $sql = '
-            SELECT ai.* FROM agent_interactions ai
+            SELECT ai.id
+            FROM agent_interactions ai
             WHERE ai.agent_type = :agentType
-            AND ai.success_score >= :minScore
-            AND JSON_KEYS(ai.input_context) = :contextKeys
+              AND ai.success_score >= :minScore
+              AND ai.input_context IS NOT NULL
+              AND JSON_VALID(ai.input_context)
+              '.($pathsExpr ? "AND JSON_CONTAINS_PATH(ai.input_context, 'all' {$pathsExpr})" : '').'
             ORDER BY ai.success_score DESC, ai.created_at DESC
             LIMIT :limit
         ';
 
-        $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+        $stmt = $conn->prepare($sql);
         $stmt->bindValue('agentType', $agentType);
         $stmt->bindValue('minScore', $minSuccessScore);
-        $stmt->bindValue('contextKeys', json_encode($contextKeys));
         $stmt->bindValue('limit', $limit, \PDO::PARAM_INT);
-
+        foreach ($contextKeys as $idx => $key) {
+            $stmt->bindValue('path'.$idx, '$."'.str_replace('"', '\"', $key).'"');
+        }
         $result = $stmt->executeQuery()->fetchAllAssociative();
 
-        $interactions = [];
-        foreach ($result as $row) {
-            $interaction = $this->getEntityManager()->getRepository(AgentInteraction::class)->find($row['id']);
-            if ($interaction instanceof AgentInteraction) {
-                $interactions[] = $interaction;
+        // Avoid N+1: bulk-load by IDs and preserve order.
+        $ids = array_column($result, 'id');
+        if (! $ids) {
+            return [];
+        }
+        $list = $this->createQueryBuilder('ai')
+            ->andWhere('ai.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->getResult();
+        $byId = [];
+        foreach ($list as $i) {
+            $byId[$i->getId()] = $i;
+        }
+        $ordered = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) {
+                $ordered[] = $byId[$id];
             }
         }
-        return $interactions;
+
+        return $ordered;
     }
 
     public function getPerformanceMetrics(string $timeRange = '30d'): array

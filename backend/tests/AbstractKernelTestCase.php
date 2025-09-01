@@ -32,12 +32,12 @@ abstract class AbstractKernelTestCase extends KernelTestCase
     protected function cleanDatabase(): void
     {
         $connection = $this->entityManager->getConnection();
-        
+
         // Clean learning system tables first (due to foreign keys)
         $connection->executeStatement('DELETE FROM pattern_variations');
         $connection->executeStatement('DELETE FROM agent_interactions');
         $connection->executeStatement('DELETE FROM knowledge_patterns');
-        
+
         // Clean existing tables
         $connection->executeStatement('DELETE FROM git_links');
         $connection->executeStatement('DELETE FROM files');

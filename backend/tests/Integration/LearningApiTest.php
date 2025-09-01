@@ -11,11 +11,11 @@ class LearningApiTest extends AbstractWebTestCase
     private function getAuthenticatedClient(): object
     {
         $client = static::createClient();
-        
+
         // Create a test user and authenticate
         $user = $this->createTestUser(['email' => 'test@learning.com']);
         $this->login($client, $user);
-        
+
         return $client;
     }
 
@@ -32,31 +32,31 @@ class LearningApiTest extends AbstractWebTestCase
             'input_context' => ['task_type' => 'feature', 'complexity' => 'simple'],
             'execution_steps' => [
                 ['type' => 'analysis', 'outcome' => 'completed'],
-                ['type' => 'implementation', 'outcome' => 'success']
+                ['type' => 'implementation', 'outcome' => 'success'],
             ],
             'output_result' => ['files_modified' => 2, 'tests_passed' => true],
             'success_score' => 0.85,
             'execution_time_ms' => 2000,
-            'error_log' => null
+            'error_log' => null,
         ];
 
         $client->request('POST', '/api/learning/record-interaction', [
-            'json' => $requestData
+            'json' => $requestData,
         ]);
 
         $this->assertResponseIsSuccessful();
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertTrue($response['success']);
         $this->assertArrayHasKey('data', $response);
         $this->assertArrayHasKey('interaction_id', $response['data']);
         $this->assertArrayHasKey('pattern_extracted', $response['data']);
-        
+
         // Verify interaction was saved to database
         $interactionRepo = $this->entityManager->getRepository(AgentInteraction::class);
         $interactions = $interactionRepo->findAll();
         $this->assertCount(1, $interactions);
-        
+
         $interaction = $interactions[0];
         $this->assertEquals('implementation', $interaction->getAgentType());
         $this->assertEquals(0.85, $interaction->getSuccessScore());
@@ -72,11 +72,11 @@ class LearningApiTest extends AbstractWebTestCase
         ];
 
         $client->request('POST', '/api/learning/record-interaction', [
-            'json' => $requestData
+            'json' => $requestData,
         ]);
 
         $this->assertResponseStatusCodeSame(400);
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertFalse($response['success']);
         $this->assertArrayHasKey('error', $response);
@@ -93,15 +93,15 @@ class LearningApiTest extends AbstractWebTestCase
             'execution_steps' => [],
             'output_result' => [],
             'success_score' => 0.5,
-            'execution_time_ms' => 1000
+            'execution_time_ms' => 1000,
         ];
 
         $client->request('POST', '/api/learning/record-interaction', [
-            'json' => $requestData
+            'json' => $requestData,
         ]);
 
         $this->assertResponseStatusCodeSame(404);
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertFalse($response['success']);
         $this->assertEquals('TASK_NOT_FOUND', $response['error']['code']);
@@ -110,22 +110,22 @@ class LearningApiTest extends AbstractWebTestCase
     public function testRecommendSolutionEndpoint(): void
     {
         $client = $this->getAuthenticatedClient();
-        
+
         // First create a pattern by recording a successful interaction
         $this->createTestPattern($client);
 
         $requestData = [
             'task_context' => ['task_type' => 'feature', 'complexity' => 'simple'],
             'agent_type' => 'implementation',
-            'min_confidence' => 0.7
+            'min_confidence' => 0.7,
         ];
 
         $client->request('POST', '/api/learning/recommend-solution', [
-            'json' => $requestData
+            'json' => $requestData,
         ]);
 
         $this->assertResponseIsSuccessful();
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertTrue($response['success']);
         $this->assertArrayHasKey('data', $response);
@@ -142,15 +142,15 @@ class LearningApiTest extends AbstractWebTestCase
         $requestData = [
             'task_context' => ['task_type' => 'unknown_task_type'],
             'agent_type' => 'unknown_agent',
-            'min_confidence' => 0.9
+            'min_confidence' => 0.9,
         ];
 
         $client->request('POST', '/api/learning/recommend-solution', [
-            'json' => $requestData
+            'json' => $requestData,
         ]);
 
         $this->assertResponseStatusCodeSame(404);
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertFalse($response['success']);
         $this->assertEquals('NO_PATTERNS_FOUND', $response['error']['code']);
@@ -159,7 +159,7 @@ class LearningApiTest extends AbstractWebTestCase
     public function testGetPatternsEndpoint(): void
     {
         $client = $this->getAuthenticatedClient();
-        
+
         // Create some test patterns
         $this->createTestPattern($client);
         $this->createTestPattern($client, ['task_type' => 'debug']);
@@ -167,16 +167,16 @@ class LearningApiTest extends AbstractWebTestCase
         $client->request('GET', '/api/learning/patterns');
 
         $this->assertResponseIsSuccessful();
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertTrue($response['success']);
         $this->assertArrayHasKey('data', $response);
         $this->assertArrayHasKey('items', $response['data']);
         $this->assertArrayHasKey('pagination', $response['data']);
-        
+
         $patterns = $response['data']['items'];
         $this->assertNotEmpty($patterns);
-        
+
         // Check pattern structure
         $pattern = $patterns[0];
         $this->assertArrayHasKey('id', $pattern);
@@ -189,7 +189,7 @@ class LearningApiTest extends AbstractWebTestCase
     public function testGetPatternsWithFilters(): void
     {
         $client = $this->getAuthenticatedClient();
-        
+
         // Create test patterns
         $this->createTestPattern($client);
 
@@ -197,13 +197,13 @@ class LearningApiTest extends AbstractWebTestCase
         $client->request('GET', '/api/learning/patterns?agent_type=implementation');
 
         $this->assertResponseIsSuccessful();
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertTrue($response['success']);
-        
+
         $patterns = $response['data']['items'];
         $this->assertNotEmpty($patterns);
-        
+
         // All returned patterns should be of the filtered type
         foreach ($patterns as $pattern) {
             $this->assertEquals('implementation', $pattern['type']);
@@ -213,18 +213,18 @@ class LearningApiTest extends AbstractWebTestCase
     public function testGetPerformanceAnalyticsEndpoint(): void
     {
         $client = $this->getAuthenticatedClient();
-        
+
         // Create some test data
         $this->createTestPattern($client);
 
         $client->request('GET', '/api/learning/analytics/performance?range=30d');
 
         $this->assertResponseIsSuccessful();
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertTrue($response['success']);
         $this->assertArrayHasKey('data', $response);
-        
+
         $analytics = $response['data'];
         $this->assertArrayHasKey('interaction_metrics', $analytics);
         $this->assertArrayHasKey('pattern_analytics', $analytics);
@@ -234,28 +234,28 @@ class LearningApiTest extends AbstractWebTestCase
     public function testSubmitPatternFeedbackEndpoint(): void
     {
         $client = $this->getAuthenticatedClient();
-        
+
         // Create a test pattern first
         $this->createTestPattern($client);
-        
+
         $patternRepo = $this->entityManager->getRepository(KnowledgePattern::class);
         $patterns = $patternRepo->findAll();
         $this->assertNotEmpty($patterns);
-        
+
         $pattern = $patterns[0];
 
         $feedbackData = [
             'feedback_type' => 'success',
             'success_score' => 0.9,
-            'comments' => 'This pattern worked well for my use case'
+            'comments' => 'This pattern worked well for my use case',
         ];
 
         $client->request('POST', "/api/learning/patterns/{$pattern->getId()}/feedback", [
-            'json' => $feedbackData
+            'json' => $feedbackData,
         ]);
 
         $this->assertResponseIsSuccessful();
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertTrue($response['success']);
         $this->assertArrayHasKey('data', $response);
@@ -265,7 +265,7 @@ class LearningApiTest extends AbstractWebTestCase
     public function testSearchInteractionsEndpoint(): void
     {
         $client = $this->getAuthenticatedClient();
-        
+
         // Create test patterns
         $this->createTestPattern($client);
 
@@ -273,15 +273,15 @@ class LearningApiTest extends AbstractWebTestCase
             'agent_type' => 'implementation',
             'context' => ['task_type' => 'feature'],
             'min_success_score' => 0.7,
-            'limit' => 10
+            'limit' => 10,
         ];
 
         $client->request('POST', '/api/learning/interactions/search', [
-            'json' => $searchData
+            'json' => $searchData,
         ]);
 
         $this->assertResponseIsSuccessful();
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertTrue($response['success']);
         $this->assertArrayHasKey('data', $response);
@@ -297,11 +297,11 @@ class LearningApiTest extends AbstractWebTestCase
         $client->request('GET', '/api/learning/health');
 
         $this->assertResponseIsSuccessful();
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertTrue($response['success']);
         $this->assertArrayHasKey('data', $response);
-        
+
         $health = $response['data'];
         $this->assertArrayHasKey('status', $health);
         $this->assertArrayHasKey('services', $health);
@@ -315,7 +315,7 @@ class LearningApiTest extends AbstractWebTestCase
         // Try to access learning endpoints without authentication
         $endpoints = [
             'POST' => ['/api/learning/record-interaction'],
-            'GET' => ['/api/learning/patterns', '/api/learning/analytics/performance']
+            'GET' => ['/api/learning/patterns', '/api/learning/analytics/performance'],
         ];
 
         foreach ($endpoints as $method => $paths) {
@@ -342,11 +342,11 @@ class LearningApiTest extends AbstractWebTestCase
             'execution_steps' => [['type' => 'implementation', 'outcome' => 'success']],
             'output_result' => ['success' => true],
             'success_score' => 0.9,
-            'execution_time_ms' => 1500
+            'execution_time_ms' => 1500,
         ];
 
         $client->request('POST', '/api/learning/record-interaction', [
-            'json' => $requestData
+            'json' => $requestData,
         ]);
 
         $this->assertResponseIsSuccessful();

@@ -84,21 +84,25 @@ class KnowledgePatternRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
 
-        $similarPatterns = [];
+        $patternsWithScores = [];
         foreach ($patterns as $pattern) {
             $similarity = $this->calculateSimilarity($pattern->getContextSignature(), $contextSignature);
             if ($similarity >= 0.6) { // 60% similarity threshold
-                $pattern->similarityScore = $similarity;
-                $similarPatterns[] = $pattern;
-            }
-            if (count($similarPatterns) >= $limit) {
-                break;
+                $patternsWithScores[] = [
+                    'pattern' => $pattern,
+                    'score' => $similarity,
+                ];
             }
         }
 
-        usort($similarPatterns, fn($a, $b) => $b->similarityScore <=> $a->similarityScore);
+        // Sort by score descending
+        usort($patternsWithScores, fn ($a, $b) => $b['score'] <=> $a['score']);
 
-        return $similarPatterns;
+        // Return top $limit patterns
+        return array_map(
+            fn ($item) => $item['pattern'],
+            array_slice($patternsWithScores, 0, $limit)
+        );
     }
 
     /**
@@ -125,7 +129,7 @@ class KnowledgePatternRepository extends ServiceEntityRepository
     public function findByTags(array $tags, int $limit = 20): array
     {
         $qb = $this->createQueryBuilder('kp');
-        
+
         foreach ($tags as $index => $tag) {
             $qb->andWhere("JSON_CONTAINS(kp.tags, :tag{$index}) = 1")
                ->setParameter("tag{$index}", json_encode($tag));
@@ -177,15 +181,16 @@ class KnowledgePatternRepository extends ServiceEntityRepository
     {
         $keys1 = array_keys($arr1);
         $keys2 = array_keys($arr2);
-        
+
         $intersection = array_intersect($keys1, $keys2);
         $union = array_unique(array_merge($keys1, $keys2));
-        
+
         if (empty($union)) {
             return false;
         }
-        
+
         $jaccardSimilarity = count($intersection) / count($union);
+
         return $jaccardSimilarity >= $threshold;
     }
 
@@ -193,20 +198,20 @@ class KnowledgePatternRepository extends ServiceEntityRepository
     {
         $keys1 = array_keys($signature1);
         $keys2 = array_keys($signature2);
-        
+
         $intersection = array_intersect($keys1, $keys2);
         $union = array_unique(array_merge($keys1, $keys2));
-        
+
         if (empty($union)) {
             return 0.0;
         }
-        
+
         $jaccardSimilarity = count($intersection) / count($union);
-        
+
         // Add value-based similarity for matching keys
         $valueSimilarity = 0.0;
         $matchingKeys = 0;
-        
+
         foreach ($intersection as $key) {
             if (isset($signature1[$key]) && isset($signature2[$key])) {
                 if ($signature1[$key] === $signature2[$key]) {
@@ -215,15 +220,16 @@ class KnowledgePatternRepository extends ServiceEntityRepository
                     similar_text($signature1[$key], $signature2[$key], $percent);
                     $valueSimilarity += $percent / 100;
                 }
-                $matchingKeys++;
+                ++$matchingKeys;
             }
         }
-        
+
         if ($matchingKeys > 0) {
             $valueSimilarity = $valueSimilarity / $matchingKeys;
+
             return ($jaccardSimilarity * 0.7) + ($valueSimilarity * 0.3);
         }
-        
+
         return $jaccardSimilarity;
     }
 }

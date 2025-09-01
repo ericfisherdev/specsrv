@@ -2,8 +2,8 @@
 
 namespace App\Repository;
 
-use App\Entity\PatternVariation;
 use App\Entity\KnowledgePattern;
+use App\Entity\PatternVariation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 

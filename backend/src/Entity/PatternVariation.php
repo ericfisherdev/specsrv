@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
     new ORM\Index(name: 'idx_variation_pattern', columns: ['base_pattern_id']),
     new ORM\Index(name: 'idx_variation_success_rate', columns: ['success_rate']),
     new ORM\Index(name: 'idx_variation_usage_count', columns: ['usage_count']),
+    new ORM\Index(name: 'idx_variation_created_at', columns: ['created_at']),
 ])]
 #[ORM\HasLifecycleCallbacks]
 class PatternVariation
@@ -29,16 +30,16 @@ class PatternVariation
     #[ORM\Column(type: 'json')]
     private array $adaptations = [];
 
-    #[ORM\Column(type: 'decimal', precision: 3, scale: 2)]
+    #[ORM\Column(name: 'success_rate', type: 'float')]
     private ?float $successRate = null;
 
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
     private int $usageCount = 0;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(name: 'created_at', type: 'datetime')]
     private ?\DateTimeInterface $createdAt = null;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(name: 'updated_at', type: 'datetime')]
     private ?\DateTimeInterface $updatedAt = null;
 
     public function __construct()
@@ -61,6 +62,7 @@ class PatternVariation
     {
         $this->basePattern = $basePattern;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -73,6 +75,7 @@ class PatternVariation
     {
         $this->contextDifferences = $contextDifferences;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -85,6 +88,7 @@ class PatternVariation
     {
         $this->adaptations = $adaptations;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -97,6 +101,7 @@ class PatternVariation
     {
         $this->successRate = $successRate;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -109,13 +114,15 @@ class PatternVariation
     {
         $this->usageCount = $usageCount;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
     public function incrementUsageCount(): static
     {
-        $this->usageCount++;
+        ++$this->usageCount;
         $this->setUpdatedAt(new \DateTime());
+
         return $this;
     }
 
@@ -127,6 +134,7 @@ class PatternVariation
     public function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -138,6 +146,7 @@ class PatternVariation
     public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
         return $this;
     }
 

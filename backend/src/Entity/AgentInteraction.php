@@ -25,7 +25,11 @@ class AgentInteraction
     #[ORM\JoinColumn(name: 'task_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Task $task = null;
 
-    #[ORM\Column(type: 'string', length: 50)]
+    #[ORM\ManyToOne(targetEntity: KnowledgePattern::class, inversedBy: 'interactions')]
+    #[ORM\JoinColumn(name: 'pattern_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?KnowledgePattern $pattern = null;
+
+    #[ORM\Column(name: 'agent_type', type: 'string', length: 50)]
     private ?string $agentType = null;
 
     #[ORM\Column(type: 'json')]
@@ -37,19 +41,19 @@ class AgentInteraction
     #[ORM\Column(type: 'json')]
     private array $outputResult = [];
 
-    #[ORM\Column(type: 'decimal', precision: 3, scale: 2)]
+    #[ORM\Column(name: 'success_score', type: 'float')]
     private ?float $successScore = null;
 
-    #[ORM\Column(type: 'string', length: 64)]
+    #[ORM\Column(name: 'pattern_hash', type: 'string', length: 64)]
     private ?string $patternHash = null;
 
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $errorLog = null;
 
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'execution_time_ms', type: 'integer')]
     private ?int $executionTimeMs = null;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(name: 'created_at', type: 'datetime')]
     private ?\DateTimeInterface $createdAt = null;
 
     public function __construct()
@@ -70,6 +74,7 @@ class AgentInteraction
     public function setTask(?Task $task): static
     {
         $this->task = $task;
+
         return $this;
     }
 
@@ -81,6 +86,7 @@ class AgentInteraction
     public function setAgentType(string $agentType): static
     {
         $this->agentType = $agentType;
+
         return $this;
     }
 
@@ -92,6 +98,7 @@ class AgentInteraction
     public function setInputContext(array $inputContext): static
     {
         $this->inputContext = $inputContext;
+
         return $this;
     }
 
@@ -103,6 +110,7 @@ class AgentInteraction
     public function setExecutionSteps(array $executionSteps): static
     {
         $this->executionSteps = $executionSteps;
+
         return $this;
     }
 
@@ -114,6 +122,7 @@ class AgentInteraction
     public function setOutputResult(array $outputResult): static
     {
         $this->outputResult = $outputResult;
+
         return $this;
     }
 
@@ -125,6 +134,7 @@ class AgentInteraction
     public function setSuccessScore(float $successScore): static
     {
         $this->successScore = $successScore;
+
         return $this;
     }
 
@@ -136,6 +146,7 @@ class AgentInteraction
     public function setPatternHash(string $patternHash): static
     {
         $this->patternHash = $patternHash;
+
         return $this;
     }
 
@@ -147,6 +158,7 @@ class AgentInteraction
     public function setErrorLog(?array $errorLog): static
     {
         $this->errorLog = $errorLog;
+
         return $this;
     }
 
@@ -158,6 +170,19 @@ class AgentInteraction
     public function setExecutionTimeMs(int $executionTimeMs): static
     {
         $this->executionTimeMs = $executionTimeMs;
+
+        return $this;
+    }
+
+    public function getPattern(): ?KnowledgePattern
+    {
+        return $this->pattern;
+    }
+
+    public function setPattern(?KnowledgePattern $pattern): static
+    {
+        $this->pattern = $pattern;
+
         return $this;
     }
 
@@ -169,6 +194,7 @@ class AgentInteraction
     public function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
