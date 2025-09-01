@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects - SpecSrv</title>
+    
+    <!-- Theme preference script to prevent flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('specsrv-theme') || 'system';
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const effectiveTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+            
+            if (effectiveTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+            document.documentElement.setAttribute('data-theme', effectiveTheme);
+        })();
+    </script>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>📋</text></svg>">
+    
+    <link rel="stylesheet" href="/dist/app.css">
+</head>
+<body class="h-full bg-gray-100 dark:bg-gray-900 transition-colors duration-200" 
+      x-data="{ 
+          showMobileMenu: false,
+          user: null,
+          projects: [],
+          showProjectModal: false,
+          searchQuery: '',
+          statusFilter: '',
+          loading: false,
+          ...toast() 
+      }"
+      x-init="initializeProjects()">
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Navigation placeholder -->
+    <div id="navigation-container"></div>
+
+    <!-- Flash Messages Container -->
+    <div id="flash-messages" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4"></div>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Page Header -->
+            <div class="md:flex md:items-center md:justify-between mb-8">
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">
+                        Projects
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Manage your projects and track their progress
+                    </p>
+                </div>
+                <div class="mt-4 flex md:mt-0 md:ml-4">
+                    <button 
+                        type="button"
+                        @click="showProjectModal = true"
+                        class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        New Project
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <input 
+                            type="text" 
+                            x-model="searchQuery"
+                            @input.debounce.500ms="filterProjects()"
+                            placeholder="Search projects..."
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        >
+                    </div>
+                    <div class="flex gap-2">
+                        <select 
+                            x-model="statusFilter"
+                            @change="filterProjects()"
+                            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        >
+                            <option value="">All Projects</option>
+                            <option value="active">Active</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projects Grid -->
+            <div id="projects-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Loading state -->
+                <template x-if="loading">
+                    <div class="col-span-full text-center py-12">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading projects...</p>
+                    </div>
+                </template>
+
+                <!-- Projects will be rendered here -->
+                <template x-for="project in projects" :key="project.id">
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-200">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white truncate" x-text="project.title"></h3>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                      :class="project.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'"
+                                      x-text="project.status">
+                                </span>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 line-clamp-3" x-text="project.description || 'No description'"></p>
+                            
+                            <div class="mt-4 flex items-center justify-between">
+                                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    <span x-text="project.task_count || 0"></span> tasks
+                                </div>
+                                <div class="flex space-x-2">
+                                    <a :href="`/projects/${project.id}`" 
+                                       class="text-blue-600 dark:text-blue-400 hover:text-blue-500 text-sm font-medium">
+                                        View
+                                    </a>
+                                    <button @click="editProject(project)" 
+                                            class="text-gray-600 dark:text-gray-400 hover:text-gray-500 text-sm font-medium">
+                                        Edit
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- GitHub repository link if available -->
+                            <div x-show="project.github_repo" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                <a :href="project.github_repo" 
+                                   target="_blank"
+                                   class="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    GitHub Repository
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Empty state -->
+                <template x-if="!loading && projects.length === 0">
+                    <div class="col-span-full text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No projects</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by creating a new project.</p>
+                        <div class="mt-6">
+                            <button @click="showProjectModal = true" 
+                                    type="button" 
+                                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                New Project
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </main>
+
+    <!-- Create Project Modal -->
+    <div x-show="showProjectModal" 
+         @click.self="showProjectModal = false"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-lg bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+             x-show="showProjectModal"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+            <div class="mt-3" x-data="projectForm()">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Create New Project</h3>
+                    <button @click="$parent.showProjectModal = false" 
+                            class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <form @submit.prevent="submitForm">
+                    <div class="mb-4">
+                        <label for="project-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Name</label>
+                        <input 
+                            type="text" 
+                            id="project-name" 
+                            x-model="form.name"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            :class="errors.name ? 'border-red-300 dark:border-red-600' : ''"
+                            required
+                        >
+                        <div x-show="errors.name" x-text="errors.name" class="text-red-600 dark:text-red-400 text-xs mt-1"></div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="project-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                        <textarea 
+                            id="project-description" 
+                            x-model="form.description"
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            :class="errors.description ? 'border-red-300 dark:border-red-600' : ''"
+                        ></textarea>
+                        <div x-show="errors.description" x-text="errors.description" class="text-red-600 dark:text-red-400 text-xs mt-1"></div>
+                    </div>
+                    <div class="mb-6">
+                        <label for="github-repo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">GitHub Repository (optional)</label>
+                        <input 
+                            type="url" 
+                            id="github-repo" 
+                            x-model="form.github_repo"
+                            placeholder="https://github.com/username/repo"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            :class="errors.github_repo ? 'border-red-300 dark:border-red-600' : ''"
+                        >
+                        <div x-show="errors.github_repo" x-text="errors.github_repo" class="text-red-600 dark:text-red-400 text-xs mt-1"></div>
+                    </div>
+                    
+                    <div x-show="generalError" class="mb-4 p-3 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-md">
+                        <p class="text-sm text-red-600 dark:text-red-400" x-text="generalError"></p>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button 
+                            type="button"
+                            @click="$parent.showProjectModal = false"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-md transition-colors duration-200"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            type="submit"
+                            :disabled="loading"
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            x-text="loading ? 'Creating...' : 'Create Project'"
+                        >
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto transition-colors duration-200">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+                &copy; <span data-current-year></span> SpecSrv - Task Management System
+            </p>
+        </div>
+    </footer>
+
+    <script>
+    async function initializeProjects() {
+        // Check authentication
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        try {
+            // Load user data
+            const userResponse = await fetch('/api/v1/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!userResponse.ok) {
+                throw new Error('Authentication failed');
+            }
+
+            this.user = await userResponse.json();
+            
+            // Load projects
+            await this.loadProjects();
+
+        } catch (error) {
+            console.error('Projects initialization error:', error);
+            localStorage.removeItem('auth_token');
+            window.location.href = '/login';
+        }
+
+        // Set current year
+        const yearElement = document.querySelector('[data-current-year]');
+        if (yearElement) {
+            yearElement.textContent = new Date().getFullYear();
+        }
+    }
+
+    function projectForm() {
+        return {
+            form: {
+                name: '',
+                description: '',
+                github_repo: ''
+            },
+            errors: {},
+            generalError: '',
+            loading: false,
+            
+            async submitForm() {
+                this.errors = {};
+                this.generalError = '';
+                
+                if (!this.validateForm()) {
+                    return;
+                }
+                
+                this.loading = true;
+                
+                try {
+                    const token = localStorage.getItem('auth_token');
+                    const response = await fetch('/api/v1/projects', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(this.form)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        // Reset form
+                        this.form = { name: '', description: '', github_repo: '' };
+                        
+                        // Close modal
+                        this.$parent.showProjectModal = false;
+                        
+                        // Reload projects
+                        await this.$parent.loadProjects();
+                        
+                        // Show success message
+                        this.$parent.showToast('Project created successfully!', 'success');
+                    } else {
+                        this.generalError = data.message || 'Failed to create project. Please try again.';
+                    }
+                } catch (error) {
+                    console.error('Project creation error:', error);
+                    this.generalError = 'Failed to create project. Please check your connection and try again.';
+                } finally {
+                    this.loading = false;
+                }
+            },
+            
+            validateForm() {
+                this.errors = {};
+                
+                if (!this.form.name?.trim()) {
+                    this.errors.name = 'Project name is required';
+                }
+                
+                if (this.form.github_repo && !this.isValidUrl(this.form.github_repo)) {
+                    this.errors.github_repo = 'Please enter a valid URL';
+                }
+                
+                return Object.keys(this.errors).length === 0;
+            },
+            
+            isValidUrl(string) {
+                try {
+                    new URL(string);
+                    return true;
+                } catch (_) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    async function loadProjects() {
+        this.loading = true;
+        
+        try {
+            const token = localStorage.getItem('auth_token');
+            const params = new URLSearchParams();
+            
+            if (this.searchQuery) {
+                params.append('search', this.searchQuery);
+            }
+            if (this.statusFilter) {
+                params.append('status', this.statusFilter);
+            }
+            
+            const response = await fetch(`/api/v1/projects?${params}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                this.projects = await response.json();
+            } else {
+                throw new Error('Failed to load projects');
+            }
+        } catch (error) {
+            console.error('Failed to load projects:', error);
+            this.showToast('Failed to load projects', 'error');
+        } finally {
+            this.loading = false;
+        }
+    }
+
+    function filterProjects() {
+        this.loadProjects();
+    }
+
+    function editProject(project) {
+        // TODO: Implement edit functionality
+        console.log('Edit project:', project);
+    }
+    </script>
+    
+    <script src="/dist/runtime.js"></script>
+    <script src="/dist/app.js"></script>
+</body>
+</html>
