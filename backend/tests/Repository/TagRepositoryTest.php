@@ -46,13 +46,11 @@ class TagRepositoryTest extends TestCase
         $this->entityManager->method('getConnection')->willReturn($this->connection);
 
         $managerRegistry = $this->createMock(\Doctrine\Persistence\ManagerRegistry::class);
-        $this->repository = new TagRepository($managerRegistry);
+        $managerRegistry->method('getManagerForClass')
+            ->with(Tag::class)
+            ->willReturn($this->entityManager);
 
-        // Use reflection to inject the mocked EntityManager
-        $reflection = new \ReflectionClass($this->repository);
-        $property = $reflection->getProperty('_em');
-        $property->setAccessible(true);
-        $property->setValue($this->repository, $this->entityManager);
+        $this->repository = new TagRepository($managerRegistry);
     }
 
     public function testFindByWorkspace(): void

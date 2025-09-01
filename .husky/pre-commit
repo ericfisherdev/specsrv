@@ -1,8 +1,17 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# PHP linting for backend
-(cd backend && composer lint && ./vendor/bin/rector process --dry-run) &&
+# PHP checks for backend (matching GitHub Actions CI)
+echo "Running PHP checks for backend..."
+(
+  cd backend && \
+  echo "→ Running PHPStan..." && \
+  composer lint && \
+  echo "→ Running PHP CS Fixer (check mode)..." && \
+  composer cs-check && \
+  echo "→ Running Rector (dry-run)..." && \
+  ./vendor/bin/rector process --dry-run
+) &&
 
 # Go linting for CLI (if CLI directory exists and has Go files)
 (
@@ -19,3 +28,5 @@
 if command -v actionlint >/dev/null 2>&1; then
   actionlint .github/workflows/*.yml || true
 fi
+
+echo "✓ All pre-commit checks passed!"

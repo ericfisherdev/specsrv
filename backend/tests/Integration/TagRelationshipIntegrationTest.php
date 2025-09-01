@@ -60,7 +60,7 @@ class TagRelationshipIntegrationTest extends TestCase
         $task->setTitle('Test Task');
 
         $project = new Project();
-        $project->setName('Test Project');
+        $project->setTitle('Test Project');
 
         $file = new File();
         $file->setFilename('test.php');
@@ -89,7 +89,7 @@ class TagRelationshipIntegrationTest extends TestCase
     public function testTagAliasManagement(): void
     {
         $workspace = new Project();
-        $workspace->setName('Test Workspace');
+        $workspace->setTitle('Test Workspace');
 
         $tag = new Tag();
         $tag->setName('JavaScript');
@@ -120,10 +120,10 @@ class TagRelationshipIntegrationTest extends TestCase
     public function testWorkspaceIsolation(): void
     {
         $workspace1 = new Project();
-        $workspace1->setName('Workspace 1');
+        $workspace1->setTitle('Workspace 1');
 
         $workspace2 = new Project();
-        $workspace2->setName('Workspace 2');
+        $workspace2->setTitle('Workspace 2');
 
         $tag1 = new Tag();
         $tag1->setName('Shared Name');

@@ -35,13 +35,11 @@ class TagAliasRepositoryTest extends TestCase
         $this->entityManager->method('createQueryBuilder')->willReturn($this->queryBuilder);
 
         $managerRegistry = $this->createMock(\Doctrine\Persistence\ManagerRegistry::class);
-        $this->repository = new TagAliasRepository($managerRegistry);
+        $managerRegistry->method('getManagerForClass')
+            ->with(TagAlias::class)
+            ->willReturn($this->entityManager);
 
-        // Use reflection to inject the mocked EntityManager
-        $reflection = new \ReflectionClass($this->repository);
-        $property = $reflection->getProperty('_em');
-        $property->setAccessible(true);
-        $property->setValue($this->repository, $this->entityManager);
+        $this->repository = new TagAliasRepository($managerRegistry);
     }
 
     public function testFindByWorkspace(): void
