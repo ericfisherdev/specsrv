@@ -444,8 +444,19 @@ class LearningEngineService
             default => $dateFrom->modify('-30 days'),
         };
 
-        $totalInteractions = $this->interactionRepo->count(['createdAt' => ['>=', $dateFrom]]);
-        $patternsCreated = $this->patternRepo->count(['createdAt' => ['>=', $dateFrom]]);
+        $totalInteractions = (int) $this->interactionRepo->createQueryBuilder('i')
+            ->select('COUNT(i.id)')
+            ->where('i.createdAt >= :dateFrom')
+            ->setParameter('dateFrom', $dateFrom)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $patternsCreated = (int) $this->patternRepo->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->where('p.createdAt >= :dateFrom')
+            ->setParameter('dateFrom', $dateFrom)
+            ->getQuery()
+            ->getSingleScalarResult();
         $reusesResult = $this->patternRepo->createQueryBuilder('p')
             ->select('SUM(p.usageCount)')
             ->where('p.lastSuccessfulUse >= :dateFrom')
@@ -453,7 +464,7 @@ class LearningEngineService
             ->getQuery()
             ->getSingleScalarResult();
 
-        $patternReuses = is_numeric($reusesResult) ? (int) $reusesResult : 0;
+        $patternReuses = (int) ($reusesResult ?? 0);
 
         return [
             'total_interactions' => $totalInteractions,

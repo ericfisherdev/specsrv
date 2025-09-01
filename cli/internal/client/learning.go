@@ -72,7 +72,7 @@ func (c *Client) SearchInteractions(req models.SearchRequest) (*models.SearchRes
 // SubmitPatternFeedback submits feedback on a pattern's performance
 func (c *Client) SubmitPatternFeedback(patternID int, req models.PatternFeedbackRequest) (*models.PatternFeedbackResponse, error) {
 	path := fmt.Sprintf("/api/learning/patterns/%d/feedback", patternID)
-	
+
 	var response models.PatternFeedbackResponse
 	err := c.Post(path, req, &response)
 	if err != nil {

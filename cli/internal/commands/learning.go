@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"text/tabwriter"
-	"time"
 
 	"github.com/ericfisherdev/specsrv/cli/internal/client"
 	"github.com/ericfisherdev/specsrv/cli/internal/config"
@@ -15,8 +14,55 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// NewLearningCommand creates a new learning command
+// ConfigLoader defines interface for loading configuration
+type ConfigLoader interface {
+	Load() (*config.Config, error)
+}
+
+// APIClientFactory defines interface for creating API clients
+type APIClientFactory interface {
+	NewClient(cfg *config.Config) APIClient
+}
+
+// APIClient defines interface for API operations
+type APIClient interface {
+	RecordInteraction(req models.InteractionRecordRequest) (*models.InteractionRecordResponse, error)
+	GetRecommendation(req models.RecommendationRequest) (*models.LearningRecommendation, error)
+	GetPatterns(params map[string]string) (*models.PaginatedPatternsResponse, error)
+	GetLearningAnalytics(timeRange string) (*models.LearningAnalytics, error)
+	SearchInteractions(req models.SearchRequest) (*models.SearchResponse, error)
+}
+
+// DefaultConfigLoader implements ConfigLoader using the config package
+type DefaultConfigLoader struct{}
+
+func (d *DefaultConfigLoader) Load() (*config.Config, error) {
+	return config.Load()
+}
+
+// DefaultAPIClientFactory implements APIClientFactory using the client package
+type DefaultAPIClientFactory struct{}
+
+func (d *DefaultAPIClientFactory) NewClient(cfg *config.Config) APIClient {
+	return client.NewClient(cfg)
+}
+
+// LearningCommandOptions allows dependency injection for testing
+type LearningCommandOptions struct {
+	ConfigLoader     ConfigLoader
+	APIClientFactory APIClientFactory
+}
+
+// NewLearningCommand creates a new learning command with default dependencies
 func NewLearningCommand() *cobra.Command {
+	return NewLearningCommandWithOptions(&LearningCommandOptions{
+		ConfigLoader:     &DefaultConfigLoader{},
+		APIClientFactory: &DefaultAPIClientFactory{},
+	})
+}
+
+// NewLearningCommandWithOptions creates a new learning command with injected dependencies
+func NewLearningCommandWithOptions(opts *LearningCommandOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "learning",
 		Aliases: []string{"learn", "ai"},
@@ -24,17 +70,17 @@ func NewLearningCommand() *cobra.Command {
 		Long:    "Record interactions, get recommendations, and analyze AI learning patterns.",
 	}
 
-	cmd.AddCommand(newLearningRecordCommand())
-	cmd.AddCommand(newLearningRecommendCommand())
-	cmd.AddCommand(newLearningPatternsCommand())
-	cmd.AddCommand(newLearningAnalyticsCommand())
-	cmd.AddCommand(newLearningSearchCommand())
+	cmd.AddCommand(newLearningRecordCommand(opts))
+	cmd.AddCommand(newLearningRecommendCommand(opts))
+	cmd.AddCommand(newLearningPatternsCommand(opts))
+	cmd.AddCommand(newLearningAnalyticsCommand(opts))
+	cmd.AddCommand(newLearningSearchCommand(opts))
 
 	return cmd
 }
 
 // newLearningRecordCommand creates the learning record subcommand
-func newLearningRecordCommand() *cobra.Command {
+func newLearningRecordCommand(opts *LearningCommandOptions) *cobra.Command {
 	var (
 		taskID          int
 		agentType       string
@@ -61,12 +107,12 @@ func newLearningRecordCommand() *cobra.Command {
 				return fmt.Errorf("success score must be between 0 and 1")
 			}
 
-			cfg, err := config.Load()
+			cfg, err := opts.ConfigLoader.Load()
 			if err != nil {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			apiClient := client.NewClient(cfg)
+			apiClient := opts.APIClientFactory.NewClient(cfg)
 
 			// Parse JSON strings
 			var contextMap map[string]interface{}
@@ -139,7 +185,7 @@ func newLearningRecordCommand() *cobra.Command {
 }
 
 // newLearningRecommendCommand creates the learning recommend subcommand
-func newLearningRecommendCommand() *cobra.Command {
+func newLearningRecommendCommand(opts *LearningCommandOptions) *cobra.Command {
 	var (
 		taskContext   string
 		agentType     string
@@ -155,12 +201,16 @@ func newLearningRecommendCommand() *cobra.Command {
 				return fmt.Errorf("agent type is required")
 			}
 
-			cfg, err := config.Load()
+			if minConfidence < 0 || minConfidence > 1 {
+				return fmt.Errorf("min-confidence must be between 0 and 1")
+			}
+
+			cfg, err := opts.ConfigLoader.Load()
 			if err != nil {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			apiClient := client.NewClient(cfg)
+			apiClient := opts.APIClientFactory.NewClient(cfg)
 
 			// Parse task context
 			var contextMap map[string]interface{}
@@ -197,7 +247,7 @@ func newLearningRecommendCommand() *cobra.Command {
 }
 
 // newLearningPatternsCommand creates the learning patterns subcommand
-func newLearningPatternsCommand() *cobra.Command {
+func newLearningPatternsCommand(opts *LearningCommandOptions) *cobra.Command {
 	var (
 		agentType     string
 		patternType   string
@@ -211,12 +261,12 @@ func newLearningPatternsCommand() *cobra.Command {
 		Short:   "List learned patterns",
 		Long:    "List AI learning patterns with optional filtering.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := config.Load()
+			cfg, err := opts.ConfigLoader.Load()
 			if err != nil {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			apiClient := client.NewClient(cfg)
+			apiClient := opts.APIClientFactory.NewClient(cfg)
 
 			// Build query parameters
 			params := make(map[string]string)
@@ -253,7 +303,7 @@ func newLearningPatternsCommand() *cobra.Command {
 }
 
 // newLearningAnalyticsCommand creates the learning analytics subcommand
-func newLearningAnalyticsCommand() *cobra.Command {
+func newLearningAnalyticsCommand(opts *LearningCommandOptions) *cobra.Command {
 	var timeRange string
 
 	cmd := &cobra.Command{
@@ -262,12 +312,12 @@ func newLearningAnalyticsCommand() *cobra.Command {
 		Short:   "Show learning analytics",
 		Long:    "Display performance analytics and learning metrics for the AI system.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := config.Load()
+			cfg, err := opts.ConfigLoader.Load()
 			if err != nil {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			apiClient := client.NewClient(cfg)
+			apiClient := opts.APIClientFactory.NewClient(cfg)
 
 			analytics, err := apiClient.GetLearningAnalytics(timeRange)
 			if err != nil {
@@ -286,12 +336,12 @@ func newLearningAnalyticsCommand() *cobra.Command {
 }
 
 // newLearningSearchCommand creates the learning search subcommand
-func newLearningSearchCommand() *cobra.Command {
+func newLearningSearchCommand(opts *LearningCommandOptions) *cobra.Command {
 	var (
-		agentType        string
-		context          string
-		minSuccessScore  float64
-		limit            int
+		agentType       string
+		context         string
+		minSuccessScore float64
+		limit           int
 	)
 
 	cmd := &cobra.Command{
@@ -299,12 +349,12 @@ func newLearningSearchCommand() *cobra.Command {
 		Short: "Search for similar interactions",
 		Long:  "Search for similar AI interactions based on context and criteria.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := config.Load()
+			cfg, err := opts.ConfigLoader.Load()
 			if err != nil {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			apiClient := client.NewClient(cfg)
+			apiClient := opts.APIClientFactory.NewClient(cfg)
 
 			// Parse context
 			var contextMap map[string]interface{}
@@ -378,7 +428,7 @@ func formatAnalyticsOutput(analytics models.LearningAnalytics, format string) er
 
 func formatRecommendationTable(rec models.LearningRecommendation) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	
+
 	fmt.Fprintln(w, "RECOMMENDATION DETAILS")
 	fmt.Fprintln(w, "═══════════════════")
 	fmt.Fprintf(w, "Pattern Name:\t%s\n", rec.Pattern.Name)
@@ -386,11 +436,11 @@ func formatRecommendationTable(rec models.LearningRecommendation) error {
 	fmt.Fprintf(w, "Confidence:\t%.2f\n", rec.Confidence)
 	fmt.Fprintf(w, "Usage Count:\t%d\n", rec.Pattern.UsageCount)
 	fmt.Fprintf(w, "Success Rate:\t%.1f%%\n", rec.EstimatedSuccessRate*100)
-	
+
 	if rec.Pattern.LastSuccessfulUse != nil {
 		fmt.Fprintf(w, "Last Used:\t%s\n", rec.Pattern.LastSuccessfulUse.Format("2006-01-02"))
 	}
-	
+
 	fmt.Fprintln(w, "\nRECOMMENDED APPROACH")
 	fmt.Fprintln(w, "══════════════════")
 	if approach, ok := rec.AdaptedSolution["approach"].(string); ok {
@@ -399,60 +449,60 @@ func formatRecommendationTable(rec models.LearningRecommendation) error {
 	if timeEst, ok := rec.AdaptedSolution["time_estimate"].(string); ok {
 		fmt.Fprintf(w, "Time Estimate:\t%s\n", timeEst)
 	}
-	
+
 	return w.Flush()
 }
 
 func formatPatternsTable(patterns []models.KnowledgePattern) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ID\tNAME\tTYPE\tCONFIDENCE\tUSAGE\tLAST USED")
-	
+
 	for _, p := range patterns {
 		lastUsed := "Never"
 		if p.LastSuccessfulUse != nil {
 			lastUsed = p.LastSuccessfulUse.Format("2006-01-02")
 		}
-		
+
 		fmt.Fprintf(w, "%d\t%s\t%s\t%.2f\t%d\t%s\n",
 			p.ID, p.Name, p.Type, p.ConfidenceScore, p.UsageCount, lastUsed)
 	}
-	
+
 	return w.Flush()
 }
 
 func formatAnalyticsTable(analytics models.LearningAnalytics) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	
+
 	fmt.Fprintln(w, "LEARNING SYSTEM ANALYTICS")
 	fmt.Fprintln(w, "═══════════════════════")
-	
+
 	if len(analytics.InteractionMetrics) > 0 {
 		fmt.Fprintln(w, "\nINTERACTION METRICS BY AGENT TYPE")
 		fmt.Fprintln(w, "AGENT TYPE\tTOTAL\tAVG SUCCESS\tAVG TIME(ms)\tSUCCESSFUL")
-		
+
 		for _, metric := range analytics.InteractionMetrics {
 			fmt.Fprintf(w, "%s\t%d\t%.2f\t%.0f\t%d\n",
 				metric.AgentType, metric.TotalInteractions, metric.AvgSuccessScore,
 				metric.AvgExecutionTime, metric.SuccessfulInteractions)
 		}
 	}
-	
+
 	if len(analytics.PatternAnalytics) > 0 {
 		fmt.Fprintln(w, "\nPATTERN ANALYTICS BY TYPE")
 		fmt.Fprintln(w, "PATTERN TYPE\tTOTAL\tAVG CONFIDENCE\tTOTAL USAGE\tLAST USED")
-		
+
 		for _, pattern := range analytics.PatternAnalytics {
 			lastUsed := "Never"
 			if pattern.LastUsed != nil {
 				lastUsed = pattern.LastUsed.Format("2006-01-02")
 			}
-			
+
 			fmt.Fprintf(w, "%s\t%d\t%.2f\t%d\t%s\n",
 				pattern.PatternType, pattern.TotalPatterns, pattern.AvgConfidence,
 				pattern.TotalUsage, lastUsed)
 		}
 	}
-	
+
 	if analytics.LearningEffectiveness != nil {
 		fmt.Fprintln(w, "\nLEARNING EFFECTIVENESS")
 		fmt.Fprintf(w, "Total Interactions:\t%d\n", analytics.LearningEffectiveness.TotalInteractions)
@@ -461,6 +511,6 @@ func formatAnalyticsTable(analytics models.LearningAnalytics) error {
 		fmt.Fprintf(w, "Learning Rate:\t%.2f%%\n", analytics.LearningEffectiveness.LearningRate*100)
 		fmt.Fprintf(w, "Reuse Rate:\t%.2f%%\n", analytics.LearningEffectiveness.ReuseRate*100)
 	}
-	
+
 	return w.Flush()
 }

@@ -3,19 +3,62 @@ package commands
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"github.com/ericfisherdev/specsrv/cli/internal/client"
 	"github.com/ericfisherdev/specsrv/cli/internal/config"
 	"github.com/ericfisherdev/specsrv/cli/pkg/models"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// Mock implementations for testing
+type MockConfigLoader struct {
+	cfg *config.Config
+	err error
+}
+
+func (m *MockConfigLoader) Load() (*config.Config, error) {
+	return m.cfg, m.err
+}
+
+type MockAPIClientFactory struct{}
+
+func (m *MockAPIClientFactory) NewClient(cfg *config.Config) APIClient {
+	return &MockAPIClient{baseURL: cfg.Server.URL, token: cfg.Auth.Token}
+}
+
+type MockAPIClient struct {
+	baseURL string
+	token   string
+}
+
+func (m *MockAPIClient) RecordInteraction(req models.InteractionRecordRequest) (*models.InteractionRecordResponse, error) {
+	// Mock implementation for testing
+	return &models.InteractionRecordResponse{}, nil
+}
+
+func (m *MockAPIClient) GetRecommendation(req models.RecommendationRequest) (*models.LearningRecommendation, error) {
+	// Mock implementation for testing
+	return &models.LearningRecommendation{}, nil
+}
+
+func (m *MockAPIClient) GetPatterns(params map[string]string) (*models.PaginatedPatternsResponse, error) {
+	// Mock implementation for testing
+	return &models.PaginatedPatternsResponse{}, nil
+}
+
+func (m *MockAPIClient) GetLearningAnalytics(timeRange string) (*models.LearningAnalytics, error) {
+	// Mock implementation for testing
+	return &models.LearningAnalytics{}, nil
+}
+
+func (m *MockAPIClient) SearchInteractions(req models.SearchRequest) (*models.SearchResponse, error) {
+	// Mock implementation for testing
+	return &models.SearchResponse{}, nil
+}
 
 func TestLearningCommands(t *testing.T) {
 	tests := []struct {
@@ -161,11 +204,15 @@ func TestLearningCommands(t *testing.T) {
 				},
 			}
 
-			// Create client
-			apiClient := client.NewClient(cfg)
+			// Create mock config loader
+			mockConfigLoader := &MockConfigLoader{cfg: cfg}
+			mockAPIClientFactory := &MockAPIClientFactory{}
 
-			// Create learning command
-			learningCmd := NewLearningCommand()
+			// Create learning command with injected dependencies
+			learningCmd := NewLearningCommandWithOptions(&LearningCommandOptions{
+				ConfigLoader:     mockConfigLoader,
+				APIClientFactory: mockAPIClientFactory,
+			})
 
 			// Capture output
 			var buf bytes.Buffer
@@ -224,13 +271,13 @@ func TestLearningCommandValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			learningCmd := NewLearningCommand()
-			
+
 			subCmd, _, err := learningCmd.Find([]string{tt.command})
 			require.NoError(t, err)
-			
+
 			subCmd.SetArgs(tt.args)
 			err = subCmd.Execute()
-			
+
 			assert.Error(t, err)
 			assert.Contains(t, err.Error(), tt.expectedErr)
 		})
@@ -255,7 +302,6 @@ func TestFormatting(t *testing.T) {
 		},
 	}
 
-	var buf bytes.Buffer
 	err := formatRecommendationOutput(recommendation, "json")
 	assert.NoError(t, err)
 
@@ -453,9 +499,9 @@ func handleSearchInteractions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	searchResponse := models.SearchResponse{
-		Patterns:    patterns,
-		TotalFound:  1,
-		Returned:    1,
+		Patterns:   patterns,
+		TotalFound: 1,
+		Returned:   1,
 	}
 
 	response := map[string]interface{}{

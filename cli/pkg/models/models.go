@@ -167,17 +167,17 @@ type ExportResponse struct {
 
 // AgentInteraction represents an AI agent interaction
 type AgentInteraction struct {
-	ID              int                    `json:"id"`
-	TaskID          int                    `json:"task_id"`
-	AgentType       string                 `json:"agent_type"`
-	InputContext    map[string]interface{} `json:"input_context"`
+	ID              int                      `json:"id"`
+	TaskID          int                      `json:"task_id"`
+	AgentType       string                   `json:"agent_type"`
+	InputContext    map[string]interface{}   `json:"input_context"`
 	ExecutionSteps  []map[string]interface{} `json:"execution_steps"`
-	OutputResult    map[string]interface{} `json:"output_result"`
-	SuccessScore    float64                `json:"success_score"`
-	PatternHash     string                 `json:"pattern_hash"`
+	OutputResult    map[string]interface{}   `json:"output_result"`
+	SuccessScore    float64                  `json:"success_score"`
+	PatternHash     string                   `json:"pattern_hash"`
 	ErrorLog        []map[string]interface{} `json:"error_log,omitempty"`
-	ExecutionTimeMs int                    `json:"execution_time_ms"`
-	CreatedAt       time.Time              `json:"created_at"`
+	ExecutionTimeMs int                      `json:"execution_time_ms"`
+	CreatedAt       time.Time                `json:"created_at"`
 }
 
 // InteractionRecordRequest represents a request to record an interaction
@@ -201,19 +201,19 @@ type InteractionRecordResponse struct {
 
 // KnowledgePattern represents a learned pattern
 type KnowledgePattern struct {
-	ID                 int                    `json:"id"`
-	Name               string                 `json:"name"`
-	Type               string                 `json:"type"`
-	Description        string                 `json:"description"`
-	ConfidenceScore    float64                `json:"confidence_score"`
-	UsageCount         int                    `json:"usage_count"`
-	LastSuccessfulUse  *time.Time             `json:"last_successful_use,omitempty"`
-	Tags               []string               `json:"tags"`
-	ContextSignature   map[string]interface{} `json:"context_signature"`
-	SolutionTemplate   map[string]interface{} `json:"solution_template"`
-	Prerequisites      map[string]interface{} `json:"prerequisites"`
-	CreatedAt          time.Time              `json:"created_at"`
-	UpdatedAt          time.Time              `json:"updated_at"`
+	ID                int                    `json:"id"`
+	Name              string                 `json:"name"`
+	Type              string                 `json:"type"`
+	Description       string                 `json:"description"`
+	ConfidenceScore   float64                `json:"confidence_score"`
+	UsageCount        int                    `json:"usage_count"`
+	LastSuccessfulUse *time.Time             `json:"last_successful_use,omitempty"`
+	Tags              []string               `json:"tags"`
+	ContextSignature  map[string]interface{} `json:"context_signature"`
+	SolutionTemplate  map[string]interface{} `json:"solution_template"`
+	Prerequisites     map[string]interface{} `json:"prerequisites"`
+	CreatedAt         time.Time              `json:"created_at"`
+	UpdatedAt         time.Time              `json:"updated_at"`
 }
 
 // PatternVariation represents a variation of a knowledge pattern
@@ -237,12 +237,12 @@ type RecommendationRequest struct {
 
 // LearningRecommendation represents an AI solution recommendation
 type LearningRecommendation struct {
-	Pattern               KnowledgePattern       `json:"pattern"`
-	Confidence            float64                `json:"confidence"`
-	AdaptedSolution       map[string]interface{} `json:"adapted_solution"`
-	UsageHistory          []InteractionSummary   `json:"usage_history"`
-	EstimatedSuccessRate  float64                `json:"estimated_success_rate"`
-	Variation             *PatternVariation      `json:"variation,omitempty"`
+	Pattern              KnowledgePattern       `json:"pattern"`
+	Confidence           float64                `json:"confidence"`
+	AdaptedSolution      map[string]interface{} `json:"adapted_solution"`
+	UsageHistory         []InteractionSummary   `json:"usage_history"`
+	EstimatedSuccessRate float64                `json:"estimated_success_rate"`
+	Variation            *PatternVariation      `json:"variation,omitempty"`
 }
 
 // InteractionSummary represents a summary of an interaction
@@ -263,9 +263,9 @@ type SearchRequest struct {
 
 // SearchResponse represents search results
 type SearchResponse struct {
-	Patterns    []KnowledgePattern `json:"patterns"`
-	TotalFound  int                `json:"total_found"`
-	Returned    int                `json:"returned"`
+	Patterns   []KnowledgePattern `json:"patterns"`
+	TotalFound int                `json:"total_found"`
+	Returned   int                `json:"returned"`
 }
 
 // PaginatedPatternsResponse represents paginated patterns
@@ -284,10 +284,10 @@ type PaginationInfo struct {
 
 // LearningAnalytics represents learning system analytics
 type LearningAnalytics struct {
-	InteractionMetrics     []InteractionMetric      `json:"interaction_metrics"`
-	PatternAnalytics       []PatternAnalytic        `json:"pattern_analytics"`
-	VariationStats         *VariationStats          `json:"variation_stats,omitempty"`
-	LearningEffectiveness  *LearningEffectiveness   `json:"learning_effectiveness,omitempty"`
+	InteractionMetrics    []InteractionMetric    `json:"interaction_metrics"`
+	PatternAnalytics      []PatternAnalytic      `json:"pattern_analytics"`
+	VariationStats        *VariationStats        `json:"variation_stats,omitempty"`
+	LearningEffectiveness *LearningEffectiveness `json:"learning_effectiveness,omitempty"`
 }
 
 // InteractionMetric represents interaction metrics by agent type
@@ -301,20 +301,20 @@ type InteractionMetric struct {
 
 // PatternAnalytic represents pattern analytics by type
 type PatternAnalytic struct {
-	PatternType    string     `json:"pattern_type"`
-	TotalPatterns  int        `json:"total_patterns"`
-	AvgConfidence  float64    `json:"avg_confidence"`
-	TotalUsage     int        `json:"total_usage"`
-	LastUsed       *time.Time `json:"last_used,omitempty"`
+	PatternType   string     `json:"pattern_type"`
+	TotalPatterns int        `json:"total_patterns"`
+	AvgConfidence float64    `json:"avg_confidence"`
+	TotalUsage    int        `json:"total_usage"`
+	LastUsed      *time.Time `json:"last_used,omitempty"`
 }
 
 // VariationStats represents pattern variation statistics
 type VariationStats struct {
-	TotalVariations  int     `json:"total_variations"`
-	AvgSuccessRate   float64 `json:"avg_success_rate"`
-	TotalUsage       int     `json:"total_usage"`
-	MaxSuccessRate   float64 `json:"max_success_rate"`
-	MinSuccessRate   float64 `json:"min_success_rate"`
+	TotalVariations int     `json:"total_variations"`
+	AvgSuccessRate  float64 `json:"avg_success_rate"`
+	TotalUsage      int     `json:"total_usage"`
+	MaxSuccessRate  float64 `json:"max_success_rate"`
+	MinSuccessRate  float64 `json:"min_success_rate"`
 }
 
 // LearningEffectiveness represents learning system effectiveness metrics
