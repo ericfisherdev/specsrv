@@ -181,7 +181,7 @@ class PatternAnalyzerServiceTest extends AbstractKernelTestCase
             ->setOutputResult(['tests_passed' => true, 'performance_improvement' => 15])
             ->setSuccessScore(0.9)
             ->setPatternHash('test-hash')
-            ->setExecutionTimeMs(2500)
+            ->setExecutionTimeMs(120000)
             ->setErrorLog([['type' => 'syntax_error', 'resolution' => 'fixed_typo']]);
 
         $template = $this->patternAnalyzer->extractSolutionTemplate($interaction);

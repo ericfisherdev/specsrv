@@ -10,7 +10,9 @@ echo "Running PHP checks for backend..."
   echo "→ Running PHP CS Fixer (check mode)..." && \
   composer cs-check && \
   echo "→ Running Rector (dry-run)..." && \
-  ./vendor/bin/rector process --dry-run
+  ./vendor/bin/rector process --dry-run && \
+  echo "→ Running PHPUnit tests..." && \
+  composer test
 ) &&
 
 # Go linting for CLI (if CLI directory exists and has Go files)
