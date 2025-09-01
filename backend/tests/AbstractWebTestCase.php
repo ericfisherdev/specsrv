@@ -3,7 +3,10 @@
 namespace App\Tests;
 
 use App\Entity\ApiKey;
+use App\Entity\Project;
+use App\Entity\Task;
 use App\Entity\User;
+use App\Enum\TaskStatusEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -32,6 +35,8 @@ abstract class AbstractWebTestCase extends WebTestCase
     protected function cleanDatabase(): void
     {
         $connection = $this->entityManager->getConnection();
+        $connection->executeStatement('DELETE FROM knowledge_patterns');
+        $connection->executeStatement('DELETE FROM agent_interactions');
         $connection->executeStatement('DELETE FROM git_links');
         $connection->executeStatement('DELETE FROM files');
         $connection->executeStatement('DELETE FROM tasks');
@@ -67,7 +72,7 @@ abstract class AbstractWebTestCase extends WebTestCase
 
     protected function makeAuthenticatedRequest(string $method, string $uri, string $apiKey, array $data = []): void
     {
-        $headers = ['HTTP_X-API-KEY' => $apiKey];
+        $headers = ['HTTP_X-API-Key' => $apiKey];
         $content = ! empty($data) ? json_encode($data) : null;
 
         if ($content) {
@@ -95,5 +100,51 @@ abstract class AbstractWebTestCase extends WebTestCase
         $this->assertJson($response->getContent());
 
         return json_decode($response->getContent(), true);
+    }
+
+    protected function getAuthenticatedClient(): KernelBrowser
+    {
+        return $this->client;
+    }
+
+    protected function getUser(KernelBrowser $client): User
+    {
+        // Return the first user from the database (created in setUp)
+        $userRepo = $this->entityManager->getRepository(User::class);
+        $users = $userRepo->findAll();
+
+        if (empty($users)) {
+            throw new \LogicException('No test users found. Make sure setUp() creates a test user.');
+        }
+
+        return $users[0];
+    }
+
+    protected function createTestProject(User $user, array $data = []): Project
+    {
+        $project = new Project();
+        $project->setTitle($data['title'] ?? 'Test Project');
+        $project->setDescription($data['description'] ?? 'Test project description');
+        $project->setUser($user);
+
+        $this->entityManager->persist($project);
+        $this->entityManager->flush();
+
+        return $project;
+    }
+
+    protected function createTestTask(Project $project, array $data = []): Task
+    {
+        $task = new Task();
+        $task->setTitle($data['title'] ?? 'Test Task');
+        $task->setDescription($data['description'] ?? 'Test task description');
+        $task->setStatus($data['status'] ?? TaskStatusEnum::TODO);
+        $task->setPriority($data['priority'] ?? 'medium');
+        $task->setProject($project);
+
+        $this->entityManager->persist($task);
+        $this->entityManager->flush();
+
+        return $task;
     }
 }
