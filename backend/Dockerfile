@@ -149,9 +149,12 @@ COPY --chown=app:app scripts/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 # Copy composer binary from composer stage
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
+# Copy application source files for development (will be overridden by volume mount)
+COPY --chown=app:app . .
+
 # Install dev composer dependencies
-COPY composer.json composer.lock ./
-RUN composer install --prefer-dist --no-scripts
+RUN composer install --prefer-dist --no-scripts --no-autoloader
+RUN composer dump-autoload
 
 # Switch back to app user
 USER app

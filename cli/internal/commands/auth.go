@@ -80,21 +80,24 @@ func newAuthLoginCommand() *cobra.Command {
 			}
 
 			// Create API client and attempt login
-			_ = client.NewClient(cfg) // apiClient - will be used when connecting to real API
+			apiClient := client.NewClient(cfg)
 
-			_ = models.AuthRequest{
+			authReq := models.AuthRequest{
 				Username: username,
 				Password: password,
-			} // authReq - will be used when connecting to real API
+			}
 
-			// In a real implementation, this would make an API call
-			// For now, we'll simulate a successful login
-			fmt.Println("\n⚠️  Note: Using mock authentication (backend not connected)")
+			// Make real API call to authenticate
+			var authResp models.AuthResponse
+			err = apiClient.Post("/api/auth/login", authReq, &authResp)
+			if err != nil {
+				return fmt.Errorf("authentication failed: %w", err)
+			}
 
-			// Simulate API response
-			mockToken := "mock-token-" + username
-			cfg.Auth.Token = mockToken
+			// Save the token from the response
+			cfg.Auth.Token = authResp.Token
 			cfg.Auth.Method = "password"
+			apiClient.SetToken(authResp.Token)
 
 			if err := config.Save(cfg); err != nil {
 				return fmt.Errorf("failed to save config: %w", err)
@@ -103,16 +106,7 @@ func newAuthLoginCommand() *cobra.Command {
 			fmt.Printf("\n✓ Successfully logged in as %s\n", username)
 			fmt.Printf("✓ Token saved to config file\n")
 
-			// When real API is connected, use:
-			// var authResp models.AuthResponse
-			// err = apiClient.Post("/auth/login", authReq, &authResp)
-			// if err != nil {
-			//     return fmt.Errorf("authentication failed: %w", err)
-			// }
-			// cfg.Auth.Token = authResp.Token
-			// apiClient.SetToken(authResp.Token)
-
-			return nil
+			return testAuthentication(cfg)
 		},
 	}
 
@@ -188,21 +182,7 @@ func testAuthentication(cfg *config.Config) error {
 	// Try to call a protected endpoint to validate the token
 	_, err := apiClient.Me()
 	if err != nil {
-		// For now, we'll consider mock auth always valid
-		if strings.Contains(cfg.Auth.Token, "mock-token") {
-			fmt.Println("✓ Authentication is valid (mock)")
-			return nil
-		}
-
-		// Fallback to health check but label it as a weak check
-		fmt.Println("Protected endpoint unavailable, falling back to weak check...")
-		if healthErr := apiClient.HealthCheck(); healthErr != nil {
-			fmt.Println("✗ Authentication test failed (weak check)")
-			return fmt.Errorf("authentication may be invalid: %w", healthErr)
-		}
-
-		fmt.Println("⚠ Authentication weak check passed (does not guarantee token validity)")
-		return nil
+		return fmt.Errorf("authentication test failed: %w", err)
 	}
 
 	fmt.Println("✓ Authentication is valid")

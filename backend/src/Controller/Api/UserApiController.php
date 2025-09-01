@@ -26,19 +26,37 @@ class UserApiController extends BaseApiController
     }
 
     #[Route('/api/auth/login', name: 'api_auth_login', methods: ['POST'])]
-    public function login(): JsonResponse
+    public function login(Request $request): JsonResponse
     {
-        $user = $this->getUser();
-
-        if (! $user) {
-            return $this->errorResponse('Authentication failed', 'AUTH_FAILED', null, 401);
+        try {
+            $data = $this->getJsonPayload($request);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse('Invalid JSON payload', 'INVALID_JSON', null, 400);
         }
 
-        assert($user instanceof User);
+        // Validate required fields
+        if (empty($data['username']) || empty($data['password'])) {
+            return $this->errorResponse('Username and password are required', 'MISSING_CREDENTIALS', null, 400);
+        }
+
+        // Find user by email
+        $user = $this->userRepository->findOneBy(['email' => $data['username']]);
+        if (!$user) {
+            return $this->errorResponse('Invalid credentials', 'AUTH_FAILED', null, 401);
+        }
+
+        // Verify password
+        if (!$this->passwordHasher->isPasswordValid($user, $data['password'])) {
+            return $this->errorResponse('Invalid credentials', 'AUTH_FAILED', null, 401);
+        }
+
+        // Generate API key for this login session
+        $apiKeyData = $this->apiKeyService->generateApiKey($user, 'CLI Login - ' . date('Y-m-d H:i:s'));
 
         return $this->successResponse([
+            'token' => $apiKeyData['api_key'],
+            'expires_at' => (new \DateTime('+1 year'))->format('c'), // Set expiry as needed
             'user' => $this->transformEntity($user),
-            'message' => 'Login successful',
         ]);
     }
 

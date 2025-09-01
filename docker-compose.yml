@@ -1,11 +1,8 @@
-version: '3.8'
-
 services:
   specsrv-backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-      target: development
+      dockerfile: Dockerfile.dev
     container_name: specsrv-backend
     ports:
       - "8080:8080"
@@ -14,11 +11,14 @@ services:
       - APP_DEBUG=1
       - DATABASE_URL=postgresql://${POSTGRES_USER:-specsrv-db-user}:${POSTGRES_PASSWORD:?set in .env}@specsrv-postgres:5432/${POSTGRES_DB:-specsrv_dev}
     volumes:
-      # Mount source code for development
-      - ./backend:/app
+      # Mount source code for development - this will override the COPY in Dockerfile
+      - ./backend:/app:cached
+      # Create named volumes for directories that shouldn't be overridden
       - specsrv-cache:/app/var/cache
-      - specsrv-logs:/app/var/log
+      - specsrv-logs:/app/var/log  
       - specsrv-uploads:/app/var/uploads
+      - node-modules-vol:/app/node_modules
+      - vendor-vol:/app/vendor
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/liveness"]
       interval: 30s
@@ -97,6 +97,10 @@ volumes:
   specsrv-assets:
     driver: local
   specsrv-postgres-data:
+    driver: local
+  node-modules-vol:
+    driver: local
+  vendor-vol:
     driver: local
 
 networks:
