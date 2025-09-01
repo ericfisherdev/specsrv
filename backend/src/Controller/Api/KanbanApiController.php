@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Api;
 
 use App\Entity\Task;
 use App\Entity\User;
@@ -8,13 +8,12 @@ use App\Enum\TaskStatusEnum;
 use App\Repository\ProjectRepository;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class KanbanController extends AbstractController
+#[Route('/api/v1/kanban')]
+class KanbanApiController extends BaseApiController
 {
     public function __construct(
         private TaskRepository $taskRepository,
@@ -23,92 +22,100 @@ class KanbanController extends AbstractController
     ) {
     }
 
-    // DISABLED for frontend migration: HTML-returning method
-    // Frontend will use API endpoints instead
-    // #[Route('/kanban', name: 'app_kanban')]
-    // public function index(Request $request): Response
-    // {
-    //     $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-    //
-    //     $projectId = $request->query->get('project');
-    //     $projectIdString = is_string($projectId) ? $projectId : null;
-    //     $projects = $this->projectRepository->findAll();
-    //
-    //     // Get tasks grouped by status
-    //     $tasksByStatus = $this->getTasksByStatus($projectIdString);
-    //
-    //     return $this->render('kanban/index.html.twig', [
-    //         'projects' => $projects,
-    //         'selectedProject' => $projectId,
-    //         'tasksByStatus' => $tasksByStatus,
-    //         'statuses' => $this->getStatusConfig(),
-    //     ]);
-    // }
+    #[Route('/boards', name: 'api_kanban_boards', methods: ['GET'])]
+    public function boards(Request $request): JsonResponse
+    {
+        $this->requireAuth();
+        $user = $this->getUser();
+        assert($user instanceof User);
 
-    #[Route('/api/v1/kanban/move-task', name: 'api_kanban_move_task', methods: ['POST'])]
+        $projectId = $request->query->get('project');
+        $projectIdString = is_string($projectId) ? $projectId : null;
+        
+        // Get all projects for the user
+        $projects = $this->projectRepository->findByUser($user);
+
+        // Get tasks grouped by status
+        $tasksByStatus = $this->getTasksByStatus($user, $projectIdString);
+
+        // Get status configuration
+        $statuses = $this->getStatusConfig();
+
+        return $this->successResponse([
+            'projects' => array_map([$this, 'transformEntity'], $projects),
+            'selected_project' => $projectIdString,
+            'tasks_by_status' => $tasksByStatus,
+            'statuses' => $statuses,
+        ]);
+    }
+
+    #[Route('/move-task', name: 'api_kanban_move_task', methods: ['POST'])]
     public function moveTask(Request $request): JsonResponse
     {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->requireAuth();
+        $user = $this->getUser();
+        assert($user instanceof User);
 
-        $data = json_decode($request->getContent(), true);
+        try {
+            $data = $this->getJsonPayload($request);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse('Invalid JSON payload', 'INVALID_JSON', null, 400);
+        }
+
         $taskId = $data['taskId'] ?? null;
         $newStatus = $data['status'] ?? null;
 
         if (! $taskId || ! $newStatus) {
-            return new JsonResponse(['error' => 'Invalid request'], 400);
+            return $this->errorResponse('Task ID and status are required', 'MISSING_FIELDS', null, 400);
         }
 
         $task = $this->taskRepository->find($taskId);
         if (! $task) {
-            return new JsonResponse(['error' => 'Task not found'], 404);
+            return $this->errorResponse('Task not found', 'TASK_NOT_FOUND', null, 404);
         }
 
         // Check ownership - verify task belongs to current user
-        $currentUser = $this->getUser();
-        if (! $currentUser instanceof User || ! $task->getProject() || $task->getProject()->getUser() !== $currentUser) {
-            return new JsonResponse(['error' => 'Access denied'], 403);
+        if (! $this->checkResourceOwnership($task)) {
+            return $this->errorResponse('Access denied', 'ACCESS_DENIED', null, 403);
         }
 
         // Validate status with safer enum handling
         $statusEnum = TaskStatusEnum::tryFrom($newStatus);
         if (! $statusEnum) {
-            return new JsonResponse(['error' => 'Invalid status'], 400);
+            return $this->errorResponse('Invalid status', 'INVALID_STATUS', null, 400);
         }
 
         $task->setStatus($statusEnum);
         $this->entityManager->flush();
 
-        return new JsonResponse(['success' => true]);
+        return $this->successResponse(['success' => true]);
     }
 
-    #[Route('/api/v1/kanban/tasks', name: 'api_kanban_tasks', methods: ['GET'])]
+    #[Route('/tasks', name: 'api_kanban_tasks', methods: ['GET'])]
     public function getTasks(Request $request): JsonResponse
     {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        $this->requireAuth();
+        $user = $this->getUser();
+        assert($user instanceof User);
 
         $projectId = $request->query->get('project');
         $projectIdString = is_string($projectId) ? $projectId : null;
-        $tasksByStatus = $this->getTasksByStatus($projectIdString);
+        $tasksByStatus = $this->getTasksByStatus($user, $projectIdString);
 
-        return new JsonResponse($tasksByStatus);
+        return $this->successResponse($tasksByStatus);
     }
 
-    private function getTasksByStatus(?string $projectId): array
+    private function getTasksByStatus(User $user, ?string $projectId): array
     {
-        $currentUser = $this->getUser();
-        if (! $currentUser instanceof User) {
-            return [];
-        }
-
         $queryBuilder = $this->taskRepository->createQueryBuilder('t')
             ->leftJoin('t.project', 'p')
-            ->leftJoin('p.user', 'u')  // Join project owner
+            ->leftJoin('p.user', 'u')
             ->addSelect('p')
             ->addSelect('u')
             ->where('t.status != :obsolete')
-            ->andWhere('u.id = :userId')  // Filter by project owner
+            ->andWhere('u.id = :userId')
             ->setParameter('obsolete', TaskStatusEnum::OBSOLETE->value)
-            ->setParameter('userId', $currentUser->getId());
+            ->setParameter('userId', $user->getId());
 
         if ($projectId) {
             $queryBuilder->andWhere('p.id = :projectId')
@@ -116,7 +123,6 @@ class KanbanController extends AbstractController
         }
 
         // Order by priority to ensure highest priority tasks are selected first
-        // when limiting to 6 per project
         $queryBuilder->orderBy(
             'CASE 
                 WHEN t.priority = :critical THEN 1
@@ -131,7 +137,7 @@ class KanbanController extends AbstractController
         ->setParameter('high', Task::PRIORITY_HIGH)
         ->setParameter('medium', Task::PRIORITY_MEDIUM)
         ->setParameter('low', Task::PRIORITY_LOW)
-        ->addOrderBy('t.createdAt', 'DESC'); // Secondary sort by creation date
+        ->addOrderBy('t.createdAt', 'DESC');
 
         $tasks = $queryBuilder->getQuery()->getResult();
 

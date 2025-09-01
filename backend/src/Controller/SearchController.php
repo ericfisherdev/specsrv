@@ -57,22 +57,9 @@ class SearchController extends AbstractController
         // Get filter options for the form
         $userProjects = $this->projectRepository->findByUser($user);
 
-        return $this->render('search/results.html.twig', [
-            'query' => $query,
-            'tasks' => $tasks,
-            'projects' => $projects,
-            'filters' => $searchCriteria,
-            'user_projects' => $userProjects,
-            'priorities' => ['low', 'medium', 'high', 'critical'],
-            'statuses' => ['backlog', 'todo', 'in_progress', 'review', 'completed'],
-            'date_ranges' => [
-                'today' => 'Today',
-                'week' => 'This Week',
-                'month' => 'This Month',
-                'quarter' => 'This Quarter',
-                'year' => 'This Year',
-            ],
-        ]);
+        // DISABLED for frontend migration: HTML-returning method
+        // Frontend will use API endpoints instead
+        throw $this->createNotFoundException('HTML view disabled. Use API endpoints instead.');
     }
 
     #[Route('/search/filters', name: 'app_search_filters', methods: ['POST'])]

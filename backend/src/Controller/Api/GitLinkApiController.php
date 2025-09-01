@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-#[Route('/api/git-links')]
+#[Route('/api/v1/git-links')]
 class GitLinkApiController extends BaseApiController
 {
     public function __construct(

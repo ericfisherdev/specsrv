@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-#[Route('/api/projects')]
+#[Route('/api/v1/projects')]
 class ProjectApiController extends BaseApiController
 {
     public function __construct(

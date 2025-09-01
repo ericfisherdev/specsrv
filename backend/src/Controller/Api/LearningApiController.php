@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/api/learning')]
+#[Route('/api/v1/learning')]
 class LearningApiController extends BaseApiController
 {
     public function __construct(

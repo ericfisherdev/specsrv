@@ -22,10 +22,9 @@ class SecurityController extends AbstractController
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        return $this->render('auth/login.html.twig', [
-            'last_username' => $lastUsername,
-            'error' => $error,
-        ]);
+        // DISABLED for frontend migration: HTML-returning method
+        // Frontend will use API endpoints instead
+        throw $this->createNotFoundException('HTML view disabled. Use API endpoints instead.');
     }
 
     #[Route(path: '/logout', name: 'app_logout')]
@@ -41,7 +40,9 @@ class SecurityController extends AbstractController
             return $this->redirectToRoute('app_dashboard');
         }
 
-        return $this->render('auth/register.html.twig');
+        // DISABLED for frontend migration: HTML-returning method
+        // Frontend will use API endpoints instead
+        throw $this->createNotFoundException('HTML view disabled. Use API endpoints instead.');
     }
 
     #[Route(path: '/profile', name: 'app_profile')]
@@ -49,10 +50,12 @@ class SecurityController extends AbstractController
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        return $this->render('auth/profile.html.twig');
+        // DISABLED for frontend migration: HTML-returning method
+        // Frontend will use API endpoints instead
+        throw $this->createNotFoundException('HTML view disabled. Use API endpoints instead.');
     }
 
-    #[Route(path: '/api/login', name: 'api_login', methods: ['POST'])]
+    #[Route(path: '/api/v1/login', name: 'api_login', methods: ['POST'])]
     public function apiLogin(): Response
     {
         $user = $this->getUser();
@@ -75,7 +78,7 @@ class SecurityController extends AbstractController
         ]);
     }
 
-    #[Route(path: '/api/user', name: 'api_user', methods: ['GET'])]
+    #[Route(path: '/api/v1/user', name: 'api_user', methods: ['GET'])]
     public function getCurrentUser(): Response
     {
         $user = $this->getUser();
@@ -97,7 +100,7 @@ class SecurityController extends AbstractController
         ]);
     }
 
-    #[Route(path: '/api/csrf-token', name: 'api_csrf_token', methods: ['GET'])]
+    #[Route(path: '/api/v1/csrf-token', name: 'api_csrf_token', methods: ['GET'])]
     public function getCsrfToken(CsrfTokenManagerInterface $csrfTokenManager): Response
     {
         $token = $csrfTokenManager->getToken('authenticate');

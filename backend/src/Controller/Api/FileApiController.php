@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/api/files', name: 'api_files_')]
+#[Route('/api/v1/files', name: 'api_files_')]
 class FileApiController extends BaseApiController
 {
     public function __construct(

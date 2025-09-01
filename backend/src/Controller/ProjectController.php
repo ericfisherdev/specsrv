@@ -26,40 +26,44 @@ class ProjectController extends AbstractController
     ) {
     }
 
-    #[Route('/projects', name: 'app_projects')]
-    public function index(): Response
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    // DISABLED for frontend migration: HTML-returning method
+    // Frontend will use API endpoints instead
+    // #[Route('/projects', name: 'app_projects')]
+    // public function index(): Response
+    // {
+    //     $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    //
+    //     return $this->render('projects/index.html.twig');
+    // }
 
-        return $this->render('projects/index.html.twig');
-    }
-
-    #[Route('/projects/list', name: 'app_projects_list_fragment', methods: ['GET'])]
-    public function listFragment(Request $request): Response
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-        $user = $this->getUser();
-        assert($user instanceof User);
-
-        $search = (string) $request->query->get('search', '');
-        $status = (string) $request->query->get('status', '');
-
-        $projects = $this->projectRepository->findByUserWithFilters($user, $search, $status);
-
-        // Add task count for each project
-        $projectsWithStats = array_map(function (Project $project) {
-            $taskCount = $this->taskRepository->countByProject($project);
-
-            return [
-                'project' => $project,
-                'task_count' => $taskCount,
-            ];
-        }, $projects);
-
-        return $this->render('projects/partials/project_list.html.twig', [
-            'projects' => $projectsWithStats,
-        ]);
-    }
+    // DISABLED for frontend migration: HTML-returning method
+    // Frontend will use API endpoints instead
+    // #[Route('/projects/list', name: 'app_projects_list_fragment', methods: ['GET'])]
+    // public function listFragment(Request $request): Response
+    // {
+    //     $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    //     $user = $this->getUser();
+    //     assert($user instanceof User);
+    //
+    //     $search = (string) $request->query->get('search', '');
+    //     $status = (string) $request->query->get('status', '');
+    //
+    //     $projects = $this->projectRepository->findByUserWithFilters($user, $search, $status);
+    //
+    //     // Add task count for each project
+    //     $projectsWithStats = array_map(function (Project $project) {
+    //         $taskCount = $this->taskRepository->countByProject($project);
+    //
+    //         return [
+    //             'project' => $project,
+    //             'task_count' => $taskCount,
+    //         ];
+    //     }, $projects);
+    //
+    //     return $this->render('projects/partials/project_list.html.twig', [
+    //         'projects' => $projectsWithStats,
+    //     ]);
+    // }
 
     #[Route('/projects/create', name: 'app_projects_create', methods: ['POST'])]
     public function create(Request $request): Response
@@ -95,9 +99,17 @@ class ProjectController extends AbstractController
 
         $taskCount = 0; // New project has no tasks
 
-        return $this->render('projects/partials/project_card.html.twig', [
-            'project' => $project,
-            'task_count' => $taskCount,
+        // DISABLED: Return JSON for API instead of HTML template
+        return $this->json([
+            'success' => true,
+            'project' => [
+                'id' => $project->getId(),
+                'title' => $project->getTitle(),
+                'description' => $project->getDescription(),
+                'github_repo' => $project->getGithubRepo(),
+                'created_at' => $project->getCreatedAt()->format('Y-m-d H:i:s'),
+                'task_count' => $taskCount,
+            ],
         ]);
     }
 
@@ -136,11 +148,9 @@ class ProjectController extends AbstractController
             }
         }
 
-        return $this->render('projects/detail.html.twig', [
-            'project' => $project,
-            'tasks' => $tasks,
-            'taskStats' => $taskStats,
-        ]);
+        // DISABLED for frontend migration: HTML-returning method
+        // Frontend will use API endpoints instead
+        throw $this->createNotFoundException('HTML view disabled. Use API endpoints instead.');
     }
 
     #[Route('/projects/{id}/edit', name: 'app_project_edit', methods: ['GET', 'POST'])]
@@ -185,9 +195,9 @@ class ProjectController extends AbstractController
             return $this->json(['success' => true, 'redirect' => $this->generateUrl('app_project_detail', ['id' => $project->getId()])]);
         }
 
-        return $this->render('projects/edit.html.twig', [
-            'project' => $project,
-        ]);
+        // DISABLED for frontend migration: HTML-returning method
+        // Frontend will use API endpoints instead
+        throw $this->createNotFoundException('HTML view disabled. Use API endpoints instead.');
     }
 
     #[Route('/projects/{id}/delete', name: 'app_projects_delete', methods: ['DELETE'])]
