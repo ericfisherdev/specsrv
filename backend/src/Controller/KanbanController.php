@@ -18,7 +18,6 @@ class KanbanController extends AbstractController
 {
     public function __construct(
         private TaskRepository $taskRepository,
-        private ProjectRepository $projectRepository,
         private EntityManagerInterface $entityManager
     ) {
     }
@@ -193,16 +192,4 @@ class KanbanController extends AbstractController
         };
     }
 
-    private function getStatusConfig(): array
-    {
-        $config = [];
-        foreach (TaskStatusEnum::getActiveStatuses() as $status) {
-            $config[$status->value] = [
-                'label' => $status->getLabel(),
-                'color' => $status->getColor(),
-            ];
-        }
-
-        return $config;
-    }
 }

@@ -107,7 +107,7 @@ class ProjectController extends AbstractController
                 'title' => $project->getTitle(),
                 'description' => $project->getDescription(),
                 'github_repo' => $project->getGithubRepo(),
-                'created_at' => $project->getCreatedAt()->format('Y-m-d H:i:s'),
+                'created_at' => $project->getCreatedAt()?->format('Y-m-d H:i:s') ?? 'unknown',
                 'task_count' => $taskCount,
             ],
         ]);

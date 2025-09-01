@@ -78,7 +78,7 @@ class SearchApiController extends BaseApiController
                 'title' => $task->getTitle(),
                 'project_title' => $task->getProject()->getTitle(),
                 'priority' => $task->getPriority(),
-                'status' => $task->getStatus()->value,
+                'status' => $task->getStatus()?->value ?? 'unknown',
                 'type' => 'task',
             ];
         }
@@ -122,7 +122,7 @@ class SearchApiController extends BaseApiController
                 'id' => $task->getId(),
                 'title' => $task->getTitle(),
                 'description' => $task->getDescription(),
-                'status' => $task->getStatus()->value,
+                'status' => $task->getStatus()?->value ?? 'unknown',
                 'priority' => $task->getPriority(),
                 'project' => $project ? [
                     'id' => $project->getId(),

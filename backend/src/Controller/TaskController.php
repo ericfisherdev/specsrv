@@ -114,8 +114,8 @@ class TaskController extends AbstractController
                 'title' => $task->getTitle(),
                 'description' => $task->getDescription(),
                 'priority' => $task->getPriority(),
-                'status' => $task->getStatus()->value,
-                'created_at' => $task->getCreatedAt()->format('Y-m-d H:i:s'),
+                'status' => $task->getStatus()?->value ?? 'unknown',
+                'created_at' => $task->getCreatedAt()?->format('Y-m-d H:i:s') ?? 'unknown',
                 'project' => [
                     'id' => $project->getId(),
                     'title' => $project->getTitle(),
@@ -270,13 +270,4 @@ class TaskController extends AbstractController
         return $this->json(['success' => true]);
     }
 
-    private function getStatusOptions(): array
-    {
-        $options = [];
-        foreach (TaskStatusEnum::cases() as $status) {
-            $options[$status->value] = $status->getLabel();
-        }
-
-        return $options;
-    }
 }
