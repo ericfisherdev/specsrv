@@ -51,7 +51,7 @@ class UserApiController extends BaseApiController
         }
 
         // Generate API key for this login session
-        $apiKeyData = $this->apiKeyService->generateApiKey($user, 'CLI Login - ' . date('Y-m-d H:i:s'));
+        $apiKeyData = $this->apiKeyService->generateApiKey($user, 'CLI Login - '.date('Y-m-d H:i:s'));
 
         return $this->successResponse([
             'token' => $apiKeyData['api_key'],
@@ -74,7 +74,7 @@ class UserApiController extends BaseApiController
         assert($user instanceof User);
 
         // Generate new API key for refresh
-        $apiKeyData = $this->apiKeyService->generateApiKey($user, 'CLI Refresh - ' . date('Y-m-d H:i:s'));
+        $apiKeyData = $this->apiKeyService->generateApiKey($user, 'CLI Refresh - '.date('Y-m-d H:i:s'));
 
         return $this->successResponse([
             'token' => $apiKeyData['api_key'],

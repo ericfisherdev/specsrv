@@ -3,9 +3,9 @@
 namespace App\Controller\Api;
 
 use App\Entity\User;
+use App\Enum\TaskStatusEnum;
 use App\Repository\ProjectRepository;
 use App\Repository\TaskRepository;
-use App\Enum\TaskStatusEnum;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -31,9 +31,9 @@ class DashboardApiController extends BaseApiController
         // Get task statistics
         $taskStats = [
             'total' => $this->taskRepository->countByUser($user),
-            'todo' => $this->taskRepository->countByUser($user, TaskStatusEnum::TODO->value) + 
+            'todo' => $this->taskRepository->countByUser($user, TaskStatusEnum::TODO->value) +
                       $this->taskRepository->countByUser($user, TaskStatusEnum::BACKLOG->value),
-            'in_progress' => $this->taskRepository->countByUser($user, TaskStatusEnum::IN_PROGRESS->value) + 
+            'in_progress' => $this->taskRepository->countByUser($user, TaskStatusEnum::IN_PROGRESS->value) +
                             $this->taskRepository->countByUser($user, TaskStatusEnum::REVIEW->value),
             'completed' => $this->taskRepository->countByUser($user, TaskStatusEnum::COMPLETED->value),
         ];

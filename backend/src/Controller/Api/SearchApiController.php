@@ -31,7 +31,7 @@ class SearchApiController extends BaseApiController
         if (strlen($query) < 2) {
             return $this->successResponse([
                 'tasks' => [],
-                'projects' => []
+                'projects' => [],
             ]);
         }
 
