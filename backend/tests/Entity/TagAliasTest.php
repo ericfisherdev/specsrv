@@ -2,9 +2,9 @@
 
 namespace App\Tests\Entity;
 
-use App\Entity\TagAlias;
-use App\Entity\Tag;
 use App\Entity\Project;
+use App\Entity\Tag;
+use App\Entity\TagAlias;
 use PHPUnit\Framework\TestCase;
 
 class TagAliasTest extends TestCase

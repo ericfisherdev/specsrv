@@ -16,7 +16,7 @@ class TagPerformanceTest extends TestCase
 
         // Create a deep hierarchy (10 levels)
         $current = $root;
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= 10; ++$i) {
             $child = new Tag();
             $child->setName("Level $i");
             $child->setParent($current);
@@ -60,7 +60,7 @@ class TagPerformanceTest extends TestCase
         $tag->setName('Popular Tag');
 
         // Add many tasks
-        for ($i = 0; $i < 100; $i++) {
+        for ($i = 0; $i < 100; ++$i) {
             $task = new \App\Entity\Task();
             $task->setTitle("Task $i");
             $tag->addTask($task);
@@ -70,7 +70,7 @@ class TagPerformanceTest extends TestCase
 
         // Remove half the tasks
         $tasks = $tag->getTasks()->toArray();
-        for ($i = 0; $i < 50; $i++) {
+        for ($i = 0; $i < 50; ++$i) {
             $tag->removeTask($tasks[$i]);
         }
 

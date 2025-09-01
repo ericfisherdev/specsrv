@@ -2,14 +2,14 @@
 
 namespace App\Tests\Repository;
 
-use App\Entity\TagAlias;
 use App\Entity\Project;
+use App\Entity\TagAlias;
 use App\Repository\TagAliasRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Query;
-use PHPUnit\Framework\TestCase;
+use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 
 class TagAliasRepositoryTest extends TestCase
 {

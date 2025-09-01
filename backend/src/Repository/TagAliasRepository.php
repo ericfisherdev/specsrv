@@ -2,8 +2,8 @@
 
 namespace App\Repository;
 
-use App\Entity\TagAlias;
 use App\Entity\Project;
+use App\Entity\TagAlias;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -18,7 +18,7 @@ class TagAliasRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find aliases by workspace
+     * Find aliases by workspace.
      */
     public function findByWorkspace(Project $workspace): array
     {
@@ -31,7 +31,7 @@ class TagAliasRepository extends ServiceEntityRepository
     }
 
     /**
-     * Check if alias exists in workspace
+     * Check if alias exists in workspace.
      */
     public function aliasExists(string $alias, Project $workspace): bool
     {
@@ -44,6 +44,6 @@ class TagAliasRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
 
-        return (int)$count > 0;
+        return (int) $count > 0;
     }
 }

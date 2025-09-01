@@ -174,7 +174,7 @@ class Project
 
     public function addTag(Tag $tag): static
     {
-        if (!$this->tags->contains($tag)) {
+        if (! $this->tags->contains($tag)) {
             $this->tags->add($tag);
             $tag->addProject($this);
         }

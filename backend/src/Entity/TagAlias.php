@@ -12,7 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     new ORM\Index(name: 'idx_tag_alias_workspace', columns: ['workspace_id']),
     new ORM\Index(name: 'idx_tag_alias_tag', columns: ['tag_id']),
 ], uniqueConstraints: [
-    new ORM\UniqueConstraint(name: 'uniq_tag_alias_workspace_alias', columns: ['workspace_id', 'alias'])
+    new ORM\UniqueConstraint(name: 'uniq_tag_alias_workspace_alias', columns: ['workspace_id', 'alias']),
 ])]
 class TagAlias
 {
@@ -60,6 +60,7 @@ class TagAlias
     public function setTag(?Tag $tag): self
     {
         $this->tag = $tag;
+
         return $this;
     }
 
@@ -71,6 +72,7 @@ class TagAlias
     public function setAlias(string $alias): self
     {
         $this->alias = $alias;
+
         return $this;
     }
 
@@ -82,6 +84,7 @@ class TagAlias
     public function setWorkspace(?Project $workspace): self
     {
         $this->workspace = $workspace;
+
         return $this;
     }
 
@@ -93,6 +96,7 @@ class TagAlias
     public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 }

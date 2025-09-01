@@ -2,14 +2,13 @@
 
 namespace App\Tests\Entity;
 
+use App\Entity\File;
+use App\Entity\Project;
 use App\Entity\Tag;
 use App\Entity\TagAlias;
 use App\Entity\Task;
-use App\Entity\Project;
-use App\Entity\File;
-use App\Entity\User;
-use PHPUnit\Framework\TestCase;
 use Doctrine\Common\Collections\ArrayCollection;
+use PHPUnit\Framework\TestCase;
 
 class TagTest extends TestCase
 {

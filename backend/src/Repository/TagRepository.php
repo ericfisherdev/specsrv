@@ -2,11 +2,10 @@
 
 namespace App\Repository;
 
-use App\Entity\Tag;
 use App\Entity\Project;
+use App\Entity\Tag;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\Uid\Uuid;
 
 /**
  * @extends ServiceEntityRepository<Tag>
@@ -19,7 +18,7 @@ class TagRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find tags by workspace with optional search term
+     * Find tags by workspace with optional search term.
      */
     public function findByWorkspace(Project $workspace, ?string $search = null): array
     {
@@ -31,14 +30,14 @@ class TagRepository extends ServiceEntityRepository
 
         if ($search) {
             $qb->andWhere('LOWER(t.name) LIKE LOWER(:search) OR LOWER(t.description) LIKE LOWER(:search)')
-                ->setParameter('search', '%' . $search . '%');
+                ->setParameter('search', '%'.$search.'%');
         }
 
         return $qb->getQuery()->getResult();
     }
 
     /**
-     * Find root tags (tags without parent) by workspace
+     * Find root tags (tags without parent) by workspace.
      */
     public function findRootTagsByWorkspace(Project $workspace): array
     {
@@ -52,7 +51,7 @@ class TagRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find tags by parent
+     * Find tags by parent.
      */
     public function findByParent(Tag $parent): array
     {
@@ -65,7 +64,7 @@ class TagRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find most used tags in workspace
+     * Find most used tags in workspace.
      */
     public function findMostUsed(Project $workspace, int $limit = 10): array
     {
@@ -79,7 +78,7 @@ class TagRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find recently created tags in workspace
+     * Find recently created tags in workspace.
      */
     public function findRecentlyCreated(Project $workspace, int $limit = 10): array
     {
@@ -93,7 +92,7 @@ class TagRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find tag by name in workspace (case-insensitive)
+     * Find tag by name in workspace (case-insensitive).
      */
     public function findByNameInWorkspace(string $name, Project $workspace): ?Tag
     {
@@ -107,7 +106,7 @@ class TagRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find tags by alias in workspace
+     * Find tags by alias in workspace.
      */
     public function findByAlias(string $alias, Project $workspace): ?Tag
     {
@@ -123,7 +122,7 @@ class TagRepository extends ServiceEntityRepository
     }
 
     /**
-     * Search tags by name or alias
+     * Search tags by name or alias.
      */
     public function searchByNameOrAlias(string $term, Project $workspace): array
     {
@@ -132,7 +131,7 @@ class TagRepository extends ServiceEntityRepository
             ->where('t.workspace = :workspace')
             ->andWhere('LOWER(t.name) LIKE LOWER(:term) OR LOWER(a.alias) LIKE LOWER(:term)')
             ->setParameter('workspace', $workspace)
-            ->setParameter('term', '%' . $term . '%')
+            ->setParameter('term', '%'.$term.'%')
             ->distinct()
             ->orderBy('t.usageCount', 'DESC')
             ->getQuery()
@@ -140,7 +139,7 @@ class TagRepository extends ServiceEntityRepository
     }
 
     /**
-     * Get tag hierarchy as a tree structure
+     * Get tag hierarchy as a tree structure.
      */
     public function getTagTree(Project $workspace): array
     {
@@ -155,7 +154,7 @@ class TagRepository extends ServiceEntityRepository
     }
 
     /**
-     * Build tag node with children
+     * Build tag node with children.
      */
     private function buildTagNode(Tag $tag): array
     {
@@ -166,7 +165,7 @@ class TagRepository extends ServiceEntityRepository
             'icon' => $tag->getIcon(),
             'description' => $tag->getDescription(),
             'usageCount' => $tag->getUsageCount(),
-            'children' => []
+            'children' => [],
         ];
 
         foreach ($tag->getChildren() as $child) {
@@ -177,7 +176,7 @@ class TagRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find tags that can be merged (similar names)
+     * Find tags that can be merged (similar names).
      */
     public function findSimilarTags(Tag $tag): array
     {
@@ -194,15 +193,15 @@ class TagRepository extends ServiceEntityRepository
             )')
             ->setParameter('workspace', $workspace)
             ->setParameter('tagId', $tag->getId())
-            ->setParameter('similarName1', '%' . $name . '%')
-            ->setParameter('similarName2', $name . '%')
-            ->setParameter('similarName3', '%' . $name)
+            ->setParameter('similarName1', '%'.$name.'%')
+            ->setParameter('similarName2', $name.'%')
+            ->setParameter('similarName3', '%'.$name)
             ->getQuery()
             ->getResult();
     }
 
     /**
-     * Get tags with low usage for cleanup suggestions
+     * Get tags with low usage for cleanup suggestions.
      */
     public function findUnusedTags(Project $workspace, int $threshold = 0): array
     {
@@ -217,85 +216,85 @@ class TagRepository extends ServiceEntityRepository
     }
 
     /**
-     * Update usage count for a tag
+     * Update usage count for a tag.
      */
     public function updateUsageCount(Tag $tag): void
     {
         $taskCount = count($tag->getTasks());
         $projectCount = count($tag->getProjects());
         $fileCount = count($tag->getFiles());
-        
+
         $totalUsage = $taskCount + $projectCount + $fileCount;
         $tag->setUsageCount($totalUsage);
-        
+
         $this->getEntityManager()->persist($tag);
         $this->getEntityManager()->flush();
     }
 
     /**
-     * Merge source tag into target tag
+     * Merge source tag into target tag.
      */
     public function mergeTags(Tag $source, Tag $target): void
     {
         $em = $this->getEntityManager();
-        
+
         // Validate workspaces match
         if ($source->getWorkspace()?->getId() !== $target->getWorkspace()?->getId()) {
             throw new \InvalidArgumentException('Cannot merge tags across different workspaces.');
         }
-        
+
         // Prevent merging into self or descendant
         if ($target->isDescendantOf($source) || $target->getId() === $source->getId()) {
             throw new \InvalidArgumentException('Cannot merge into self or descendant.');
         }
-        
+
         // Use transaction for atomicity
         $em->getConnection()->transactional(function () use ($em, $source, $target): void {
             // Move all tasks (clone to avoid modification during iteration)
             foreach (clone $source->getTasks() as $task) {
-                if (!$target->getTasks()->contains($task)) {
+                if (! $target->getTasks()->contains($task)) {
                     $target->addTask($task);
                 }
                 $source->removeTask($task);
             }
-            
+
             // Move all projects (clone to avoid modification during iteration)
             foreach (clone $source->getProjects() as $project) {
-                if (!$target->getProjects()->contains($project)) {
+                if (! $target->getProjects()->contains($project)) {
                     $target->addProject($project);
                 }
                 $source->removeProject($project);
             }
-            
+
             // Move all files (clone to avoid modification during iteration)
             foreach (clone $source->getFiles() as $file) {
-                if (!$target->getFiles()->contains($file)) {
+                if (! $target->getFiles()->contains($file)) {
                     $target->addFile($file);
                 }
                 $source->removeFile($file);
             }
-            
+
             // Move children (clone to avoid modification during iteration)
             foreach (clone $source->getChildren() as $child) {
                 $child->setParent($target);
             }
-            
+
             // Move aliases with de-duplication (case-insensitive)
             $existingAliases = [];
             foreach ($target->getAliases() as $alias) {
                 $aliasName = $alias->getAlias();
-                if ($aliasName !== null) {
+                if (null !== $aliasName) {
                     $existingAliases[mb_strtolower($aliasName)] = true;
                 }
             }
-            
+
             foreach (clone $source->getAliases() as $alias) {
                 $aliasName = $alias->getAlias();
-                if ($aliasName === null) {
+                if (null === $aliasName) {
                     continue;
                 }
                 $normalizedAlias = mb_strtolower($aliasName);
-                if (!isset($existingAliases[$normalizedAlias])) {
+                if (! isset($existingAliases[$normalizedAlias])) {
                     // Alias doesn't exist on target, move it
                     $alias->setTag($target);
                     $target->addAlias($alias);
@@ -306,11 +305,11 @@ class TagRepository extends ServiceEntityRepository
                     $em->remove($alias);
                 }
             }
-            
+
             // Note: If using database triggers for usage counts, this call can be removed
             // to avoid drift between application and database counts
             $this->updateUsageCount($target);
-            
+
             // Remove source tag
             $em->remove($source);
             $em->flush();

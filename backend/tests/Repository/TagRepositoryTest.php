@@ -2,18 +2,17 @@
 
 namespace App\Tests\Repository;
 
-use App\Entity\Tag;
-use App\Entity\TagAlias;
-use App\Entity\Project;
-use App\Entity\Task;
 use App\Entity\File;
+use App\Entity\Project;
+use App\Entity\Tag;
+use App\Entity\Task;
 use App\Repository\TagRepository;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\QueryBuilder;
-use Doctrine\ORM\Query;
 use Doctrine\DBAL\Connection;
-use PHPUnit\Framework\TestCase;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query;
+use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 
 class TagRepositoryTest extends TestCase
 {

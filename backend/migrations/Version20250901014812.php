@@ -8,7 +8,7 @@ use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * Change tags parent_id foreign key from CASCADE to SET NULL
+ * Change tags parent_id foreign key from CASCADE to SET NULL.
  */
 final class Version20250901014812 extends AbstractMigration
 {
@@ -21,7 +21,7 @@ final class Version20250901014812 extends AbstractMigration
     {
         // Drop the existing foreign key constraint
         $this->addSql('ALTER TABLE tags DROP CONSTRAINT FK_6FBC9429727ACA70');
-        
+
         // Add new foreign key constraint with SET NULL
         $this->addSql('ALTER TABLE tags ADD CONSTRAINT FK_6FBC9429727ACA70 FOREIGN KEY (parent_id) REFERENCES tags (id) ON DELETE SET NULL NOT DEFERRABLE INITIALLY IMMEDIATE');
     }
@@ -30,7 +30,7 @@ final class Version20250901014812 extends AbstractMigration
     {
         // Drop the SET NULL foreign key constraint
         $this->addSql('ALTER TABLE tags DROP CONSTRAINT FK_6FBC9429727ACA70');
-        
+
         // Restore the original CASCADE constraint
         $this->addSql('ALTER TABLE tags ADD CONSTRAINT FK_6FBC9429727ACA70 FOREIGN KEY (parent_id) REFERENCES tags (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE');
     }

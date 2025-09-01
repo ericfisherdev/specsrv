@@ -2,11 +2,11 @@
 
 namespace App\Tests\Integration;
 
-use App\Entity\Tag;
-use App\Entity\Task;
-use App\Entity\Project;
 use App\Entity\File;
+use App\Entity\Project;
+use App\Entity\Tag;
 use App\Entity\TagAlias;
+use App\Entity\Task;
 use PHPUnit\Framework\TestCase;
 
 class TagRelationshipIntegrationTest extends TestCase

@@ -5,7 +5,6 @@ namespace App\Entity;
 use App\Repository\TagRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -17,7 +16,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     new ORM\Index(name: 'idx_tags_usage_count', columns: ['usage_count']),
     new ORM\Index(name: 'idx_tags_created_at', columns: ['created_at']),
 ], uniqueConstraints: [
-    new ORM\UniqueConstraint(name: 'uniq_tags_workspace_name', columns: ['workspace_id', 'name'])
+    new ORM\UniqueConstraint(name: 'uniq_tags_workspace_name', columns: ['workspace_id', 'name']),
 ])]
 #[ORM\HasLifecycleCallbacks]
 class Tag
@@ -110,6 +109,7 @@ class Tag
     public function setWorkspace(?Project $workspace): self
     {
         $this->workspace = $workspace;
+
         return $this;
     }
 
@@ -121,6 +121,7 @@ class Tag
     public function setName(string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -132,6 +133,7 @@ class Tag
     public function setColor(?string $color): self
     {
         $this->color = $color;
+
         return $this;
     }
 
@@ -143,6 +145,7 @@ class Tag
     public function setIcon(?string $icon): self
     {
         $this->icon = $icon;
+
         return $this;
     }
 
@@ -154,6 +157,7 @@ class Tag
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -167,31 +171,31 @@ class Tag
         if ($parent === $this) {
             throw new \InvalidArgumentException('A tag cannot be its own parent');
         }
-        
-        if ($parent !== null) {
+
+        if (null !== $parent) {
             // Check for cycles by walking up the parent chain
             $p = $parent;
-            while ($p !== null) {
+            while (null !== $p) {
                 if ($p === $this) {
                     throw new \InvalidArgumentException('Setting this parent would create a cycle');
                 }
                 $p = $p->getParent();
             }
         }
-        
+
         // Remove from previous parent's children collection if needed
-        if ($this->parent !== null && $this->parent !== $parent) {
+        if (null !== $this->parent && $this->parent !== $parent) {
             $this->parent->children->removeElement($this);
         }
-        
+
         // Set the new parent
         $this->parent = $parent;
-        
+
         // Add to new parent's children collection if needed
-        if ($parent !== null && !$parent->children->contains($this)) {
+        if (null !== $parent && ! $parent->children->contains($this)) {
             $parent->children->add($this);
         }
-        
+
         return $this;
     }
 
@@ -205,10 +209,11 @@ class Tag
 
     public function addChild(self $child): self
     {
-        if (!$this->children->contains($child)) {
+        if (! $this->children->contains($child)) {
             $this->children->add($child);
             $child->setParent($this);
         }
+
         return $this;
     }
 
@@ -219,6 +224,7 @@ class Tag
                 $child->setParent(null);
             }
         }
+
         return $this;
     }
 
@@ -230,20 +236,23 @@ class Tag
     public function setUsageCount(int $usageCount): self
     {
         $this->usageCount = $usageCount;
+
         return $this;
     }
 
     public function incrementUsageCount(): self
     {
-        $this->usageCount++;
+        ++$this->usageCount;
+
         return $this;
     }
 
     public function decrementUsageCount(): self
     {
         if ($this->usageCount > 0) {
-            $this->usageCount--;
+            --$this->usageCount;
         }
+
         return $this;
     }
 
@@ -255,6 +264,7 @@ class Tag
     public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -266,6 +276,7 @@ class Tag
     public function setUpdatedAt(\DateTimeInterface $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+
         return $this;
     }
 
@@ -277,6 +288,7 @@ class Tag
     public function setCreatedBy(?User $createdBy): self
     {
         $this->createdBy = $createdBy;
+
         return $this;
     }
 
@@ -290,10 +302,11 @@ class Tag
 
     public function addTask(Task $task): self
     {
-        if (!$this->tasks->contains($task)) {
+        if (! $this->tasks->contains($task)) {
             $this->tasks->add($task);
             $task->addTag($this);
         }
+
         return $this;
     }
 
@@ -302,6 +315,7 @@ class Tag
         if ($this->tasks->removeElement($task)) {
             $task->removeTag($this);
         }
+
         return $this;
     }
 
@@ -315,12 +329,13 @@ class Tag
 
     public function addProject(Project $project): self
     {
-        if (!$this->projects->contains($project)) {
+        if (! $this->projects->contains($project)) {
             $this->projects->add($project);
-            if (!$project->getTags()->contains($this)) {
+            if (! $project->getTags()->contains($this)) {
                 $project->addTag($this);
             }
         }
+
         return $this;
     }
 
@@ -329,6 +344,7 @@ class Tag
         if ($this->projects->removeElement($project)) {
             $project->removeTag($this);
         }
+
         return $this;
     }
 
@@ -342,12 +358,13 @@ class Tag
 
     public function addFile(File $file): self
     {
-        if (!$this->files->contains($file)) {
+        if (! $this->files->contains($file)) {
             $this->files->add($file);
-            if (!$file->getTags()->contains($this)) {
+            if (! $file->getTags()->contains($this)) {
                 $file->addTag($this);
             }
         }
+
         return $this;
     }
 
@@ -356,6 +373,7 @@ class Tag
         if ($this->files->removeElement($file)) {
             $file->removeTag($this);
         }
+
         return $this;
     }
 
@@ -369,10 +387,11 @@ class Tag
 
     public function addAlias(TagAlias $alias): self
     {
-        if (!$this->aliases->contains($alias)) {
+        if (! $this->aliases->contains($alias)) {
             $this->aliases->add($alias);
             $alias->setTag($this);
         }
+
         return $this;
     }
 
@@ -383,6 +402,7 @@ class Tag
                 $alias->setTag(null);
             }
         }
+
         return $this;
     }
 
@@ -393,50 +413,50 @@ class Tag
     }
 
     /**
-     * Get the full hierarchical path of the tag
+     * Get the full hierarchical path of the tag.
      */
     public function getPath(): string
     {
         $path = [$this->name];
         $parent = $this->parent;
-        
-        while ($parent !== null) {
+
+        while (null !== $parent) {
             array_unshift($path, $parent->getName());
             $parent = $parent->getParent();
         }
-        
+
         return implode(' / ', $path);
     }
 
     /**
-     * Check if this tag is a descendant of another tag
+     * Check if this tag is a descendant of another tag.
      */
     public function isDescendantOf(Tag $tag): bool
     {
         $parent = $this->parent;
-        
-        while ($parent !== null) {
+
+        while (null !== $parent) {
             if ($parent->getId() === $tag->getId()) {
                 return true;
             }
             $parent = $parent->getParent();
         }
-        
+
         return false;
     }
 
     /**
-     * Get all descendants of this tag
+     * Get all descendants of this tag.
      */
     public function getAllDescendants(): array
     {
         $descendants = [];
-        
+
         foreach ($this->children as $child) {
             $descendants[] = $child;
             $descendants = array_merge($descendants, $child->getAllDescendants());
         }
-        
+
         return $descendants;
     }
 }
