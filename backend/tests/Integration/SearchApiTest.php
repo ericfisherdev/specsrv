@@ -8,22 +8,6 @@ use App\Tests\AbstractWebTestCase;
 
 class SearchApiTest extends AbstractWebTestCase
 {
-    private string $apiKey;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // Create a test user and API key for authentication
-        $user = $this->createTestUser(['email' => 'test@search.com']);
-        $this->apiKey = 'test-search-api-key';
-        $this->createTestApiKey($user, ['keyHash' => hash('sha256', $this->apiKey)]);
-    }
-
-    private function makeRequest(string $method, string $uri, array $data = []): void
-    {
-        $this->makeAuthenticatedRequest($method, $uri, $this->apiKey, $data);
-    }
 
     public function testSearchSuggestionsEndpoint(): void
     {

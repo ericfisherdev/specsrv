@@ -8,22 +8,6 @@ use App\Tests\AbstractWebTestCase;
 
 class KanbanApiTest extends AbstractWebTestCase
 {
-    private string $apiKey;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // Create a test user and API key for authentication
-        $user = $this->createTestUser(['email' => 'test@kanban.com']);
-        $this->apiKey = 'test-kanban-api-key';
-        $this->createTestApiKey($user, ['keyHash' => hash('sha256', $this->apiKey)]);
-    }
-
-    private function makeRequest(string $method, string $uri, array $data = []): void
-    {
-        $this->makeAuthenticatedRequest($method, $uri, $this->apiKey, $data);
-    }
 
     public function testKanbanBoardsEndpoint(): void
     {
@@ -158,6 +142,7 @@ class KanbanApiTest extends AbstractWebTestCase
 
         $responseData = json_decode($response->getContent(), true);
         $this->assertNotNull($responseData, 'Response should be valid JSON: ' . $response->getContent());
+        $this->assertArrayHasKey('success', $responseData, 'Response missing success field. Full response: ' . $response->getContent());
         $this->assertFalse($responseData['success']);
         $this->assertEquals('TASK_NOT_FOUND', $responseData['error']['code']);
     }

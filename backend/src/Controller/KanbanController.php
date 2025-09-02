@@ -44,53 +44,55 @@ class KanbanController extends AbstractController
     //     ]);
     // }
 
-    #[Route('/api/v1/kanban/move-task', name: 'api_kanban_move_task', methods: ['POST'])]
-    public function moveTask(Request $request): JsonResponse
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    // DISABLED for frontend migration: Use KanbanApiController instead
+    // #[Route('/api/v1/kanban/move-task', name: 'api_kanban_move_task', methods: ['POST'])]
+    // public function moveTask(Request $request): JsonResponse
+    // {
+    //     $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    //
+    //     $data = json_decode($request->getContent(), true);
+    //     $taskId = $data['taskId'] ?? null;
+    //     $newStatus = $data['status'] ?? null;
+    //
+    //     if (! $taskId || ! $newStatus) {
+    //         return new JsonResponse(['error' => 'Invalid request'], 400);
+    //     }
+    //
+    //     $task = $this->taskRepository->find($taskId);
+    //     if (! $task) {
+    //         return new JsonResponse(['error' => 'Task not found'], 404);
+    //     }
+    //
+    //     // Check ownership - verify task belongs to current user
+    //     $currentUser = $this->getUser();
+    //     if (! $currentUser instanceof User || ! $task->getProject() || $task->getProject()->getUser() !== $currentUser) {
+    //         return new JsonResponse(['error' => 'Access denied'], 403);
+    //     }
+    //
+    //     // Validate status with safer enum handling
+    //     $statusEnum = TaskStatusEnum::tryFrom($newStatus);
+    //     if (! $statusEnum) {
+    //         return new JsonResponse(['error' => 'Invalid status'], 400);
+    //     }
+    //
+    //     $task->setStatus($statusEnum);
+    //     $this->entityManager->flush();
+    //
+    //     return new JsonResponse(['success' => true]);
+    // }
 
-        $data = json_decode($request->getContent(), true);
-        $taskId = $data['taskId'] ?? null;
-        $newStatus = $data['status'] ?? null;
-
-        if (! $taskId || ! $newStatus) {
-            return new JsonResponse(['error' => 'Invalid request'], 400);
-        }
-
-        $task = $this->taskRepository->find($taskId);
-        if (! $task) {
-            return new JsonResponse(['error' => 'Task not found'], 404);
-        }
-
-        // Check ownership - verify task belongs to current user
-        $currentUser = $this->getUser();
-        if (! $currentUser instanceof User || ! $task->getProject() || $task->getProject()->getUser() !== $currentUser) {
-            return new JsonResponse(['error' => 'Access denied'], 403);
-        }
-
-        // Validate status with safer enum handling
-        $statusEnum = TaskStatusEnum::tryFrom($newStatus);
-        if (! $statusEnum) {
-            return new JsonResponse(['error' => 'Invalid status'], 400);
-        }
-
-        $task->setStatus($statusEnum);
-        $this->entityManager->flush();
-
-        return new JsonResponse(['success' => true]);
-    }
-
-    #[Route('/api/v1/kanban/tasks', name: 'api_kanban_tasks', methods: ['GET'])]
-    public function getTasks(Request $request): JsonResponse
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-
-        $projectId = $request->query->get('project');
-        $projectIdString = is_string($projectId) ? $projectId : null;
-        $tasksByStatus = $this->getTasksByStatus($projectIdString);
-
-        return new JsonResponse($tasksByStatus);
-    }
+    // DISABLED for frontend migration: Use KanbanApiController instead
+    // #[Route('/api/v1/kanban/tasks', name: 'api_kanban_tasks', methods: ['GET'])]
+    // public function getTasks(Request $request): JsonResponse
+    // {
+    //     $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    //
+    //     $projectId = $request->query->get('project');
+    //     $projectIdString = is_string($projectId) ? $projectId : null;
+    //     $tasksByStatus = $this->getTasksByStatus($projectIdString);
+    //
+    //     return new JsonResponse($tasksByStatus);
+    // }
 
     private function getTasksByStatus(?string $projectId): array
     {

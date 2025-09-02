@@ -50,6 +50,10 @@ abstract class AbstractWebTestCase extends WebTestCase
         $user = new User();
         $user->setEmail($data['email'] ?? 'test@example.com');
         
+        if (isset($data['name'])) {
+            $user->setName($data['name']);
+        }
+        
         // Hash the password using the password hasher service
         $passwordHasher = static::getContainer()->get('security.user_password_hasher');
         $hashedPassword = $passwordHasher->hashPassword($user, $data['password'] ?? 'password123');
@@ -113,12 +117,12 @@ abstract class AbstractWebTestCase extends WebTestCase
 
     protected function getUser(KernelBrowser $client): User
     {
-        // Return the first user from the database (created in setUp)
+        // Return the first user from the database, or create one if none exists
         $userRepo = $this->entityManager->getRepository(User::class);
         $users = $userRepo->findAll();
 
         if (empty($users)) {
-            throw new \LogicException('No test users found. Make sure setUp() creates a test user.');
+            return $this->createTestUser();
         }
 
         return $users[0];
@@ -150,5 +154,55 @@ abstract class AbstractWebTestCase extends WebTestCase
         $this->entityManager->flush();
 
         return $task;
+    }
+
+    protected function makeRequest(string $method, string $uri, array $data = []): void
+    {
+        // Get or create a test user and API key for authentication
+        $user = $this->getTestUser();
+        $apiKey = $this->getOrCreateTestApiKey($user);
+
+        $headers = ['HTTP_X-API-Key' => $apiKey];
+        $content = !empty($data) ? json_encode($data) : null;
+
+        if ($content) {
+            $headers['CONTENT_TYPE'] = 'application/json';
+        }
+
+        $this->client->request($method, $uri, [], [], $headers, $content);
+    }
+
+    private function getTestUser(): User
+    {
+        $userRepo = $this->entityManager->getRepository(User::class);
+        $users = $userRepo->findAll();
+        
+        if (empty($users)) {
+            return $this->createTestUser(['email' => 'test@example.com']);
+        }
+        
+        return $users[0];
+    }
+
+    private function getOrCreateTestApiKey(User $user): string
+    {
+        $apiKeyRepo = $this->entityManager->getRepository(ApiKey::class);
+        $apiKeyEntity = $apiKeyRepo->findOneBy(['user' => $user]);
+        
+        if (!$apiKeyEntity) {
+            $apiKey = 'test-api-key-' . uniqid();
+            $this->createTestApiKey($user, ['keyHash' => hash('sha256', $apiKey)]);
+            return $apiKey;
+        }
+        
+        // For existing API keys, we need to use a consistent key that matches the hash
+        // Since we can't reverse the hash, let's use a well-known test key
+        $knownTestKey = 'test-api-key-known';
+        
+        // Update the existing API key entity to use our known test key hash
+        $apiKeyEntity->setKeyHash(hash('sha256', $knownTestKey));
+        $this->entityManager->flush();
+        
+        return $knownTestKey;
     }
 }

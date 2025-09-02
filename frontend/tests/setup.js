@@ -1,5 +1,9 @@
 // Jest setup file for DOM testing
 
+// Set up environment variables for testing
+process.env.API_BASE_URL = 'http://localhost:8080/api';
+process.env.NODE_ENV = 'test';
+
 // Mock global objects that aren't available in jsdom
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

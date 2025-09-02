@@ -333,4 +333,72 @@ export class TaskService {
       position,
     });
   }
+
+  // Convenience methods for common operations
+
+  /**
+   * Mark task as complete
+   * @param {number} id - Task ID
+   * @returns {Promise<Object>}
+   */
+  async markComplete(id) {
+    return this.updateTaskStatus(id, 'completed');
+  }
+
+  /**
+   * Mark task as todo
+   * @param {number} id - Task ID
+   * @returns {Promise<Object>}
+   */
+  async markTodo(id) {
+    return this.updateTaskStatus(id, 'todo');
+  }
+
+  /**
+   * Update task priority
+   * @param {number} id - Task ID
+   * @param {string} priority - Priority level
+   * @returns {Promise<Object>}
+   */
+  async updatePriority(id, priority) {
+    return this.updateTaskPriority(id, priority);
+  }
+
+  /**
+   * Set task priority to critical
+   * @param {number} id - Task ID
+   * @returns {Promise<Object>}
+   */
+  async setCritical(id) {
+    return this.updateTaskPriority(id, 'critical');
+  }
+
+  /**
+   * Get task files
+   * @param {number} taskId - Task ID
+   * @returns {Promise<Array>}
+   */
+  async getTaskFiles(taskId) {
+    return this.getTaskAttachments(taskId);
+  }
+
+  /**
+   * Upload file to task
+   * @param {number} taskId - Task ID
+   * @param {FormData} formData - File data
+   * @returns {Promise<Object>}
+   */
+  async uploadTaskFile(taskId, formData) {
+    return this.addTaskAttachment(taskId, formData);
+  }
+
+  /**
+   * Delete task file
+   * @param {number} taskId - Task ID
+   * @param {number} fileId - File ID
+   * @returns {Promise<void>}
+   */
+  async deleteTaskFile(taskId, fileId) {
+    return this.deleteTaskAttachment(taskId, fileId);
+  }
 }

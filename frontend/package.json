@@ -81,9 +81,6 @@
       "js",
       "json"
     ],
-    "extensionsToTreatAsEsm": [
-      ".js"
-    ],
     "globals": {
       "@babel/preset-env": {
         "targets": {

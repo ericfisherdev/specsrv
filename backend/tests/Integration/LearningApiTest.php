@@ -8,23 +8,6 @@ use App\Tests\AbstractWebTestCase;
 
 class LearningApiTest extends AbstractWebTestCase
 {
-    private string $apiKey;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // Create a test user and API key for authentication
-        $user = $this->createTestUser(['email' => 'test@learning.com']);
-        $this->apiKey = 'test-learning-api-key';
-        // Store the SHA-256 hash in the database as expected by ApiKeyAuthenticator
-        $apiKeyEntity = $this->createTestApiKey($user, ['keyHash' => hash('sha256', $this->apiKey)]);
-    }
-
-    private function makeRequest(string $method, string $uri, array $data = []): void
-    {
-        $this->makeAuthenticatedRequest($method, $uri, $this->apiKey, $data);
-    }
 
     public function testRecordInteractionEndpoint(): void
     {
@@ -123,7 +106,7 @@ class LearningApiTest extends AbstractWebTestCase
         $this->makeRequest('POST', '/api/v1/learning/recommend-solution', $requestData);
 
         $response = $this->client->getResponse();
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->getStatusCode(), 'Auth failed. Response: ' . $response->getContent());
 
         $responseData = json_decode($response->getContent(), true);
         $this->assertTrue($responseData['success']);

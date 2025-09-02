@@ -368,11 +368,16 @@ describe('ApiService', () => {
     it('should timeout after specified time', async () => {
       // Mock a slow response
       fetch.mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, 35000))
+        new Promise(resolve => setTimeout(resolve, 100))
       );
       
-      await expect(apiService.get('/test')).rejects.toThrow('Request timeout');
-    });
+      // Create an ApiService with a very short timeout for testing
+      const { ApiService } = await import('../../src/services/ApiService.js');
+      const shortTimeoutApiService = new ApiService();
+      shortTimeoutApiService.timeout = 50; // 50ms timeout
+      
+      await expect(shortTimeoutApiService.get('/test')).rejects.toThrow('Request timeout');
+    }, 1000); // Add explicit timeout for this test
   });
 
   describe('healthCheck', () => {

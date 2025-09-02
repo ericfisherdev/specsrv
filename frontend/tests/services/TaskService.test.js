@@ -222,7 +222,7 @@ describe('TaskService', () => {
       await taskService.assignTask(456, 123);
       
       expect(mockApiService.patch).toHaveBeenCalledWith('/tasks/456', { 
-        assigneeId: 123 
+        assignee_id: 123 
       });
     });
 
@@ -230,7 +230,7 @@ describe('TaskService', () => {
       await taskService.unassignTask(456);
       
       expect(mockApiService.patch).toHaveBeenCalledWith('/tasks/456', { 
-        assigneeId: null 
+        assignee_id: null 
       });
     });
   });

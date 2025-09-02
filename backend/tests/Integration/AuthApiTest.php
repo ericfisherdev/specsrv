@@ -214,6 +214,8 @@ class AuthApiTest extends AbstractWebTestCase
         $this->assertEquals(401, $response->getStatusCode());
 
         $responseData = json_decode($response->getContent(), true);
+        $this->assertNotNull($responseData, 'Response should be valid JSON: ' . $response->getContent());
+        $this->assertArrayHasKey('success', $responseData, 'Response missing success field. Full response: ' . $response->getContent());
         $this->assertFalse($responseData['success']);
         $this->assertEquals('AUTH_REQUIRED', $responseData['error']['code']);
     }
@@ -268,6 +270,8 @@ class AuthApiTest extends AbstractWebTestCase
         $this->assertEquals(401, $response->getStatusCode());
 
         $responseData = json_decode($response->getContent(), true);
+        $this->assertNotNull($responseData, 'Response should be valid JSON: ' . $response->getContent());
+        $this->assertArrayHasKey('success', $responseData, 'Response missing success field. Full response: ' . $response->getContent());
         $this->assertFalse($responseData['success']);
         $this->assertEquals('AUTH_REQUIRED', $responseData['error']['code']);
     }

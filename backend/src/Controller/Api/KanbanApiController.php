@@ -49,7 +49,7 @@ class KanbanApiController extends BaseApiController
         ]);
     }
 
-    #[Route('/move-task', name: 'api_kanban_move_task', methods: ['POST'])]
+    #[Route('/move-task', name: 'api_v1_kanban_move_task', methods: ['POST'])]
     public function moveTask(Request $request): JsonResponse
     {
         $this->requireAuth();
@@ -91,7 +91,7 @@ class KanbanApiController extends BaseApiController
         return $this->successResponse(['success' => true]);
     }
 
-    #[Route('/tasks', name: 'api_kanban_tasks', methods: ['GET'])]
+    #[Route('/tasks', name: 'api_v1_kanban_tasks', methods: ['GET'])]
     public function getTasks(Request $request): JsonResponse
     {
         $this->requireAuth();

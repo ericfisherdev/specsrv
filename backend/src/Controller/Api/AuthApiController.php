@@ -28,7 +28,16 @@ class AuthApiController extends BaseApiController
     #[Route('/login', name: 'login', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
-        $data = $this->getJsonPayload($request);
+        try {
+            $data = $this->getJsonPayload($request);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse(
+                'Invalid JSON payload',
+                'INVALID_JSON',
+                null,
+                400
+            );
+        }
 
         if (!isset($data['email']) || !isset($data['password'])) {
             return $this->errorResponse(
@@ -91,13 +100,42 @@ class AuthApiController extends BaseApiController
     #[Route('/register', name: 'register', methods: ['POST'])]
     public function register(Request $request): JsonResponse
     {
-        $data = $this->getJsonPayload($request);
+        try {
+            $data = $this->getJsonPayload($request);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse(
+                'Invalid JSON payload',
+                'INVALID_JSON',
+                null,
+                400
+            );
+        }
 
         if (!isset($data['email']) || !isset($data['password'])) {
             return $this->errorResponse(
                 'Email and password are required',
                 'MISSING_CREDENTIALS',
                 null,
+                400
+            );
+        }
+
+        // Validate email format
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            return $this->errorResponse(
+                'Invalid email format',
+                'VALIDATION_ERROR',
+                ['email' => 'The email address is not valid.'],
+                400
+            );
+        }
+
+        // Validate password length
+        if (strlen($data['password']) < 6) {
+            return $this->errorResponse(
+                'Password is too short',
+                'VALIDATION_ERROR',
+                ['password' => 'Password must be at least 6 characters long.'],
                 400
             );
         }

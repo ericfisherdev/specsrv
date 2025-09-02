@@ -9,22 +9,6 @@ use App\Tests\AbstractWebTestCase;
 
 class DashboardApiTest extends AbstractWebTestCase
 {
-    private string $apiKey;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // Create a test user and API key for authentication
-        $user = $this->createTestUser(['email' => 'test@dashboard.com']);
-        $this->apiKey = 'test-dashboard-api-key';
-        $this->createTestApiKey($user, ['keyHash' => hash('sha256', $this->apiKey)]);
-    }
-
-    private function makeRequest(string $method, string $uri, array $data = []): void
-    {
-        $this->makeAuthenticatedRequest($method, $uri, $this->apiKey, $data);
-    }
 
     public function testDashboardStatsEndpoint(): void
     {
