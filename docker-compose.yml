@@ -57,14 +57,46 @@ services:
 
   specsrv-frontend:
     build:
-      context: ./backend
+      context: ./frontend
       dockerfile: Dockerfile
-      target: frontend
-    container_name: specsrv-frontend-build
+    container_name: specsrv-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - API_BASE_URL=http://specsrv-backend:8080
+      - NODE_ENV=production
+    depends_on:
+      specsrv-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+    profiles:
+      - production
+
+  specsrv-frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: specsrv-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - API_BASE_URL=http://specsrv-backend:8080
+      - NODE_ENV=development
     volumes:
-      - ./backend/assets:/app/assets
-      - specsrv-assets:/app/public/build
-    command: ["npm", "run", "watch"]
+      - ./frontend:/app:cached
+      - frontend-node-modules:/app/node_modules
+    command: ["npm", "run", "dev"]
+    depends_on:
+      specsrv-backend:
+        condition: service_healthy
     networks:
       - specsrv-network
     profiles:
@@ -101,6 +133,8 @@ volumes:
   node-modules-vol:
     driver: local
   vendor-vol:
+    driver: local
+  frontend-node-modules:
     driver: local
 
 networks:
