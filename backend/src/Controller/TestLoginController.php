@@ -23,7 +23,7 @@ class TestLoginController extends AbstractController
         $user = $em->getRepository(User::class)->findOneBy(['email' => 'admin@specsrv.dev']);
 
         if (! $user) {
-            return new Response('User not found', 404);
+            return $this->json(['error' => 'User not found'], 404);
         }
 
         // Manually create authentication token
