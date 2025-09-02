@@ -89,9 +89,18 @@ class ProjectController extends AbstractController
 
         $violations = $this->validator->validate($project);
         if (count($violations) > 0) {
-            return $this->render('projects/partials/error.html.twig', [
-                'errors' => $violations,
-            ], new Response('', 400));
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = [
+                    'field' => $violation->getPropertyPath(),
+                    'message' => $violation->getMessage()
+                ];
+            }
+            return $this->json([
+                'success' => false,
+                'error' => ['code' => 'VALIDATION_ERROR', 'message' => 'Validation failed'],
+                'errors' => $errors
+            ], 400);
         }
 
         $this->entityManager->persist($project);

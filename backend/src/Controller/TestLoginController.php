@@ -34,8 +34,7 @@ class TestLoginController extends AbstractController
         $session->set('_security_main', serialize($token));
         $session->save();
 
-        return $this->render('dashboard/index.html.twig', [
-            'user' => $user,
-        ]);
+        // Redirect to frontend dashboard instead of rendering template
+        return $this->redirect('http://localhost:3000/dashboard');
     }
 }
