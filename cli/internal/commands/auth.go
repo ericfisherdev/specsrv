@@ -9,7 +9,6 @@ import (
 
 	"github.com/ericfisherdev/specsrv/cli/internal/client"
 	"github.com/ericfisherdev/specsrv/cli/internal/config"
-	"github.com/ericfisherdev/specsrv/cli/pkg/models"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -82,22 +81,15 @@ func newAuthLoginCommand() *cobra.Command {
 			// Create API client and attempt login
 			apiClient := client.NewClient(cfg)
 
-			authReq := models.AuthRequest{
-				Username: username,
-				Password: password,
-			}
-
-			// Make real API call to authenticate
-			var authResp models.AuthResponse
-			err = apiClient.Post("/api/auth/login", authReq, &authResp)
+			// Use the Login method from client which calls the new v1 API
+			token, err := apiClient.Login(username, password)
 			if err != nil {
 				return fmt.Errorf("authentication failed: %w", err)
 			}
 
 			// Save the token from the response
-			cfg.Auth.Token = authResp.Token
+			cfg.Auth.Token = token
 			cfg.Auth.Method = "password"
-			apiClient.SetToken(authResp.Token)
 
 			if err := config.Save(cfg); err != nil {
 				return fmt.Errorf("failed to save config: %w", err)

@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"text/tabwriter"
-	"time"
 
 	"github.com/ericfisherdev/specsrv/cli/internal/client"
 	"github.com/ericfisherdev/specsrv/cli/internal/config"
@@ -55,7 +54,7 @@ func newTasksListCommand() *cobra.Command {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			_ = client.NewClient(cfg) // apiClient - will be used when connecting to real API
+			apiClient := client.NewClient(cfg)
 
 			// Build query parameters
 			query := make(map[string]string)
@@ -72,8 +71,17 @@ func newTasksListCommand() *cobra.Command {
 				query["search"] = search
 			}
 
-			// Make API call (placeholder - would connect to real API)
-			tasks := getMockTasks(projectID) // In real implementation, this would be apiClient.GetTasks(query)
+			// Make API call to get tasks
+			tasksData, err := apiClient.GetTasks(query)
+			if err != nil {
+				return fmt.Errorf("failed to fetch tasks: %w", err)
+			}
+
+			// Convert to models.Task for formatting
+			tasks := make([]models.Task, len(tasksData))
+			for i, t := range tasksData {
+				tasks[i] = convertToTaskModel(t)
+			}
 
 			// Format output based on --output flag
 			outputFormat := getOutputFormat()
@@ -108,17 +116,19 @@ func newTasksShowCommand() *cobra.Command {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			_ = client.NewClient(cfg) // apiClient - will be used when connecting to real API
+			apiClient := client.NewClient(cfg)
 
-			// Make API call (placeholder - would connect to real API)
-			task := getMockTask(id) // In real implementation, this would be apiClient.GetTask(id)
-			if task == nil {
-				return fmt.Errorf("task with ID %d not found", id)
+			// Make API call to get task
+			taskData, err := apiClient.GetTask(id)
+			if err != nil {
+				return fmt.Errorf("failed to fetch task %d: %w", id, err)
 			}
+
+			task := convertToTaskModel(taskData)
 
 			// Format output
 			outputFormat := getOutputFormat()
-			return formatTaskOutput(*task, outputFormat)
+			return formatTaskOutput(task, outputFormat)
 		},
 	}
 }
@@ -151,7 +161,7 @@ func newTasksCreateCommand() *cobra.Command {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			_ = client.NewClient(cfg) // apiClient - will be used when connecting to real API
+			apiClient := client.NewClient(cfg)
 
 			req := models.TaskCreateRequest{
 				ProjectID:   projectID,
@@ -162,8 +172,13 @@ func newTasksCreateCommand() *cobra.Command {
 				Tags:        tags,
 			}
 
-			// Make API call (placeholder - would connect to real API)
-			task := createMockTask(req) // In real implementation, this would be apiClient.CreateTask(req)
+			// Make API call to create task
+			taskData, err := apiClient.CreateTask(req)
+			if err != nil {
+				return fmt.Errorf("failed to create task: %w", err)
+			}
+
+			task := convertToTaskModel(taskData)
 
 			fmt.Printf("✓ Task created successfully (ID: %d)\n", task.ID)
 
@@ -211,7 +226,7 @@ func newTasksUpdateCommand() *cobra.Command {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			_ = client.NewClient(cfg) // apiClient - will be used when connecting to real API
+			apiClient := client.NewClient(cfg)
 
 			req := models.TaskUpdateRequest{}
 			if title != "" {
@@ -232,17 +247,19 @@ func newTasksUpdateCommand() *cobra.Command {
 				req.Tags = tags
 			}
 
-			// Make API call (placeholder - would connect to real API)
-			task := updateMockTask(id, req) // In real implementation, this would be apiClient.UpdateTask(id, req)
-			if task == nil {
-				return fmt.Errorf("task with ID %d not found", id)
+			// Make API call to update task
+			taskData, err := apiClient.UpdateTask(id, req)
+			if err != nil {
+				return fmt.Errorf("failed to update task %d: %w", id, err)
 			}
+
+			task := convertToTaskModel(taskData)
 
 			fmt.Printf("✓ Task updated successfully (ID: %d)\n", task.ID)
 
 			// Show the updated task
 			outputFormat := getOutputFormat()
-			return formatTaskOutput(*task, outputFormat)
+			return formatTaskOutput(task, outputFormat)
 		},
 	}
 
@@ -285,12 +302,12 @@ func newTasksDeleteCommand() *cobra.Command {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			_ = client.NewClient(cfg) // apiClient - will be used when connecting to real API
+			apiClient := client.NewClient(cfg)
 
-			// Make API call (placeholder - would connect to real API)
-			success := deleteMockTask(id) // In real implementation, this would be apiClient.DeleteTask(id)
-			if !success {
-				return fmt.Errorf("task with ID %d not found", id)
+			// Make API call to delete task
+			err = apiClient.DeleteTask(id)
+			if err != nil {
+				return fmt.Errorf("failed to delete task %d: %w", id, err)
 			}
 
 			fmt.Printf("✓ Task %d deleted successfully\n", id)
@@ -352,84 +369,57 @@ func formatTaskTable(task models.Task) error {
 	return w.Flush()
 }
 
-// Mock data functions (would be replaced with real API calls)
-var mockTaskID = 100
-
-func getMockTasks(projectID int) []models.Task {
-	allTasks := []models.Task{
-		{ID: 1, ProjectID: 1, Title: "Fix authentication error handling in UserApiController", Description: "The login endpoint should return more specific error messages for failed authentication attempts. Currently it returns generic errors that don't help users understand what went wrong.", Status: "todo", Priority: "medium", Tags: []string{"nitpick", "api", "authentication"}, CreatedAt: parseTime("2024-01-01T10:00:00Z"), UpdatedAt: parseTime("2024-01-01T10:00:00Z")},
-		{ID: 2, ProjectID: 1, Title: "Add input validation to project creation endpoint", Description: "The project creation API should validate all input fields before attempting to create the project. Missing validation could lead to database errors.", Status: "todo", Priority: "high", Tags: []string{"nitpick", "api", "validation"}, CreatedAt: parseTime("2024-01-01T10:30:00Z"), UpdatedAt: parseTime("2024-01-01T10:30:00Z")},
-		{ID: 3, ProjectID: 1, Title: "Improve error messages in task management", Description: "Task creation and update operations should provide more descriptive error messages when validation fails.", Status: "backlog", Priority: "low", Tags: []string{"nitpick", "tasks", "ux"}, CreatedAt: parseTime("2024-01-01T11:00:00Z"), UpdatedAt: parseTime("2024-01-01T11:00:00Z")},
-		{ID: 4, ProjectID: 2, Title: "Add CLI help text for all commands", Description: "Every CLI command should have comprehensive help text that explains usage, flags, and examples.", Status: "working", Priority: "medium", Tags: []string{"nitpick", "cli", "documentation"}, CreatedAt: parseTime("2024-01-02T09:00:00Z"), UpdatedAt: parseTime("2024-01-02T09:00:00Z")},
-		{ID: 5, ProjectID: 2, Title: "Implement config file validation", Description: "The CLI should validate configuration files on startup and provide clear error messages for invalid configurations.", Status: "todo", Priority: "high", Tags: []string{"nitpick", "cli", "config"}, CreatedAt: parseTime("2024-01-02T09:30:00Z"), UpdatedAt: parseTime("2024-01-02T09:30:00Z")},
+// convertToTaskModel converts API response data to Task model
+func convertToTaskModel(data map[string]interface{}) models.Task {
+	task := models.Task{}
+	
+	if id, ok := data["id"].(float64); ok {
+		task.ID = int(id)
 	}
-
-	if projectID > 0 {
-		var filtered []models.Task
-		for _, task := range allTasks {
-			if task.ProjectID == projectID {
-				filtered = append(filtered, task)
+	if projectID, ok := data["projectId"].(float64); ok {
+		task.ProjectID = int(projectID)
+	} else if projectID, ok := data["project_id"].(float64); ok {
+		task.ProjectID = int(projectID)
+	}
+	if title, ok := data["title"].(string); ok {
+		task.Title = title
+	}
+	if description, ok := data["description"].(string); ok {
+		task.Description = description
+	}
+	if status, ok := data["status"].(string); ok {
+		task.Status = enums.TaskStatus(status)
+	}
+	if priority, ok := data["priority"].(string); ok {
+		task.Priority = enums.TaskPriority(priority)
+	}
+	
+	// Handle tags array
+	if tagsInterface, ok := data["tags"]; ok {
+		if tagsArray, ok := tagsInterface.([]interface{}); ok {
+			tags := make([]string, len(tagsArray))
+			for i, tag := range tagsArray {
+				if tagStr, ok := tag.(string); ok {
+					tags[i] = tagStr
+				}
 			}
-		}
-		return filtered
-	}
-
-	return allTasks
-}
-
-func getMockTask(id int) *models.Task {
-	tasks := getMockTasks(0)
-	for i := range tasks {
-		if tasks[i].ID == id {
-			return &tasks[i]
+			task.Tags = tags
 		}
 	}
-	return nil
-}
-
-func createMockTask(req models.TaskCreateRequest) models.Task {
-	mockTaskID++
-	return models.Task{
-		ID:          mockTaskID,
-		ProjectID:   req.ProjectID,
-		Title:       req.Title,
-		Description: req.Description,
-		Status:      req.Status,
-		Priority:    req.Priority,
-		Tags:        req.Tags,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+	
+	// Parse timestamps
+	if createdAt, ok := data["createdAt"].(string); ok {
+		task.CreatedAt = parseTime(createdAt)
+	} else if createdAt, ok := data["created_at"].(string); ok {
+		task.CreatedAt = parseTime(createdAt)
 	}
-}
-
-func updateMockTask(id int, req models.TaskUpdateRequest) *models.Task {
-	task := getMockTask(id)
-	if task == nil {
-		return nil
+	if updatedAt, ok := data["updatedAt"].(string); ok {
+		task.UpdatedAt = parseTime(updatedAt)
+	} else if updatedAt, ok := data["updated_at"].(string); ok {
+		task.UpdatedAt = parseTime(updatedAt)
 	}
-
-	if req.Title != nil {
-		task.Title = *req.Title
-	}
-	if req.Description != nil {
-		task.Description = *req.Description
-	}
-	if req.Status != nil {
-		task.Status = *req.Status
-	}
-	if req.Priority != nil {
-		task.Priority = *req.Priority
-	}
-	if len(req.Tags) > 0 {
-		task.Tags = req.Tags
-	}
-
-	task.UpdatedAt = time.Now()
+	
 	return task
-}
-
-func deleteMockTask(id int) bool {
-	return getMockTask(id) != nil
 }
 
 func truncateString(s string, maxLen int) string {

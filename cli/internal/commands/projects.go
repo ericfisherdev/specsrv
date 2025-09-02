@@ -64,7 +64,7 @@ func newProjectsListCommand() *cobra.Command {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			_ = client.NewClient(cfg) // apiClient - will be used when connecting to real API
+			apiClient := client.NewClient(cfg)
 
 			// Build query parameters
 			query := make(map[string]string)
@@ -75,8 +75,17 @@ func newProjectsListCommand() *cobra.Command {
 				query["search"] = search
 			}
 
-			// Make API call (placeholder - would connect to real API)
-			projects := getMockProjects() // In real implementation, this would be apiClient.GetProjects(query)
+			// Make API call to get projects
+			projectsData, err := apiClient.GetProjects(query)
+			if err != nil {
+				return fmt.Errorf("failed to fetch projects: %w", err)
+			}
+
+			// Convert to models.Project for formatting
+			projects := make([]models.Project, len(projectsData))
+			for i, p := range projectsData {
+				projects[i] = convertToProjectModel(p)
+			}
 
 			// Format output based on --output flag
 			outputFormat := getOutputFormat()
@@ -109,17 +118,19 @@ func newProjectsShowCommand() *cobra.Command {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			_ = client.NewClient(cfg) // apiClient - will be used when connecting to real API
+			apiClient := client.NewClient(cfg)
 
-			// Make API call (placeholder - would connect to real API)
-			project := getMockProject(id) // In real implementation, this would be apiClient.GetProject(id)
-			if project == nil {
-				return fmt.Errorf("project with ID %d not found", id)
+			// Make API call to get project
+			projectData, err := apiClient.GetProject(id)
+			if err != nil {
+				return fmt.Errorf("failed to fetch project %d: %w", id, err)
 			}
+
+			project := convertToProjectModel(projectData)
 
 			// Format output
 			outputFormat := getOutputFormat()
-			return formatProjectOutput(*project, outputFormat)
+			return formatProjectOutput(project, outputFormat)
 		},
 	}
 }
@@ -146,7 +157,7 @@ func newProjectsCreateCommand() *cobra.Command {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			_ = client.NewClient(cfg) // apiClient - will be used when connecting to real API
+			apiClient := client.NewClient(cfg)
 
 			req := models.ProjectCreateRequest{
 				Name:        name,
@@ -154,8 +165,13 @@ func newProjectsCreateCommand() *cobra.Command {
 				Status:      enums.ProjectStatus(status),
 			}
 
-			// Make API call (placeholder - would connect to real API)
-			project := createMockProject(req) // In real implementation, this would be apiClient.CreateProject(req)
+			// Make API call to create project
+			projectData, err := apiClient.CreateProject(req)
+			if err != nil {
+				return fmt.Errorf("failed to create project: %w", err)
+			}
+
+			project := convertToProjectModel(projectData)
 
 			fmt.Printf("✓ Project created successfully (ID: %d)\n", project.ID)
 
@@ -197,7 +213,7 @@ func newProjectsUpdateCommand() *cobra.Command {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			_ = client.NewClient(cfg) // apiClient - will be used when connecting to real API
+			apiClient := client.NewClient(cfg)
 
 			req := models.ProjectUpdateRequest{}
 			if name != "" {
@@ -211,17 +227,19 @@ func newProjectsUpdateCommand() *cobra.Command {
 				req.Status = &statusEnum
 			}
 
-			// Make API call (placeholder - would connect to real API)
-			project := updateMockProject(id, req) // In real implementation, this would be apiClient.UpdateProject(id, req)
-			if project == nil {
-				return fmt.Errorf("project with ID %d not found", id)
+			// Make API call to update project
+			projectData, err := apiClient.UpdateProject(id, req)
+			if err != nil {
+				return fmt.Errorf("failed to update project %d: %w", id, err)
 			}
+
+			project := convertToProjectModel(projectData)
 
 			fmt.Printf("✓ Project updated successfully (ID: %d)\n", project.ID)
 
 			// Show the updated project
 			outputFormat := getOutputFormat()
-			return formatProjectOutput(*project, outputFormat)
+			return formatProjectOutput(project, outputFormat)
 		},
 	}
 
@@ -262,12 +280,12 @@ func newProjectsDeleteCommand() *cobra.Command {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			_ = client.NewClient(cfg) // apiClient - will be used when connecting to real API
+			apiClient := client.NewClient(cfg)
 
-			// Make API call (placeholder - would connect to real API)
-			success := deleteMockProject(id) // In real implementation, this would be apiClient.DeleteProject(id)
-			if !success {
-				return fmt.Errorf("project with ID %d not found", id)
+			// Make API call to delete project
+			err = apiClient.DeleteProject(id)
+			if err != nil {
+				return fmt.Errorf("failed to delete project %d: %w", id, err)
 			}
 
 			fmt.Printf("✓ Project %d deleted successfully\n", id)
@@ -325,59 +343,41 @@ func formatProjectTable(project models.Project) error {
 	return w.Flush()
 }
 
-// Mock data functions (would be replaced with real API calls)
-func getMockProjects() []models.Project {
-	return []models.Project{
-		{ID: 1, Name: "SpecSrv Development", Description: "Main development project", Status: "active", TaskCount: 15, CreatedAt: parseTime("2024-01-01T00:00:00Z"), UpdatedAt: parseTime("2024-01-15T00:00:00Z")},
-		{ID: 2, Name: "CLI Tool", Description: "Command line interface", Status: "active", TaskCount: 8, CreatedAt: parseTime("2024-01-10T00:00:00Z"), UpdatedAt: parseTime("2024-01-20T00:00:00Z")},
-		{ID: 3, Name: "Documentation", Description: "Project documentation", Status: "inactive", TaskCount: 3, CreatedAt: parseTime("2024-01-05T00:00:00Z"), UpdatedAt: parseTime("2024-01-12T00:00:00Z")},
+// convertToProjectModel converts API response data to Project model
+func convertToProjectModel(data map[string]interface{}) models.Project {
+	project := models.Project{}
+	
+	if id, ok := data["id"].(float64); ok {
+		project.ID = int(id)
 	}
-}
-
-func getMockProject(id int) *models.Project {
-	projects := getMockProjects()
-	for i := range projects {
-		if projects[i].ID == id {
-			return &projects[i]
-		}
+	if name, ok := data["name"].(string); ok {
+		project.Name = name
 	}
-	return nil
-}
-
-func createMockProject(req models.ProjectCreateRequest) models.Project {
-	return models.Project{
-		ID:          4,
-		Name:        req.Name,
-		Description: req.Description,
-		Status:      req.Status,
-		TaskCount:   0,
-		CreatedAt:   parseTime("2024-01-25T00:00:00Z"),
-		UpdatedAt:   parseTime("2024-01-25T00:00:00Z"),
+	if description, ok := data["description"].(string); ok {
+		project.Description = description
 	}
-}
-
-func updateMockProject(id int, req models.ProjectUpdateRequest) *models.Project {
-	project := getMockProject(id)
-	if project == nil {
-		return nil
+	if status, ok := data["status"].(string); ok {
+		project.Status = enums.ProjectStatus(status)
 	}
-
-	if req.Name != nil {
-		project.Name = *req.Name
+	if taskCount, ok := data["taskCount"].(float64); ok {
+		project.TaskCount = int(taskCount)
+	} else if taskCount, ok := data["task_count"].(float64); ok {
+		project.TaskCount = int(taskCount)
 	}
-	if req.Description != nil {
-		project.Description = *req.Description
+	
+	// Parse timestamps
+	if createdAt, ok := data["createdAt"].(string); ok {
+		project.CreatedAt = parseTime(createdAt)
+	} else if createdAt, ok := data["created_at"].(string); ok {
+		project.CreatedAt = parseTime(createdAt)
 	}
-	if req.Status != nil {
-		project.Status = *req.Status
+	if updatedAt, ok := data["updatedAt"].(string); ok {
+		project.UpdatedAt = parseTime(updatedAt)
+	} else if updatedAt, ok := data["updated_at"].(string); ok {
+		project.UpdatedAt = parseTime(updatedAt)
 	}
-
-	project.UpdatedAt = parseTime("2024-01-26T00:00:00Z")
+	
 	return project
-}
-
-func deleteMockProject(id int) bool {
-	return getMockProject(id) != nil
 }
 
 func parseTime(timeStr string) time.Time {

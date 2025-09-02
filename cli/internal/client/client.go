@@ -250,8 +250,45 @@ func (c *Client) HealthCheck() error {
 // Me gets the current authenticated user info
 func (c *Client) Me() (map[string]interface{}, error) {
 	var user map[string]interface{}
-	err := c.Get("/api/auth/me", &user)
+	err := c.Get("/api/v1/auth/me", &user)
 	return user, err
+}
+
+// Login authenticates with email/password and returns JWT token
+func (c *Client) Login(email, password string) (string, error) {
+	loginReq := map[string]string{
+		"email":    email,
+		"password": password,
+	}
+	
+	var result map[string]interface{}
+	err := c.Post("/api/v1/auth/login", loginReq, &result)
+	if err != nil {
+		return "", err
+	}
+	
+	if token, ok := result["token"].(string); ok {
+		c.SetToken(token)
+		return token, nil
+	}
+	
+	return "", fmt.Errorf("invalid login response: no token found")
+}
+
+// RefreshToken refreshes the JWT token
+func (c *Client) RefreshToken() (string, error) {
+	var result map[string]interface{}
+	err := c.Post("/api/v1/auth/refresh", nil, &result)
+	if err != nil {
+		return "", err
+	}
+	
+	if token, ok := result["token"].(string); ok {
+		c.SetToken(token)
+		return token, nil
+	}
+	
+	return "", fmt.Errorf("invalid refresh response: no token found")
 }
 
 // GetWithQuery performs a GET request with query parameters
@@ -260,4 +297,108 @@ func (c *Client) GetWithQuery(path string, query url.Values, result interface{})
 		path += "?" + query.Encode()
 	}
 	return c.Get(path, result)
+}
+
+// GetProjects retrieves all projects with optional filtering
+func (c *Client) GetProjects(query map[string]string) ([]map[string]interface{}, error) {
+	path := "/api/v1/projects"
+	
+	if len(query) > 0 {
+		queryParams := url.Values{}
+		for k, v := range query {
+			queryParams.Add(k, v)
+		}
+		path += "?" + queryParams.Encode()
+	}
+	
+	var result []map[string]interface{}
+	err := c.Get(path, &result)
+	return result, err
+}
+
+// GetProject retrieves a specific project by ID
+func (c *Client) GetProject(id int) (map[string]interface{}, error) {
+	var project map[string]interface{}
+	err := c.Get(fmt.Sprintf("/api/v1/projects/%d", id), &project)
+	return project, err
+}
+
+// CreateProject creates a new project
+func (c *Client) CreateProject(req interface{}) (map[string]interface{}, error) {
+	var project map[string]interface{}
+	err := c.Post("/api/v1/projects", req, &project)
+	return project, err
+}
+
+// UpdateProject updates an existing project
+func (c *Client) UpdateProject(id int, req interface{}) (map[string]interface{}, error) {
+	var project map[string]interface{}
+	err := c.Put(fmt.Sprintf("/api/v1/projects/%d", id), req, &project)
+	return project, err
+}
+
+// DeleteProject deletes a project
+func (c *Client) DeleteProject(id int) error {
+	return c.Delete(fmt.Sprintf("/api/v1/projects/%d", id), nil)
+}
+
+// GetTasks retrieves all tasks with optional filtering
+func (c *Client) GetTasks(query map[string]string) ([]map[string]interface{}, error) {
+	path := "/api/v1/tasks"
+	
+	if len(query) > 0 {
+		queryParams := url.Values{}
+		for k, v := range query {
+			queryParams.Add(k, v)
+		}
+		path += "?" + queryParams.Encode()
+	}
+	
+	var result []map[string]interface{}
+	err := c.Get(path, &result)
+	return result, err
+}
+
+// GetTask retrieves a specific task by ID
+func (c *Client) GetTask(id int) (map[string]interface{}, error) {
+	var task map[string]interface{}
+	err := c.Get(fmt.Sprintf("/api/v1/tasks/%d", id), &task)
+	return task, err
+}
+
+// CreateTask creates a new task
+func (c *Client) CreateTask(req interface{}) (map[string]interface{}, error) {
+	var task map[string]interface{}
+	err := c.Post("/api/v1/tasks", req, &task)
+	return task, err
+}
+
+// UpdateTask updates an existing task
+func (c *Client) UpdateTask(id int, req interface{}) (map[string]interface{}, error) {
+	var task map[string]interface{}
+	err := c.Put(fmt.Sprintf("/api/v1/tasks/%d", id), req, &task)
+	return task, err
+}
+
+// DeleteTask deletes a task
+func (c *Client) DeleteTask(id int) error {
+	return c.Delete(fmt.Sprintf("/api/v1/tasks/%d", id), nil)
+}
+
+// GetDashboardStats retrieves dashboard statistics
+func (c *Client) GetDashboardStats() (map[string]interface{}, error) {
+	var stats map[string]interface{}
+	err := c.Get("/api/v1/dashboard/stats", &stats)
+	return stats, err
+}
+
+// SearchProjects searches projects with suggestions
+func (c *Client) SearchProjects(query string) ([]map[string]interface{}, error) {
+	queryParams := url.Values{}
+	queryParams.Add("q", query)
+	path := "/api/v1/search/suggestions?" + queryParams.Encode()
+	
+	var results []map[string]interface{}
+	err := c.Get(path, &results)
+	return results, err
 }
