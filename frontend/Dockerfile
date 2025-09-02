@@ -4,20 +4,26 @@ FROM node:20-alpine AS build
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better cache layering
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install all dependencies (including dev dependencies for build)
+RUN npm ci && npm cache clean --force
 
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application for production
 RUN npm run build
+
+# Remove development dependencies to reduce size
+RUN npm ci --only=production && npm cache clean --force
 
 # Production stage with Nginx
 FROM nginx:alpine AS production
+
+# Install curl for health checks
+RUN apk add --no-cache curl
 
 # Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html

@@ -49,7 +49,11 @@ abstract class AbstractWebTestCase extends WebTestCase
     {
         $user = new User();
         $user->setEmail($data['email'] ?? 'test@example.com');
-        $user->setPassword($data['password'] ?? 'password123');
+        
+        // Hash the password using the password hasher service
+        $passwordHasher = static::getContainer()->get('security.user_password_hasher');
+        $hashedPassword = $passwordHasher->hashPassword($user, $data['password'] ?? 'password123');
+        $user->setPassword($hashedPassword);
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();
