@@ -47,7 +47,7 @@ class LearningApiTest extends AbstractWebTestCase
             'error_log' => null,
         ];
 
-        $this->makeRequest('POST', '/api/learning/record-interaction', $requestData);
+        $this->makeRequest('POST', '/api/v1/learning/record-interaction', $requestData);
 
         $response = $this->client->getResponse();
         $this->assertEquals(200, $response->getStatusCode(), 'Response: '.$response->getContent());
@@ -75,7 +75,7 @@ class LearningApiTest extends AbstractWebTestCase
             'task_id' => 999, // Missing other required fields
         ];
 
-        $this->makeRequest('POST', '/api/learning/record-interaction', $requestData);
+        $this->makeRequest('POST', '/api/v1/learning/record-interaction', $requestData);
 
         $response = $this->client->getResponse();
         $this->assertEquals(400, $response->getStatusCode());
@@ -97,7 +97,7 @@ class LearningApiTest extends AbstractWebTestCase
             'execution_time_ms' => 1000,
         ];
 
-        $this->makeRequest('POST', '/api/learning/record-interaction', $requestData);
+        $this->makeRequest('POST', '/api/v1/learning/record-interaction', $requestData);
 
         $response = $this->client->getResponse();
         $this->assertEquals(404, $response->getStatusCode());
@@ -120,7 +120,7 @@ class LearningApiTest extends AbstractWebTestCase
             'min_confidence' => 0.7,
         ];
 
-        $this->makeRequest('POST', '/api/learning/recommend-solution', $requestData);
+        $this->makeRequest('POST', '/api/v1/learning/recommend-solution', $requestData);
 
         $response = $this->client->getResponse();
         $this->assertEquals(200, $response->getStatusCode());
@@ -144,7 +144,7 @@ class LearningApiTest extends AbstractWebTestCase
             'min_confidence' => 0.9,
         ];
 
-        $this->makeRequest('POST', '/api/learning/recommend-solution', $requestData);
+        $this->makeRequest('POST', '/api/v1/learning/recommend-solution', $requestData);
 
         $response = $this->client->getResponse();
         $this->assertEquals(404, $response->getStatusCode());
@@ -162,7 +162,7 @@ class LearningApiTest extends AbstractWebTestCase
         $this->createTestPattern($client);
         $this->createTestPattern($client, ['task_type' => 'debug']);
 
-        $this->makeRequest('GET', '/api/learning/patterns', []);
+        $this->makeRequest('GET', '/api/v1/learning/patterns', []);
 
         $response = $this->client->getResponse();
         $this->assertEquals(200, $response->getStatusCode());
@@ -193,7 +193,7 @@ class LearningApiTest extends AbstractWebTestCase
         $this->createTestPattern($client);
 
         // Test filtering by agent type
-        $this->makeRequest('GET', '/api/learning/patterns?agent_type=implementation', []);
+        $this->makeRequest('GET', '/api/v1/learning/patterns?agent_type=implementation', []);
 
         $response = $this->client->getResponse();
         $this->assertEquals(200, $response->getStatusCode());
@@ -217,7 +217,7 @@ class LearningApiTest extends AbstractWebTestCase
         // Create some test data
         $this->createTestPattern($client);
 
-        $this->makeRequest('GET', '/api/learning/analytics/performance?range=30d', []);
+        $this->makeRequest('GET', '/api/v1/learning/analytics/performance?range=30d', []);
 
         $response = $this->client->getResponse();
         $this->assertEquals(200, $response->getStatusCode());
@@ -251,7 +251,7 @@ class LearningApiTest extends AbstractWebTestCase
             'comments' => 'This pattern worked well for my use case',
         ];
 
-        $this->makeRequest('POST', "/api/learning/patterns/{$pattern->getId()}/feedback", $feedbackData);
+        $this->makeRequest('POST', "/api/v1/learning/patterns/{$pattern->getId()}/feedback", $feedbackData);
 
         $response = $this->client->getResponse();
         $this->assertEquals(200, $response->getStatusCode());
@@ -276,7 +276,7 @@ class LearningApiTest extends AbstractWebTestCase
             'limit' => 10,
         ];
 
-        $this->makeRequest('POST', '/api/learning/interactions/search', $searchData);
+        $this->makeRequest('POST', '/api/v1/learning/interactions/search', $searchData);
 
         $response = $this->client->getResponse();
         $this->assertEquals(200, $response->getStatusCode());
@@ -293,7 +293,7 @@ class LearningApiTest extends AbstractWebTestCase
     {
         $client = $this->getAuthenticatedClient();
 
-        $this->makeRequest('GET', '/api/learning/health', []);
+        $this->makeRequest('GET', '/api/v1/learning/health', []);
 
         $response = $this->client->getResponse();
         $this->assertEquals(200, $response->getStatusCode());
@@ -312,8 +312,8 @@ class LearningApiTest extends AbstractWebTestCase
     {
         // Try to access learning endpoints without authentication
         $endpoints = [
-            'POST' => ['/api/learning/record-interaction'],
-            'GET' => ['/api/learning/patterns', '/api/learning/analytics/performance'],
+            'POST' => ['/api/v1/learning/record-interaction'],
+            'GET' => ['/api/v1/learning/patterns', '/api/v1/learning/analytics/performance'],
         ];
 
         foreach ($endpoints as $method => $paths) {
@@ -344,7 +344,7 @@ class LearningApiTest extends AbstractWebTestCase
             'execution_time_ms' => 1500,
         ];
 
-        $this->makeRequest('POST', '/api/learning/record-interaction', $requestData);
+        $this->makeRequest('POST', '/api/v1/learning/record-interaction', $requestData);
 
         $response = $this->client->getResponse();
         $this->assertEquals(200, $response->getStatusCode());

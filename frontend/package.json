@@ -65,7 +65,19 @@
       "text",
       "lcov",
       "html"
-    ]
+    ],
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "moduleFileExtensions": ["js", "json"],
+    "extensionsToTreatAsEsm": [".js"],
+    "globals": {
+      "@babel/preset-env": {
+        "targets": {
+          "node": "current"
+        }
+      }
+    }
   },
   "eslintConfig": {
     "env": {

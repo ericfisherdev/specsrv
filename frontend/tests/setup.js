@@ -47,22 +47,48 @@ global.ResizeObserver = class ResizeObserver {
 global.fetch = jest.fn();
 
 // Mock localStorage
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-global.localStorage = localStorageMock;
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: jest.fn((key) => store[key] || null),
+    setItem: jest.fn((key, value) => {
+      store[key] = value.toString();
+    }),
+    removeItem: jest.fn((key) => {
+      delete store[key];
+    }),
+    clear: jest.fn(() => {
+      store = {};
+    }),
+  };
+})();
+
+Object.defineProperty(global, 'localStorage', {
+  value: localStorageMock,
+  writable: true,
+});
 
 // Mock sessionStorage
-const sessionStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-global.sessionStorage = sessionStorageMock;
+const sessionStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: jest.fn((key) => store[key] || null),
+    setItem: jest.fn((key, value) => {
+      store[key] = value.toString();
+    }),
+    removeItem: jest.fn((key) => {
+      delete store[key];
+    }),
+    clear: jest.fn(() => {
+      store = {};
+    }),
+  };
+})();
+
+Object.defineProperty(global, 'sessionStorage', {
+  value: sessionStorageMock,
+  writable: true,
+});
 
 // Mock console methods to reduce test noise (can be overridden in individual tests)
 global.console = {
@@ -128,15 +154,19 @@ afterEach(() => {
   jest.clearAllMocks();
   
   // Reset localStorage and sessionStorage
-  localStorageMock.getItem.mockClear();
-  localStorageMock.setItem.mockClear();
-  localStorageMock.removeItem.mockClear();
-  localStorageMock.clear.mockClear();
+  if (global.localStorage) {
+    global.localStorage.getItem.mockClear();
+    global.localStorage.setItem.mockClear();
+    global.localStorage.removeItem.mockClear();
+    global.localStorage.clear.mockClear();
+  }
   
-  sessionStorageMock.getItem.mockClear();
-  sessionStorageMock.setItem.mockClear();
-  sessionStorageMock.removeItem.mockClear();
-  sessionStorageMock.clear.mockClear();
+  if (global.sessionStorage) {
+    global.sessionStorage.getItem.mockClear();
+    global.sessionStorage.setItem.mockClear();
+    global.sessionStorage.removeItem.mockClear();
+    global.sessionStorage.clear.mockClear();
+  }
 });
 
 // Global test utilities
