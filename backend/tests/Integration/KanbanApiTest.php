@@ -8,7 +8,6 @@ use App\Tests\AbstractWebTestCase;
 
 class KanbanApiTest extends AbstractWebTestCase
 {
-
     public function testKanbanBoardsEndpoint(): void
     {
         $client = $this->getAuthenticatedClient();
@@ -45,15 +44,15 @@ class KanbanApiTest extends AbstractWebTestCase
         $this->assertArrayHasKey('data', $responseData);
 
         $data = $responseData['data'];
-        
+
         // Check projects list
         $this->assertArrayHasKey('projects', $data);
         $this->assertCount(2, $data['projects']);
-        
+
         // Check tasks by status
         $this->assertArrayHasKey('tasks_by_status', $data);
         $tasksByStatus = $data['tasks_by_status'];
-        
+
         // Verify all status categories exist
         $this->assertArrayHasKey(TaskStatusEnum::BACKLOG->value, $tasksByStatus);
         $this->assertArrayHasKey(TaskStatusEnum::TODO->value, $tasksByStatus);
@@ -89,10 +88,10 @@ class KanbanApiTest extends AbstractWebTestCase
 
         $response = $this->client->getResponse();
         $responseData = json_decode($response->getContent(), true);
-        
+
         $data = $responseData['data'];
         $this->assertEquals((string) $project1->getId(), $data['selected_project']);
-        
+
         // Should have tasks only from project 1
         $todoTasks = $data['tasks_by_status'][TaskStatusEnum::TODO->value];
         $this->assertCount(1, $todoTasks);
@@ -141,8 +140,8 @@ class KanbanApiTest extends AbstractWebTestCase
         $this->assertEquals(404, $response->getStatusCode());
 
         $responseData = json_decode($response->getContent(), true);
-        $this->assertNotNull($responseData, 'Response should be valid JSON: ' . $response->getContent());
-        $this->assertArrayHasKey('success', $responseData, 'Response missing success field. Full response: ' . $response->getContent());
+        $this->assertNotNull($responseData, 'Response should be valid JSON: '.$response->getContent());
+        $this->assertArrayHasKey('success', $responseData, 'Response missing success field. Full response: '.$response->getContent());
         $this->assertFalse($responseData['success']);
         $this->assertEquals('TASK_NOT_FOUND', $responseData['error']['code']);
     }
@@ -193,7 +192,7 @@ class KanbanApiTest extends AbstractWebTestCase
         $user = $this->getUser($client);
 
         $project = $this->createTestProject($user);
-        
+
         // Create tasks with different priorities to test ordering
         $this->createTestTask($project, [
             'title' => 'Low Priority Task',
@@ -216,7 +215,7 @@ class KanbanApiTest extends AbstractWebTestCase
 
         $tasksByStatus = $responseData['data'];
         $todoTasks = $tasksByStatus[TaskStatusEnum::TODO->value];
-        
+
         // Should be ordered by priority (critical first)
         $this->assertEquals('Critical Priority Task', $todoTasks[0]['title']);
         $this->assertEquals('Low Priority Task', $todoTasks[1]['title']);
@@ -239,7 +238,7 @@ class KanbanApiTest extends AbstractWebTestCase
 
         $response = $this->client->getResponse();
         $responseData = json_decode($response->getContent(), true);
-        
+
         $todoTasks = $responseData['data'][TaskStatusEnum::TODO->value];
         $task = $todoTasks[0];
 
@@ -265,9 +264,9 @@ class KanbanApiTest extends AbstractWebTestCase
         $user = $this->getUser($client);
 
         $project = $this->createTestProject($user);
-        
+
         // Create more than 6 tasks to test the limit
-        for ($i = 1; $i <= 8; $i++) {
+        for ($i = 1; $i <= 8; ++$i) {
             $this->createTestTask($project, [
                 'title' => "Task $i",
                 'status' => TaskStatusEnum::TODO,
@@ -279,9 +278,9 @@ class KanbanApiTest extends AbstractWebTestCase
 
         $response = $this->client->getResponse();
         $responseData = json_decode($response->getContent(), true);
-        
+
         $todoTasks = $responseData['data'][TaskStatusEnum::TODO->value];
-        
+
         // Should be limited to 6 tasks per project when no project filter is applied
         $this->assertCount(6, $todoTasks);
     }

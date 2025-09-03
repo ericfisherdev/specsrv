@@ -209,7 +209,7 @@ class Project
     }
 
     /**
-     * Convert entity to array for API responses
+     * Convert entity to array for API responses.
      */
     public function toArray(): array
     {
@@ -220,7 +220,7 @@ class Project
             'github_repo' => $this->githubRepo,
             'user_id' => $this->user?->getId(),
             'tasks_count' => $this->tasks->count(),
-            'tags' => $this->tags->map(fn(Tag $tag) => $tag->toArray())->toArray(),
+            'tags' => $this->tags->map(fn (Tag $tag) => $tag->toArray())->toArray(),
             'created_at' => $this->createdAt?->format('c'),
             'updated_at' => $this->updatedAt?->format('c'),
         ];

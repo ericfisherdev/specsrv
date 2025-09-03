@@ -41,12 +41,12 @@ class UserApiController extends BaseApiController
 
         // Find user by email
         $user = $this->userRepository->findOneBy(['email' => $data['username']]);
-        if (!$user) {
+        if (! $user) {
             return $this->errorResponse('Invalid credentials', 'AUTH_FAILED', null, 401);
         }
 
         // Verify password
-        if (!$this->passwordHasher->isPasswordValid($user, $data['password'])) {
+        if (! $this->passwordHasher->isPasswordValid($user, $data['password'])) {
             return $this->errorResponse('Invalid credentials', 'AUTH_FAILED', null, 401);
         }
 

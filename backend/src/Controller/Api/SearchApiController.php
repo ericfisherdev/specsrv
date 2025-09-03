@@ -2,7 +2,6 @@
 
 namespace App\Controller\Api;
 
-use App\Entity\Task;
 use App\Entity\User;
 use App\Repository\ProjectRepository;
 use App\Repository\TaskRepository;

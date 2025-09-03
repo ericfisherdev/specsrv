@@ -195,7 +195,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * Convert entity to array for API responses
+     * Convert entity to array for API responses.
      */
     public function toArray(): array
     {

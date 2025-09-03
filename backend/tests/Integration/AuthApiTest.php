@@ -38,7 +38,7 @@ class AuthApiTest extends AbstractWebTestCase
         $data = $responseData['data'];
         $this->assertArrayHasKey('token', $data);
         $this->assertArrayHasKey('user', $data);
-        
+
         // Verify token is a string
         $this->assertIsString($data['token']);
         $this->assertNotEmpty($data['token']);
@@ -125,7 +125,7 @@ class AuthApiTest extends AbstractWebTestCase
         $data = $responseData['data'];
         $this->assertArrayHasKey('token', $data);
         $this->assertArrayHasKey('user', $data);
-        
+
         // Verify user data
         $userData = $data['user'];
         $this->assertEquals('newuser@test.com', $userData['email']);
@@ -214,8 +214,8 @@ class AuthApiTest extends AbstractWebTestCase
         $this->assertEquals(401, $response->getStatusCode());
 
         $responseData = json_decode($response->getContent(), true);
-        $this->assertNotNull($responseData, 'Response should be valid JSON: ' . $response->getContent());
-        $this->assertArrayHasKey('success', $responseData, 'Response missing success field. Full response: ' . $response->getContent());
+        $this->assertNotNull($responseData, 'Response should be valid JSON: '.$response->getContent());
+        $this->assertArrayHasKey('success', $responseData, 'Response missing success field. Full response: '.$response->getContent());
         $this->assertFalse($responseData['success']);
         $this->assertEquals('AUTH_REQUIRED', $responseData['error']['code']);
     }
@@ -256,7 +256,7 @@ class AuthApiTest extends AbstractWebTestCase
 
         $data = $responseData['data'];
         $this->assertArrayHasKey('user', $data);
-        
+
         $userData = $data['user'];
         $this->assertEquals('me@test.com', $userData['email']);
         $this->assertEquals('Me Test User', $userData['name']);
@@ -270,8 +270,8 @@ class AuthApiTest extends AbstractWebTestCase
         $this->assertEquals(401, $response->getStatusCode());
 
         $responseData = json_decode($response->getContent(), true);
-        $this->assertNotNull($responseData, 'Response should be valid JSON: ' . $response->getContent());
-        $this->assertArrayHasKey('success', $responseData, 'Response missing success field. Full response: ' . $response->getContent());
+        $this->assertNotNull($responseData, 'Response should be valid JSON: '.$response->getContent());
+        $this->assertArrayHasKey('success', $responseData, 'Response missing success field. Full response: '.$response->getContent());
         $this->assertFalse($responseData['success']);
         $this->assertEquals('AUTH_REQUIRED', $responseData['error']['code']);
     }

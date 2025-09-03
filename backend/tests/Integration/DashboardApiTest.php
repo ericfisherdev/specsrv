@@ -9,7 +9,6 @@ use App\Tests\AbstractWebTestCase;
 
 class DashboardApiTest extends AbstractWebTestCase
 {
-
     public function testDashboardStatsEndpoint(): void
     {
         $client = $this->getAuthenticatedClient();
@@ -36,7 +35,7 @@ class DashboardApiTest extends AbstractWebTestCase
         $this->assertArrayHasKey('data', $responseData);
 
         $data = $responseData['data'];
-        
+
         // Check user information
         $this->assertArrayHasKey('user', $data);
         $this->assertEquals($user->getEmail(), $data['user']['email']);
@@ -68,7 +67,7 @@ class DashboardApiTest extends AbstractWebTestCase
 
         $responseData = json_decode($response->getContent(), true);
         $this->assertTrue($responseData['success']);
-        
+
         $data = $responseData['data'];
         $this->assertEquals(0, $data['projects']['total']);
         $this->assertEquals(0, $data['tasks']['stats']['total']);
@@ -90,12 +89,12 @@ class DashboardApiTest extends AbstractWebTestCase
 
         // Create more than 5 projects to test pagination
         $projects = [];
-        for ($i = 1; $i <= 7; $i++) {
+        for ($i = 1; $i <= 7; ++$i) {
             $projects[] = $this->createTestProject($user, ['title' => "Project $i"]);
         }
 
         // Create more than 5 tasks
-        for ($i = 1; $i <= 8; $i++) {
+        for ($i = 1; $i <= 8; ++$i) {
             $this->createTestTask($projects[0], ['title' => "Task $i"]);
         }
 
@@ -103,13 +102,13 @@ class DashboardApiTest extends AbstractWebTestCase
 
         $response = $this->client->getResponse();
         $responseData = json_decode($response->getContent(), true);
-        
+
         $data = $responseData['data'];
-        
+
         // Should return all projects and tasks but recent ones should be limited to 5
         $this->assertEquals(7, $data['projects']['total']);
         $this->assertCount(5, $data['projects']['recent']);
-        
+
         $this->assertEquals(8, $data['tasks']['stats']['total']);
         $this->assertCount(5, $data['tasks']['recent']);
     }
@@ -126,7 +125,7 @@ class DashboardApiTest extends AbstractWebTestCase
 
         $response = $this->client->getResponse();
         $responseData = json_decode($response->getContent(), true);
-        
+
         $data = $responseData['data'];
 
         // Verify complete data structure
@@ -145,7 +144,7 @@ class DashboardApiTest extends AbstractWebTestCase
         $this->assertArrayHasKey('recent', $projectsData);
         $this->assertIsArray($projectsData['recent']);
 
-        if (!empty($projectsData['recent'])) {
+        if (! empty($projectsData['recent'])) {
             $recentProject = $projectsData['recent'][0];
             $this->assertArrayHasKey('id', $recentProject);
             $this->assertArrayHasKey('title', $recentProject);
@@ -155,7 +154,7 @@ class DashboardApiTest extends AbstractWebTestCase
         $tasksData = $data['tasks'];
         $this->assertArrayHasKey('stats', $tasksData);
         $this->assertArrayHasKey('recent', $tasksData);
-        
+
         $taskStats = $tasksData['stats'];
         $this->assertArrayHasKey('total', $taskStats);
         $this->assertArrayHasKey('todo', $taskStats);
@@ -163,7 +162,7 @@ class DashboardApiTest extends AbstractWebTestCase
         $this->assertArrayHasKey('completed', $taskStats);
 
         $this->assertIsArray($tasksData['recent']);
-        if (!empty($tasksData['recent'])) {
+        if (! empty($tasksData['recent'])) {
             $recentTask = $tasksData['recent'][0];
             $this->assertArrayHasKey('id', $recentTask);
             $this->assertArrayHasKey('title', $recentTask);

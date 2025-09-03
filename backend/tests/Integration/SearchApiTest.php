@@ -8,7 +8,6 @@ use App\Tests\AbstractWebTestCase;
 
 class SearchApiTest extends AbstractWebTestCase
 {
-
     public function testSearchSuggestionsEndpoint(): void
     {
         $client = $this->getAuthenticatedClient();
@@ -113,7 +112,7 @@ class SearchApiTest extends AbstractWebTestCase
         $project = $this->createTestProject($user, ['title' => 'Test Project']);
 
         // Create more than 5 tasks to test the limit
-        for ($i = 1; $i <= 7; $i++) {
+        for ($i = 1; $i <= 7; ++$i) {
             $this->createTestTask($project, [
                 'title' => "Test Task $i",
                 'description' => "Test description for task $i",
@@ -126,7 +125,7 @@ class SearchApiTest extends AbstractWebTestCase
         $responseData = json_decode($response->getContent(), true);
 
         $data = $responseData['data'];
-        
+
         // Should be limited to 5 results each
         $this->assertCount(1, $data['projects']); // 1 project
         $this->assertLessThanOrEqual(5, count($data['tasks'])); // Max 5 tasks

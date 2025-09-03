@@ -269,5 +269,4 @@ class TaskController extends AbstractController
 
         return $this->json(['success' => true]);
     }
-
 }

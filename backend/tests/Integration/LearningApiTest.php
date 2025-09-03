@@ -8,7 +8,6 @@ use App\Tests\AbstractWebTestCase;
 
 class LearningApiTest extends AbstractWebTestCase
 {
-
     public function testRecordInteractionEndpoint(): void
     {
         $client = $this->getAuthenticatedClient();
@@ -106,7 +105,7 @@ class LearningApiTest extends AbstractWebTestCase
         $this->makeRequest('POST', '/api/v1/learning/recommend-solution', $requestData);
 
         $response = $this->client->getResponse();
-        $this->assertEquals(200, $response->getStatusCode(), 'Auth failed. Response: ' . $response->getContent());
+        $this->assertEquals(200, $response->getStatusCode(), 'Auth failed. Response: '.$response->getContent());
 
         $responseData = json_decode($response->getContent(), true);
         $this->assertTrue($responseData['success']);

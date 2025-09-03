@@ -109,7 +109,7 @@ class RateLimitService
     {
         $baseRequests = (int) $this->apiRateLimitRequests;
         $baseWindow = (int) $this->apiRateLimitWindow;
-        
+
         return [
             'api' => [
                 'requests' => $baseRequests,

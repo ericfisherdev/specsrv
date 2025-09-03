@@ -93,13 +93,14 @@ class ProjectController extends AbstractController
             foreach ($violations as $violation) {
                 $errors[] = [
                     'field' => $violation->getPropertyPath(),
-                    'message' => $violation->getMessage()
+                    'message' => $violation->getMessage(),
                 ];
             }
+
             return $this->json([
                 'success' => false,
                 'error' => ['code' => 'VALIDATION_ERROR', 'message' => 'Validation failed'],
-                'errors' => $errors
+                'errors' => $errors,
             ], 400);
         }
 

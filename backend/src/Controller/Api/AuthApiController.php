@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/v1/auth', name: 'api_v1_auth_')]
@@ -39,7 +38,7 @@ class AuthApiController extends BaseApiController
             );
         }
 
-        if (!isset($data['email']) || !isset($data['password'])) {
+        if (! isset($data['email']) || ! isset($data['password'])) {
             return $this->errorResponse(
                 'Email and password are required',
                 'MISSING_CREDENTIALS',
@@ -50,7 +49,7 @@ class AuthApiController extends BaseApiController
 
         $user = $this->userRepository->findOneBy(['email' => $data['email']]);
 
-        if (!$user || !$this->passwordHasher->isPasswordValid($user, $data['password'])) {
+        if (! $user || ! $this->passwordHasher->isPasswordValid($user, $data['password'])) {
             return $this->errorResponse(
                 'Invalid credentials',
                 'INVALID_CREDENTIALS',
@@ -72,7 +71,7 @@ class AuthApiController extends BaseApiController
     {
         $user = $this->getUser();
 
-        if (!$user) {
+        if (! $user) {
             return $this->errorResponse(
                 'Authentication required',
                 'AUTH_REQUIRED',
@@ -111,7 +110,7 @@ class AuthApiController extends BaseApiController
             );
         }
 
-        if (!isset($data['email']) || !isset($data['password'])) {
+        if (! isset($data['email']) || ! isset($data['password'])) {
             return $this->errorResponse(
                 'Email and password are required',
                 'MISSING_CREDENTIALS',
@@ -121,7 +120,7 @@ class AuthApiController extends BaseApiController
         }
 
         // Validate email format
-        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             return $this->errorResponse(
                 'Invalid email format',
                 'VALIDATION_ERROR',
@@ -188,7 +187,7 @@ class AuthApiController extends BaseApiController
     {
         $user = $this->getUser();
 
-        if (!$user) {
+        if (! $user) {
             return $this->errorResponse(
                 'Authentication required',
                 'AUTH_REQUIRED',

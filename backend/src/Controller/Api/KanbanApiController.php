@@ -31,7 +31,7 @@ class KanbanApiController extends BaseApiController
 
         $projectId = $request->query->get('project');
         $projectIdString = is_string($projectId) ? $projectId : null;
-        
+
         // Get all projects for the user
         $projects = $this->projectRepository->findByUser($user);
 
