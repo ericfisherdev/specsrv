@@ -4,11 +4,11 @@
  */
 export class ThemeManager {
   constructor() {
-    this.storageKey = "specsrv-theme";
-    this.themes = ["light", "dark", "system"];
-    this.currentTheme = "system";
+    this.storageKey = 'specsrv-theme';
+    this.themes = ['light', 'dark', 'system'];
+    this.currentTheme = 'system';
     this.isDark = false;
-    this.mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
     // Event listeners
     this.listeners = {
@@ -25,7 +25,7 @@ export class ThemeManager {
 
     // Set up system theme listener
     this.mediaQuery.addEventListener(
-      "change",
+      'change',
       this.handleSystemThemeChange.bind(this)
     );
 
@@ -82,7 +82,7 @@ export class ThemeManager {
    */
   getStoredTheme() {
     const stored = localStorage.getItem(this.storageKey);
-    return this.themes.includes(stored) ? stored : "system";
+    return this.themes.includes(stored) ? stored : 'system';
   }
 
   /**
@@ -99,8 +99,8 @@ export class ThemeManager {
    * @returns {string}
    */
   getEffectiveTheme(theme = this.currentTheme) {
-    if (theme === "system") {
-      return this.mediaQuery.matches ? "dark" : "light";
+    if (theme === 'system') {
+      return this.mediaQuery.matches ? 'dark' : 'light';
     }
     return theme;
   }
@@ -112,7 +112,7 @@ export class ThemeManager {
   setTheme(theme) {
     if (!this.themes.includes(theme)) {
       console.warn(`Invalid theme: ${theme}. Using "system" instead.`);
-      theme = "system";
+      theme = 'system';
     }
 
     const oldTheme = this.currentTheme;
@@ -129,10 +129,10 @@ export class ThemeManager {
     }
 
     // Emit change event
-    this.emit("change", {
+    this.emit('change', {
       theme: this.currentTheme,
       effectiveTheme: newEffectiveTheme,
-      isDark: newEffectiveTheme === "dark",
+      isDark: newEffectiveTheme === 'dark',
       oldTheme,
       oldEffectiveTheme,
     });
@@ -144,7 +144,7 @@ export class ThemeManager {
    */
   toggle() {
     const effectiveTheme = this.getEffectiveTheme();
-    const newTheme = effectiveTheme === "dark" ? "light" : "dark";
+    const newTheme = effectiveTheme === 'dark' ? 'light' : 'dark';
     this.setTheme(newTheme);
     return newTheme;
   }
@@ -169,16 +169,16 @@ export class ThemeManager {
     const html = document.documentElement;
 
     // Update dark class
-    if (effectiveTheme === "dark") {
-      html.classList.add("dark");
+    if (effectiveTheme === 'dark') {
+      html.classList.add('dark');
       this.isDark = true;
     } else {
-      html.classList.remove("dark");
+      html.classList.remove('dark');
       this.isDark = false;
     }
 
     // Update data attribute for CSS selector targeting
-    html.setAttribute("data-theme", effectiveTheme);
+    html.setAttribute('data-theme', effectiveTheme);
 
     // Update meta theme-color for mobile browsers
     this.updateThemeColor(effectiveTheme);
@@ -189,18 +189,18 @@ export class ThemeManager {
    * @param {string} effectiveTheme - Current effective theme
    */
   updateThemeColor(effectiveTheme) {
-    let themeColorMeta = document.querySelector("meta[name="theme-color"]");
+    let themeColorMeta = document.querySelector('meta[name="theme-color"]');
 
     if (!themeColorMeta) {
-      themeColorMeta = document.createElement("meta");
-      themeColorMeta.name = "theme-color";
+      themeColorMeta = document.createElement('meta');
+      themeColorMeta.name = 'theme-color';
       document.head.appendChild(themeColorMeta);
     }
 
     // Set theme color based on theme
     const colors = {
-      light: "#ffffff",
-      dark: "#111827",
+      light: '#ffffff',
+      dark: '#111827',
     };
 
     themeColorMeta.content = colors[effectiveTheme] || colors.light;
@@ -211,14 +211,14 @@ export class ThemeManager {
    * @param {MediaQueryListEvent} event - Media query event
    */
   handleSystemThemeChange(event) {
-    if (this.currentTheme === "system") {
-      const newEffectiveTheme = event.matches ? "dark" : "light";
+    if (this.currentTheme === 'system') {
+      const newEffectiveTheme = event.matches ? 'dark' : 'light';
       this.applyTheme(newEffectiveTheme);
 
-      this.emit("change", {
+      this.emit('change', {
         theme: this.currentTheme,
         effectiveTheme: newEffectiveTheme,
-        isDark: newEffectiveTheme === "dark",
+        isDark: newEffectiveTheme === 'dark',
         systemChange: true,
       });
     }
@@ -255,7 +255,7 @@ export class ThemeManager {
    * @returns {boolean}
    */
   isDarkMode() {
-    return this.getEffectiveTheme() === "dark";
+    return this.getEffectiveTheme() === 'dark';
   }
 
   /**
@@ -263,7 +263,7 @@ export class ThemeManager {
    * @returns {boolean}
    */
   isLightMode() {
-    return this.getEffectiveTheme() === "light";
+    return this.getEffectiveTheme() === 'light';
   }
 
   /**
@@ -271,7 +271,7 @@ export class ThemeManager {
    * @returns {boolean}
    */
   isSystemTheme() {
-    return this.currentTheme === "system";
+    return this.currentTheme === 'system';
   }
 
   /**
@@ -281,22 +281,22 @@ export class ThemeManager {
   getThemeOptions() {
     return [
       {
-        value: "light",
-        label: "Light",
-        icon: "☀️",
-        description: "Light mode",
+        value: 'light',
+        label: 'Light',
+        icon: '☀️',
+        description: 'Light mode',
       },
       {
-        value: "dark",
-        label: "Dark",
-        icon: "🌙",
-        description: "Dark mode",
+        value: 'dark',
+        label: 'Dark',
+        icon: '🌙',
+        description: 'Dark mode',
       },
       {
-        value: "system",
-        label: "System",
-        icon: "💻",
-        description: "Follow system preference",
+        value: 'system',
+        label: 'System',
+        icon: '💻',
+        description: 'Follow system preference',
       },
     ];
   }
@@ -308,24 +308,24 @@ export class ThemeManager {
    */
   getThemeProperties(effectiveTheme = this.getEffectiveTheme()) {
     const lightProperties = {
-      "--color-background": "#ffffff",
-      "--color-foreground": "#000000",
-      "--color-surface": "#f8fafc",
-      "--color-border": "#e2e8f0",
-      "--color-primary": "#3b82f6",
-      "--color-secondary": "#64748b",
+      '--color-background': '#ffffff',
+      '--color-foreground': '#000000',
+      '--color-surface': '#f8fafc',
+      '--color-border': '#e2e8f0',
+      '--color-primary': '#3b82f6',
+      '--color-secondary': '#64748b',
     };
 
     const darkProperties = {
-      "--color-background": "#111827",
-      "--color-foreground": "#ffffff",
-      "--color-surface": "#1f2937",
-      "--color-border": "#374151",
-      "--color-primary": "#60a5fa",
-      "--color-secondary": "#9ca3af",
+      '--color-background': '#111827',
+      '--color-foreground': '#ffffff',
+      '--color-surface': '#1f2937',
+      '--color-border': '#374151',
+      '--color-primary': '#60a5fa',
+      '--color-secondary': '#9ca3af',
     };
 
-    return effectiveTheme === "dark" ? darkProperties : lightProperties;
+    return effectiveTheme === 'dark' ? darkProperties : lightProperties;
   }
 
   /**

@@ -1,4 +1,4 @@
-import ApiService from "./ApiService.js";
+import ApiService from './ApiService.js';
 
 /**
  * Learning Service - Handles AI agent learning and knowledge operations
@@ -6,7 +6,7 @@ import ApiService from "./ApiService.js";
 export class LearningService extends ApiService {
   constructor() {
     super();
-    this.basePath = "/learning";
+    this.basePath = '/learning';
   }
 
   /**
@@ -173,7 +173,7 @@ export class LearningService extends ApiService {
      * @param {number} rating - Rating (1-5)
      * @param {string} feedback - Optional feedback
      */
-  async rateLearningEntry(entryId, rating, feedback = "") {
+  async rateLearningEntry(entryId, rating, feedback = '') {
     return this.post(`${this.basePath}/${entryId}/rating`, {
       rating,
       feedback
@@ -204,14 +204,14 @@ export class LearningService extends ApiService {
      */
   async importLearningData(file, options = {}) {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
     Object.keys(options).forEach(key => {
       formData.append(key, options[key]);
     });
 
     return this.request(`${this.basePath}/import`, {
-      method: "POST",
+      method: 'POST',
       body: formData,
       headers: {}
     });

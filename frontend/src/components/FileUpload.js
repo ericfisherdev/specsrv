@@ -6,10 +6,10 @@ export class FileUpload {
   constructor(container, options = {}) {
     this.container = container;
     this.options = {
-      uploadUrl: "/api/v1/files/upload",
-      deleteUrl: "/api/v1/files",
-      downloadUrl: "/api/v1/files/download",
-      acceptedTypes: "image/*,.pdf,.md,.txt",
+      uploadUrl: '/api/v1/files/upload',
+      deleteUrl: '/api/v1/files',
+      downloadUrl: '/api/v1/files/download',
+      acceptedTypes: 'image/*,.pdf,.md,.txt',
       maxFileSize: 10 * 1024 * 1024, // 10MB
       projectId: null,
       taskId: null,
@@ -21,7 +21,7 @@ export class FileUpload {
       errors: [],
       uploading: false,
       uploadProgress: 0,
-      uploadStatus: "Preparing upload...",
+      uploadStatus: 'Preparing upload...',
       currentFiles: [],
       uploadSpeed: 0,
       uploadETA: 0,
@@ -55,7 +55,7 @@ export class FileUpload {
 
   renderUploadArea() {
     return `
-            <div class="upload-area" style="display: ${!this.state.uploading && this.state.files.length === 0 ? "block" : "none"}">
+            <div class="upload-area" style="display: ${!this.state.uploading && this.state.files.length === 0 ? 'block' : 'none'}">
                 <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
@@ -83,7 +83,7 @@ export class FileUpload {
 
   renderUploadProgress() {
     return `
-            <div class="upload-progress" style="display: ${this.state.uploading ? "block" : "none"}">
+            <div class="upload-progress" style="display: ${this.state.uploading ? 'block' : 'none'}">
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
@@ -102,14 +102,14 @@ export class FileUpload {
                     </div>
 
                     <!-- Individual File Progress -->
-                    <div class="current-files space-y-2" style="display: ${this.state.currentFiles.length > 0 ? "block" : "none"}">
-                        ${this.state.currentFiles.map(file => this.renderCurrentFile(file)).join("")}
+                    <div class="current-files space-y-2" style="display: ${this.state.currentFiles.length > 0 ? 'block' : 'none'}">
+                        ${this.state.currentFiles.map(file => this.renderCurrentFile(file)).join('')}
                     </div>
 
                     <!-- Upload Speed and ETA -->
-                    <div class="upload-stats flex justify-between text-xs text-gray-500" style="display: ${this.state.uploadSpeed > 0 ? "flex" : "none"}">
+                    <div class="upload-stats flex justify-between text-xs text-gray-500" style="display: ${this.state.uploadSpeed > 0 ? 'flex' : 'none'}">
                         <span>Speed: ${this.formatSpeed(this.state.uploadSpeed)}</span>
-                        <span style="display: ${this.state.uploadETA > 0 ? "inline" : "none"}">ETA: ${this.formatTime(this.state.uploadETA)}</span>
+                        <span style="display: ${this.state.uploadETA > 0 ? 'inline' : 'none'}">ETA: ${this.formatTime(this.state.uploadETA)}</span>
                     </div>
                 </div>
             </div>
@@ -134,8 +134,8 @@ export class FileUpload {
                     </div>
                 </div>
                 <div class="flex-shrink-0">
-                    ${file.progress === 100 ? "<span class=\"text-green-500\"><svg class=\"w-4 h-4\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path fill-rule=\"evenodd\" d=\"M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z\" clip-rule=\"evenodd\"/></svg></span>" : ""}
-                    ${file.error ? "<span class=\"text-red-500\"><svg class=\"w-4 h-4\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path fill-rule=\"evenodd\" d=\"M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z\" clip-rule=\"evenodd\"/></svg></span>" : ""}
+                    ${file.progress === 100 ? '<span class="text-green-500"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg></span>' : ''}
+                    ${file.error ? '<span class="text-red-500"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg></span>' : ''}
                 </div>
             </div>
         `;
@@ -143,13 +143,13 @@ export class FileUpload {
 
   renderFileList() {
     if (this.state.files.length === 0 || this.state.uploading) {
-      return "";
+      return '';
     }
 
     return `
             <div class="mt-4 space-y-2 uploaded-files">
                 <h4 class="text-sm font-medium text-gray-900 text-left">Uploaded Files:</h4>
-                ${this.state.files.map(file => this.renderUploadedFile(file)).join("")}
+                ${this.state.files.map(file => this.renderUploadedFile(file)).join('')}
             </div>
         `;
   }
@@ -187,37 +187,37 @@ export class FileUpload {
 
   renderErrors() {
     if (this.state.errors.length === 0) {
-      return "";
+      return '';
     }
 
     return `
             <div class="mt-4 space-y-2 upload-errors">
-${this.state.errors.map(error => "<div class=\"p-3 bg-red-50 border border-red-200 rounded-lg\"><div class=\"flex\"><svg class=\"h-5 w-5 text-red-400\" viewBox=\"0 0 20 20\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z\" clip-rule=\"evenodd\"/></svg><div class=\"ml-3\"><p class=\"text-sm text-red-800\"><span class=\"font-medium\">" + error.filename + "</span>: <span>" + error.error + "</span></p></div></div></div>").join("")}
+${this.state.errors.map(error => '<div class="p-3 bg-red-50 border border-red-200 rounded-lg"><div class="flex"><svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><div class="ml-3"><p class="text-sm text-red-800"><span class="font-medium">' + error.filename + '</span>: <span>' + error.error + '</span></p></div></div></div>').join('')}
             </div>
         `;
   }
 
   bindEvents() {
-    const uploadArea = this.container.querySelector(".file-upload-area");
-    const fileInput = this.container.querySelector(".file-input");
+    const uploadArea = this.container.querySelector('.file-upload-area');
+    const fileInput = this.container.querySelector('.file-input');
 
     // Drag and drop events
-    uploadArea.addEventListener("dragover", (e) => {
+    uploadArea.addEventListener('dragover', (e) => {
       e.preventDefault();
       this.state.isDragging = true;
-      uploadArea.classList.add("border-blue-500", "bg-blue-50");
+      uploadArea.classList.add('border-blue-500', 'bg-blue-50');
     });
 
-    uploadArea.addEventListener("dragleave", (e) => {
+    uploadArea.addEventListener('dragleave', (e) => {
       e.preventDefault();
       this.state.isDragging = false;
-      uploadArea.classList.remove("border-blue-500", "bg-blue-50");
+      uploadArea.classList.remove('border-blue-500', 'bg-blue-50');
     });
 
-    uploadArea.addEventListener("drop", (e) => {
+    uploadArea.addEventListener('drop', (e) => {
       e.preventDefault();
       this.state.isDragging = false;
-      uploadArea.classList.remove("border-blue-500", "bg-blue-50");
+      uploadArea.classList.remove('border-blue-500', 'bg-blue-50');
 
       const files = Array.from(e.dataTransfer.files);
       this.uploadFiles(files);
@@ -225,15 +225,15 @@ ${this.state.errors.map(error => "<div class=\"p-3 bg-red-50 border border-red-2
 
     // File input change
     if (fileInput) {
-      fileInput.addEventListener("change", (e) => {
+      fileInput.addEventListener('change', (e) => {
         const files = Array.from(e.target.files);
         this.uploadFiles(files);
       });
     }
 
     // Delete file buttons (event delegation)
-    this.container.addEventListener("click", (e) => {
-      if (e.target.classList.contains("delete-file-btn")) {
+    this.container.addEventListener('click', (e) => {
+      if (e.target.classList.contains('delete-file-btn')) {
         const filename = e.target.dataset.filename;
         this.removeFile(filename);
       }
@@ -266,7 +266,7 @@ ${this.state.errors.map(error => "<div class=\"p-3 bg-red-50 border border-red-2
 
     this.state.uploading = true;
     this.state.uploadProgress = 0;
-    this.state.uploadStatus = "Preparing upload...";
+    this.state.uploadStatus = 'Preparing upload...';
     this.state.errors = [];
     this.state.uploadStartTime = Date.now();
     this.state.totalBytes = validFiles.reduce((total, file) => total + file.size, 0);
@@ -290,7 +290,7 @@ ${this.state.errors.map(error => "<div class=\"p-3 bg-red-50 border border-red-2
         this.state.uploadStatus = `Successfully uploaded ${result.uploaded_files.length} file(s)`;
 
         // Dispatch success event
-        this.container.dispatchEvent(new CustomEvent("files-uploaded", {
+        this.container.dispatchEvent(new CustomEvent('files-uploaded', {
           detail: { files: result.uploaded_files }
         }));
       }
@@ -313,8 +313,8 @@ ${this.state.errors.map(error => "<div class=\"p-3 bg-red-50 border border-red-2
 
     } catch (error) {
       this.state.errors.push({
-        filename: "Upload",
-        error: error.message || "Upload failed"
+        filename: 'Upload',
+        error: error.message || 'Upload failed'
       });
 
       // Mark all files as failed
@@ -342,19 +342,19 @@ ${this.state.errors.map(error => "<div class=\"p-3 bg-red-50 border border-red-2
       const formData = new FormData();
 
       files.forEach(file => {
-        formData.append("files[]", file);
+        formData.append('files[]', file);
       });
 
       // Add context data
       if (this.options.projectId) {
-        formData.append("project_id", this.options.projectId);
+        formData.append('project_id', this.options.projectId);
       }
       if (this.options.taskId) {
-        formData.append("task_id", this.options.taskId);
+        formData.append('task_id', this.options.taskId);
       }
 
       // Track upload progress
-      xhr.upload.addEventListener("progress", (e) => {
+      xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
           const percentComplete = (e.loaded / e.total) * 100;
           this.state.uploadProgress = Math.round(percentComplete);
@@ -380,41 +380,41 @@ ${this.state.errors.map(error => "<div class=\"p-3 bg-red-50 border border-red-2
 
           // Update status message
           if (percentComplete < 50) {
-            this.state.uploadStatus = "Uploading files...";
+            this.state.uploadStatus = 'Uploading files...';
           } else if (percentComplete < 90) {
-            this.state.uploadStatus = "Processing files...";
+            this.state.uploadStatus = 'Processing files...';
           } else {
-            this.state.uploadStatus = "Finalizing upload...";
+            this.state.uploadStatus = 'Finalizing upload...';
           }
 
           this.updateProgress();
         }
       });
 
-      xhr.addEventListener("load", () => {
+      xhr.addEventListener('load', () => {
         try {
           const result = JSON.parse(xhr.responseText);
           resolve(result);
         } catch (error) {
-          reject(new Error("Invalid server response"));
+          reject(new Error('Invalid server response'));
         }
       });
 
-      xhr.addEventListener("error", () => {
-        reject(new Error("Network error occurred"));
+      xhr.addEventListener('error', () => {
+        reject(new Error('Network error occurred'));
       });
 
-      xhr.open("POST", this.options.uploadUrl);
-      xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+      xhr.open('POST', this.options.uploadUrl);
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
       xhr.send(formData);
     });
   }
 
   updateProgress() {
-    const progressBar = this.container.querySelector(".progress-bar");
-    const progressText = this.container.querySelector(".upload-progress-text");
-    const statusElement = this.container.querySelector(".upload-status");
-    const statsElement = this.container.querySelector(".upload-stats");
+    const progressBar = this.container.querySelector('.progress-bar');
+    const progressText = this.container.querySelector('.upload-progress-text');
+    const statusElement = this.container.querySelector('.upload-status');
+    const statsElement = this.container.querySelector('.upload-stats');
 
     if (progressBar) {
       progressBar.style.width = `${this.state.uploadProgress}%`;
@@ -429,31 +429,31 @@ ${this.state.errors.map(error => "<div class=\"p-3 bg-red-50 border border-red-2
     }
 
     if (statsElement) {
-      statsElement.style.display = this.state.uploadSpeed > 0 ? "flex" : "none";
+      statsElement.style.display = this.state.uploadSpeed > 0 ? 'flex' : 'none';
       statsElement.innerHTML = `
                 <span>Speed: ${this.formatSpeed(this.state.uploadSpeed)}</span>
-                <span style="display: ${this.state.uploadETA > 0 ? "inline" : "none"}">ETA: ${this.formatTime(this.state.uploadETA)}</span>
+                <span style="display: ${this.state.uploadETA > 0 ? 'inline' : 'none'}">ETA: ${this.formatTime(this.state.uploadETA)}</span>
             `;
     }
 
     // Update current files progress
-    const currentFilesContainer = this.container.querySelector(".current-files");
+    const currentFilesContainer = this.container.querySelector('.current-files');
     if (currentFilesContainer) {
-      currentFilesContainer.innerHTML = this.state.currentFiles.map(file => this.renderCurrentFile(file)).join("");
+      currentFilesContainer.innerHTML = this.state.currentFiles.map(file => this.renderCurrentFile(file)).join('');
     }
   }
 
   async removeFile(filename) {
-    if (!confirm("Are you sure you want to delete this file?")) {
+    if (!confirm('Are you sure you want to delete this file?')) {
       return;
     }
 
     try {
       const response = await fetch(`${this.options.deleteUrl}/${filename}`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "X-Requested-With": "XMLHttpRequest",
-          "Content-Type": "application/json"
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json'
         }
       });
 
@@ -464,16 +464,16 @@ ${this.state.errors.map(error => "<div class=\"p-3 bg-red-50 border border-red-2
         this.render();
 
         // Dispatch delete event
-        this.container.dispatchEvent(new CustomEvent("file-deleted", {
+        this.container.dispatchEvent(new CustomEvent('file-deleted', {
           detail: { filename }
         }));
       } else {
-        alert("Failed to delete file");
+        alert('Failed to delete file');
       }
 
     } catch (error) {
-      console.error("Failed to delete file:", error);
-      alert("Error deleting file");
+      console.error('Failed to delete file:', error);
+      alert('Error deleting file');
     }
   }
 
@@ -483,25 +483,25 @@ ${this.state.errors.map(error => "<div class=\"p-3 bg-red-50 border border-red-2
   }
 
   formatFileSize(bytes) {
-    if (bytes === 0) {return "0 Bytes";}
+    if (bytes === 0) {return '0 Bytes';}
     const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
   formatSpeed(bytesPerSecond) {
-    if (bytesPerSecond === 0) {return "0 B/s";}
+    if (bytesPerSecond === 0) {return '0 B/s';}
     const k = 1024;
-    const sizes = ["B/s", "KB/s", "MB/s", "GB/s"];
+    const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
     const i = Math.floor(Math.log(bytesPerSecond) / Math.log(k));
-    return parseFloat((bytesPerSecond / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+    return parseFloat((bytesPerSecond / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
   formatTime(seconds) {
-    if (seconds < 60) {return Math.round(seconds) + "s";}
-    if (seconds < 3600) {return Math.floor(seconds / 60) + "m " + Math.round(seconds % 60) + "s";}
-    return Math.floor(seconds / 3600) + "h " + Math.floor((seconds % 3600) / 60) + "m";
+    if (seconds < 60) {return Math.round(seconds) + 's';}
+    if (seconds < 3600) {return Math.floor(seconds / 60) + 'm ' + Math.round(seconds % 60) + 's';}
+    return Math.floor(seconds / 3600) + 'h ' + Math.floor((seconds % 3600) / 60) + 'm';
   }
 
   // Public methods

@@ -130,20 +130,20 @@ export function createNavigation() {
 
 export function initializeNavigation() {
   // Set current year in footer
-  const yearElement = document.querySelector("[data-current-year]");
+  const yearElement = document.querySelector('[data-current-year]');
   if (yearElement) {
     yearElement.textContent = new Date().getFullYear();
   }
 
   // Highlight active navigation item
   const currentPath = window.location.pathname;
-  const navItems = document.querySelectorAll("[data-nav-item]");
+  const navItems = document.querySelectorAll('[data-nav-item]');
 
   navItems.forEach(item => {
-    const navType = item.getAttribute("data-nav-item");
+    const navType = item.getAttribute('data-nav-item');
     if (currentPath.includes(navType)) {
-      item.classList.add("text-primary-600", "dark:text-primary-400");
-      item.classList.remove("text-gray-700", "dark:text-gray-300");
+      item.classList.add('text-primary-600', 'dark:text-primary-400');
+      item.classList.remove('text-gray-700', 'dark:text-gray-300');
     }
   });
 }

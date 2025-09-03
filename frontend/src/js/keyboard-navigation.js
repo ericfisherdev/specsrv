@@ -1,30 +1,30 @@
 /*jslint browser: true, devel: true */
-"use strict";
+'use strict';
 
 // Keyboard Navigation Support
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', function () {
 
   // Global keyboard shortcuts
-  document.addEventListener("keydown", function(e) {
+  document.addEventListener('keydown', function(e) {
     // Skip if typing in input/textarea
-    if (e.target.tagName === "INPUT" ||
-        e.target.tagName === "TEXTAREA" ||
-        e.target.contentEditable === "true") {
+    if (e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'TEXTAREA' ||
+        e.target.contentEditable === 'true') {
       return;
     }
 
     // Global shortcuts (with Ctrl/Cmd)
     if (e.ctrlKey || e.metaKey) {
       switch(e.key) {
-      case "k": // Ctrl+K - Quick search/command palette
+      case 'k': // Ctrl+K - Quick search/command palette
         e.preventDefault();
         openQuickSearch();
         break;
-      case "n": // Ctrl+N - New task
+      case 'n': // Ctrl+N - New task
         e.preventDefault();
         openNewTaskModal();
         break;
-      case "/": // Ctrl+/ - Focus search
+      case '/': // Ctrl+/ - Focus search
         e.preventDefault();
         focusSearch();
         break;
@@ -33,10 +33,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Navigation shortcuts (without modifier keys)
     switch(e.key) {
-    case "Escape":
+    case 'Escape':
       closeModals();
       break;
-    case "?":
+    case '?':
       if (!e.shiftKey) {return;}
       e.preventDefault();
       showKeyboardShortcuts();
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function openQuickSearch() {
-  const searchInput = document.querySelector("#global-search, [name='search']");
+  const searchInput = document.querySelector('#global-search, [name=\'search\']');
   if (searchInput) {
     searchInput.focus();
     searchInput.select();
@@ -66,14 +66,14 @@ function openQuickSearch() {
 }
 
 function openNewTaskModal() {
-  const newTaskButton = document.querySelector("[data-action='new-task']");
+  const newTaskButton = document.querySelector('[data-action=\'new-task\']');
   if (newTaskButton) {
     newTaskButton.click();
   }
 }
 
 function focusSearch() {
-  const searchInputs = document.querySelectorAll("input[type='search'], input[name='search']");
+  const searchInputs = document.querySelectorAll('input[type=\'search\'], input[name=\'search\']');
   if (searchInputs.length > 0) {
     searchInputs[0].focus();
   }
@@ -81,10 +81,10 @@ function focusSearch() {
 
 function closeModals() {
   // Close Alpine.js modals
-  document.querySelectorAll("[x-show]").forEach(function (modal) {
-    if (modal.style.display !== "none") {
+  document.querySelectorAll('[x-show]').forEach(function (modal) {
+    if (modal.style.display !== 'none') {
       const closeBtn = modal.querySelector(
-        "[data-action='close'], .close-modal, [x-on\\:click*='false']"
+        '[data-action=\'close\'], .close-modal, [x-on\\:click*=\'false\']'
       );
       if (closeBtn) {
         closeBtn.click();
@@ -93,7 +93,7 @@ function closeModals() {
   });
 
   // Remove any overlay classes
-  document.body.classList.remove("modal-open");
+  document.body.classList.remove('modal-open');
 }
 
 function showKeyboardShortcuts() {
@@ -148,19 +148,19 @@ function showKeyboardShortcuts() {
     </div>
     `;
 
-  document.body.insertAdjacentHTML("beforeend", shortcuts);
+  document.body.insertAdjacentHTML('beforeend', shortcuts);
 }
 
 function setupModalKeyboardNavigation() {
   // Handle Tab navigation in modals
-  document.addEventListener("keydown", function(e) {
-    if (e.key !== "Tab") {return;}
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Tab') {return;}
 
-    const modal = document.querySelector("[role='dialog']:not([style*='display: none'])");
+    const modal = document.querySelector('[role=\'dialog\']:not([style*=\'display: none\'])');
     if (!modal) {return;}
 
     const focusableElements = modal.querySelectorAll(
-      "a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex='-1'])"
+      'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex=\'-1\'])'
     );
 
     if (focusableElements.length === 0) {return;}
@@ -183,28 +183,28 @@ function setupModalKeyboardNavigation() {
 }
 
 function setupDropdownKeyboardNavigation() {
-  document.addEventListener("keydown", function(e) {
-    const activeDropdown = document.querySelector("[x-show='true'] [role='menu'], .dropdown-menu:not(.hidden)");
+  document.addEventListener('keydown', function(e) {
+    const activeDropdown = document.querySelector('[x-show=\'true\'] [role=\'menu\'], .dropdown-menu:not(.hidden)');
     if (!activeDropdown) {return;}
 
-    const items = activeDropdown.querySelectorAll("[role='menuitem'], .dropdown-item");
+    const items = activeDropdown.querySelectorAll('[role=\'menuitem\'], .dropdown-item');
     if (items.length === 0) {return;}
 
     let currentIndex = Array.from(items).findIndex((item) => item === document.activeElement);
 
     switch(e.key) {
-    case "ArrowDown":
+    case 'ArrowDown':
       e.preventDefault();
       currentIndex = (currentIndex + 1) % items.length;
       items[currentIndex].focus();
       break;
-    case "ArrowUp":
+    case 'ArrowUp':
       e.preventDefault();
       currentIndex = (currentIndex - 1 + items.length) % items.length;
       items[currentIndex].focus();
       break;
-    case "Enter":
-    case " ":
+    case 'Enter':
+    case ' ':
       e.preventDefault();
       if (document.activeElement) {
         document.activeElement.click();
@@ -217,31 +217,31 @@ function setupDropdownKeyboardNavigation() {
 function setupKanbanKeyboardNavigation() {
   let selectedCard = null;
 
-  document.addEventListener("keydown", function(e) {
-    const kanbanBoard = document.querySelector(".kanban-board");
+  document.addEventListener('keydown', function(e) {
+    const kanbanBoard = document.querySelector('.kanban-board');
     if (!kanbanBoard) {return;}
 
-    const cards = kanbanBoard.querySelectorAll(".task-card");
+    const cards = kanbanBoard.querySelectorAll('.task-card');
     if (cards.length === 0) {return;}
 
     switch(e.key) {
-    case "ArrowRight":
-    case "ArrowLeft":
-    case "ArrowUp":
-    case "ArrowDown":
+    case 'ArrowRight':
+    case 'ArrowLeft':
+    case 'ArrowUp':
+    case 'ArrowDown':
       e.preventDefault();
       navigateCards(e.key, cards);
       break;
-    case "Enter":
+    case 'Enter':
       if (selectedCard) {
         e.preventDefault();
         selectedCard.click();
       }
       break;
-    case " ":
+    case ' ':
       if (selectedCard) {
         e.preventDefault();
-        selectedCard.querySelector("[data-action='quick-edit']")?.click();
+        selectedCard.querySelector('[data-action=\'quick-edit\']')?.click();
       }
       break;
     }
@@ -255,16 +255,16 @@ function setupKanbanKeyboardNavigation() {
       let newIndex;
 
       switch(direction) {
-      case "ArrowRight":
+      case 'ArrowRight':
         newIndex = Math.min(currentIndex + 1, cards.length - 1);
         break;
-      case "ArrowLeft":
+      case 'ArrowLeft':
         newIndex = Math.max(currentIndex - 1, 0);
         break;
-      case "ArrowDown":
+      case 'ArrowDown':
         newIndex = Math.min(currentIndex + 5, cards.length - 1); // Assume 5 cards per row
         break;
-      case "ArrowUp":
+      case 'ArrowUp':
         newIndex = Math.max(currentIndex - 5, 0);
         break;
       }
@@ -273,9 +273,9 @@ function setupKanbanKeyboardNavigation() {
     }
 
     // Update visual selection
-    cards.forEach((card) => card.classList.remove("keyboard-selected"));
-    selectedCard.classList.add("keyboard-selected");
-    selectedCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    cards.forEach((card) => card.classList.remove('keyboard-selected'));
+    selectedCard.classList.add('keyboard-selected');
+    selectedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
 
@@ -285,10 +285,10 @@ function setupFocusManagement() {
     mutations.forEach(function(mutation) {
       mutation.addedNodes.forEach(function(node) {
         if (node.nodeType === Node.ELEMENT_NODE) {
-          const modal = node.querySelector ? node.querySelector("[role='dialog']") : null;
-          if (modal || (node.getAttribute && node.getAttribute("role") === "dialog")) {
+          const modal = node.querySelector ? node.querySelector('[role=\'dialog\']') : null;
+          if (modal || (node.getAttribute && node.getAttribute('role') === 'dialog')) {
             setTimeout(() => {
-              const firstInput = (modal || node).querySelector("input:not([type='hidden']), textarea, select");
+              const firstInput = (modal || node).querySelector('input:not([type=\'hidden\']), textarea, select');
               if (firstInput) {
                 firstInput.focus();
               }
@@ -302,7 +302,7 @@ function setupFocusManagement() {
   observer.observe(document.body, { childList: true, subtree: true });
 
   // Add keyboard selection styles
-  const style = document.createElement("style");
+  const style = document.createElement('style');
   style.textContent = `
         .keyboard-selected {
             outline: 2px solid #3B82F6;

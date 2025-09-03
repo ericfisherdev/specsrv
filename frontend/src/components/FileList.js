@@ -7,7 +7,7 @@ export class FileList {
     this.container = container;
     this.options = {
       canDelete: false,
-      baseUrl: "/api/v1/files",
+      baseUrl: '/api/v1/files',
       ...options
     };
     this.files = [];
@@ -18,7 +18,7 @@ export class FileList {
 
   init() {
     // Initialize Alpine.js data
-    if (this.container && typeof Alpine !== "undefined") {
+    if (this.container && typeof Alpine !== 'undefined') {
       this.container._x_dataStack = [{
         previewFile: null,
         togglePreview: (filename) => this.togglePreview(filename),
@@ -43,7 +43,7 @@ export class FileList {
             <div class="space-y-3" x-data="{ previewFile: null }">
                 <h4 class="text-sm font-medium text-gray-900">Attached Files (${files.length})</h4>
                 <div class="grid gap-3">
-                    ${files.map(file => this.renderFileItem(file)).join("")}
+                    ${files.map(file => this.renderFileItem(file)).join('')}
                 </div>
             </div>
         `;
@@ -75,21 +75,21 @@ export class FileList {
                         <div class="flex items-center space-x-2 text-xs text-gray-500">
                             <span>${this.formatFileSize(file.size)}</span>
                             <span>•</span>
-                            <span>${file.mime_type || "Unknown type"}</span>
-                            ${file.created_at ? "<span>•</span><span>" + this.formatDate(file.created_at) + "</span>" : ""}
+                            <span>${file.mime_type || 'Unknown type'}</span>
+                            ${file.created_at ? '<span>•</span><span>' + this.formatDate(file.created_at) + '</span>' : ''}
                         </div>
                     </div>
                 </div>
 
                 <!-- Actions -->
                 <div class="flex items-center space-x-2 ml-4">
-                    ${canPreview ? this.renderPreviewButton(file) : ""}
+                    ${canPreview ? this.renderPreviewButton(file) : ''}
                     ${this.renderDownloadButton(file)}
-                    ${this.options.canDelete ? this.renderDeleteButton(file) : ""}
+                    ${this.options.canDelete ? this.renderDeleteButton(file) : ''}
                 </div>
             </div>
 
-            ${canPreview ? this.renderPreviewPanel(file) : ""}
+            ${canPreview ? this.renderPreviewPanel(file) : ''}
         `;
   }
 
@@ -210,20 +210,20 @@ export class FileList {
      * Get appropriate file icon based on MIME type
      */
   getFileIcon(mimeType) {
-    if (mimeType && mimeType.startsWith("image/")) {
+    if (mimeType && mimeType.startsWith('image/')) {
       return `
                 <svg class="h-8 w-8 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
                 </svg>
             `;
-    } else if (mimeType === "application/pdf") {
+    } else if (mimeType === 'application/pdf') {
       return `
                 <svg class="h-8 w-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
                     <path d="M8 8a.5.5 0 01.5-.5H10a.5.5 0 010 1H8.5A.5.5 0 018 8zm0 2.5a.5.5 0 01.5-.5H11a.5.5 0 010 1H8.5a.5.5 0 01-.5-.5zm0 2.5a.5.5 0 01.5-.5H9a.5.5 0 010 1H8.5A.5.5 0 018 13z"/>
                 </svg>
             `;
-    } else if (mimeType && mimeType.startsWith("text/")) {
+    } else if (mimeType && mimeType.startsWith('text/')) {
       return `
                 <svg class="h-8 w-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
@@ -242,27 +242,27 @@ export class FileList {
      * Check if file can be previewed
      */
   canPreviewFile(mimeType) {
-    return mimeType && (mimeType.startsWith("text/markdown") || mimeType.startsWith("text/plain"));
+    return mimeType && (mimeType.startsWith('text/markdown') || mimeType.startsWith('text/plain'));
   }
 
   /**
      * Format file size
      */
   formatFileSize(bytes) {
-    if (!bytes) {return "Unknown size";}
-    return Math.round(bytes / 1024 * 10) / 10 + " KB";
+    if (!bytes) {return 'Unknown size';}
+    return Math.round(bytes / 1024 * 10) / 10 + ' KB';
   }
 
   /**
      * Format date
      */
   formatDate(dateString) {
-    if (!dateString) {return "";}
+    if (!dateString) {return '';}
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
   }
 
@@ -279,10 +279,10 @@ export class FileList {
         const content = await response.text();
         previewContainer.innerHTML = content;
       } else {
-        previewContainer.innerHTML = "<p class=\"text-red-600\">Failed to load preview</p>";
+        previewContainer.innerHTML = '<p class="text-red-600">Failed to load preview</p>';
       }
     } catch (error) {
-      previewContainer.innerHTML = "<p class=\"text-red-600\">Error loading preview</p>";
+      previewContainer.innerHTML = '<p class="text-red-600">Error loading preview</p>';
     }
   }
 
@@ -290,15 +290,15 @@ export class FileList {
      * Delete a file
      */
   async deleteFile(filename) {
-    if (!confirm("Are you sure you want to delete this file?")) {
+    if (!confirm('Are you sure you want to delete this file?')) {
       return;
     }
 
     try {
       const response = await fetch(`${this.options.baseUrl}/${filename}`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
 
@@ -310,14 +310,14 @@ export class FileList {
         }
 
         // Emit custom event
-        this.container.dispatchEvent(new CustomEvent("file-deleted", {
+        this.container.dispatchEvent(new CustomEvent('file-deleted', {
           detail: { filename }
         }));
       } else {
-        alert("Failed to delete file");
+        alert('Failed to delete file');
       }
     } catch (error) {
-      alert("Error deleting file");
+      alert('Error deleting file');
     }
   }
 }

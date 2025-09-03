@@ -1,5 +1,5 @@
 export function createSearchAutocomplete(options = {}) {
-  const searchPlaceholder = options.placeholder || "Search tasks and projects...";
+  const searchPlaceholder = options.placeholder || 'Search tasks and projects...';
 
   return `
         <div x-data="searchAutocomplete()" class="relative" @click.outside="hideSuggestions()">
@@ -136,9 +136,9 @@ export function createSearchAutocomplete(options = {}) {
 
 window.searchAutocomplete = function() {
   return {
-    query: "",
+    query: '',
     suggestions: [],
-    recentSearches: JSON.parse(localStorage.getItem("recent_searches") || "[]"),
+    recentSearches: JSON.parse(localStorage.getItem('recent_searches') || '[]'),
     showSuggestions: false,
     loading: false,
     selectedIndex: -1,
@@ -163,7 +163,7 @@ window.searchAutocomplete = function() {
         }
 
       } catch (error) {
-        console.error("Search error:", error);
+        console.error('Search error:', error);
         this.suggestions = [];
       } finally {
         this.loading = false;
@@ -225,7 +225,7 @@ window.searchAutocomplete = function() {
       this.recentSearches.unshift(query);
       this.recentSearches = this.recentSearches.slice(0, 5);
 
-      localStorage.setItem("recent_searches", JSON.stringify(this.recentSearches));
+      localStorage.setItem('recent_searches', JSON.stringify(this.recentSearches));
     },
 
     hideSuggestions() {
@@ -237,18 +237,18 @@ window.searchAutocomplete = function() {
 
     getPriorityClass(priority) {
       const classes = {
-        "low": "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900",
-        "medium": "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900",
-        "high": "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900",
-        "critical": "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900"
+        'low': 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900',
+        'medium': 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900',
+        'high': 'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900',
+        'critical': 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900'
       };
-      return classes[priority] || "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700";
+      return classes[priority] || 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700';
     }
   };
 };
 
 export function initializeSearchAutocomplete() {
-  const searchContainer = document.getElementById("search-autocomplete");
+  const searchContainer = document.getElementById('search-autocomplete');
   if (searchContainer) {
     searchContainer.innerHTML = createSearchAutocomplete();
   }

@@ -5,8 +5,8 @@
 export class Modal {
   constructor(options = {}) {
     this.options = {
-      title: "Modal",
-      size: "md", // sm, md, lg, xl, full
+      title: 'Modal',
+      size: 'md', // sm, md, lg, xl, full
       closable: true,
       backdrop: true, // Click outside to close
       keyboard: true, // ESC key to close
@@ -30,9 +30,9 @@ export class Modal {
 
   create() {
     // Create modal container
-    this.element = document.createElement("div");
-    this.element.className = "modal-overlay fixed inset-0 z-50 overflow-y-auto";
-    this.element.style.display = "none";
+    this.element = document.createElement('div');
+    this.element.className = 'modal-overlay fixed inset-0 z-50 overflow-y-auto';
+    this.element.style.display = 'none';
 
     this.element.innerHTML = this.render();
 
@@ -43,7 +43,7 @@ export class Modal {
     this.bindEvents();
 
     // Initialize Alpine.js data if available
-    if (typeof Alpine !== "undefined") {
+    if (typeof Alpine !== 'undefined') {
       this.element._x_dataStack = [{
         isOpen: false,
         close: () => this.close(),
@@ -55,20 +55,20 @@ export class Modal {
 
   render() {
     const sizeClasses = {
-      sm: "max-w-sm",
-      md: "max-w-md",
-      lg: "max-w-lg",
-      xl: "max-w-xl",
-      "2xl": "max-w-2xl",
-      "3xl": "max-w-3xl",
-      "4xl": "max-w-4xl",
-      "5xl": "max-w-5xl",
-      "6xl": "max-w-6xl",
-      full: "max-w-full"
+      sm: 'max-w-sm',
+      md: 'max-w-md',
+      lg: 'max-w-lg',
+      xl: 'max-w-xl',
+      '2xl': 'max-w-2xl',
+      '3xl': 'max-w-3xl',
+      '4xl': 'max-w-4xl',
+      '5xl': 'max-w-5xl',
+      '6xl': 'max-w-6xl',
+      full: 'max-w-full'
     };
 
     const sizeClass = sizeClasses[this.options.size] || sizeClasses.md;
-    const centeringClass = this.options.centered ? "flex items-center justify-center min-h-screen" : "flex justify-center pt-4 pb-20";
+    const centeringClass = this.options.centered ? 'flex items-center justify-center min-h-screen' : 'flex justify-center pt-4 pb-20';
 
     return `
             <div class="modal-backdrop fixed inset-0 bg-gray-600 bg-opacity-50 transition-opacity" aria-hidden="true"></div>
@@ -79,15 +79,15 @@ export class Modal {
                      aria-labelledby="modal-title">
 
                     <!-- Modal Header -->
-                    <div class="modal-header ${this.options.closable ? "flex items-center justify-between pb-4" : "pb-4"}">
+                    <div class="modal-header ${this.options.closable ? 'flex items-center justify-between pb-4' : 'pb-4'}">
                         <h3 class="modal-title text-lg leading-6 font-medium text-gray-900" id="modal-title">
                             ${this.options.title}
                         </h3>
-                        ${this.options.closable ? "<button type=\"button\" class=\"modal-close-btn bg-white rounded-md text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500\" aria-label=\"Close\"><svg class=\"h-6 w-6\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M6 18L18 6M6 6l12 12\" /></svg></button>" : ""}
+                        ${this.options.closable ? '<button type="button" class="modal-close-btn bg-white rounded-md text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" aria-label="Close"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>' : ''}
                     </div>
 
                     <!-- Modal Body -->
-                    <div class="modal-body ${this.options.scrollable ? "overflow-y-auto max-h-96" : ""}">
+                    <div class="modal-body ${this.options.scrollable ? 'overflow-y-auto max-h-96' : ''}">
                         <!-- Content will be inserted here -->
                     </div>
 
@@ -102,13 +102,13 @@ export class Modal {
 
   bindEvents() {
     // Get elements
-    this.backdropElement = this.element.querySelector(".modal-backdrop");
-    this.contentElement = this.element.querySelector(".modal-content");
+    this.backdropElement = this.element.querySelector('.modal-backdrop');
+    this.contentElement = this.element.querySelector('.modal-content');
 
     // Close button
-    const closeBtn = this.element.querySelector(".modal-close-btn");
+    const closeBtn = this.element.querySelector('.modal-close-btn');
     if (closeBtn) {
-      closeBtn.addEventListener("click", (e) => {
+      closeBtn.addEventListener('click', (e) => {
         e.preventDefault();
         this.close();
       });
@@ -116,47 +116,47 @@ export class Modal {
 
     // Backdrop click
     if (this.options.backdrop) {
-      this.backdropElement.addEventListener("click", () => {
+      this.backdropElement.addEventListener('click', () => {
         this.close();
       });
     }
 
     // Keyboard events
     if (this.options.keyboard) {
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && this.isOpen) {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.isOpen) {
           this.close();
         }
       });
     }
 
     // Prevent modal content clicks from closing modal
-    this.contentElement.addEventListener("click", (e) => {
+    this.contentElement.addEventListener('click', (e) => {
       e.stopPropagation();
     });
   }
 
-  open(content = "", actions = null) {
+  open(content = '', actions = null) {
     this.setContent(content);
     this.setActions(actions);
 
     this.isOpen = true;
-    this.element.style.display = "block";
+    this.element.style.display = 'block';
 
     // Add body class to prevent scrolling
-    document.body.classList.add("modal-open", "overflow-hidden");
+    document.body.classList.add('modal-open', 'overflow-hidden');
 
     // Trigger enter animation
     setTimeout(() => {
-      this.element.classList.add("opacity-100");
-      this.contentElement.classList.add("opacity-100", "translate-y-0", "sm:scale-100");
+      this.element.classList.add('opacity-100');
+      this.contentElement.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
     }, 10);
 
     // Call onOpen callback
     this.onOpen();
 
     // Dispatch event
-    this.element.dispatchEvent(new CustomEvent("modal:open"));
+    this.element.dispatchEvent(new CustomEvent('modal:open'));
 
     return this;
   }
@@ -165,25 +165,25 @@ export class Modal {
     this.isOpen = false;
 
     // Trigger exit animation
-    this.element.classList.remove("opacity-100");
-    this.contentElement.classList.remove("opacity-100", "translate-y-0", "sm:scale-100");
+    this.element.classList.remove('opacity-100');
+    this.contentElement.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
 
     setTimeout(() => {
-      this.element.style.display = "none";
-      document.body.classList.remove("modal-open", "overflow-hidden");
+      this.element.style.display = 'none';
+      document.body.classList.remove('modal-open', 'overflow-hidden');
     }, 150);
 
     // Call onClose callback
     this.onClose();
 
     // Dispatch event
-    this.element.dispatchEvent(new CustomEvent("modal:close"));
+    this.element.dispatchEvent(new CustomEvent('modal:close'));
 
     return this;
   }
 
   setTitle(title) {
-    const titleElement = this.element.querySelector(".modal-title");
+    const titleElement = this.element.querySelector('.modal-title');
     if (titleElement) {
       titleElement.textContent = title;
     }
@@ -191,12 +191,12 @@ export class Modal {
   }
 
   setContent(content) {
-    const bodyElement = this.element.querySelector(".modal-body");
+    const bodyElement = this.element.querySelector('.modal-body');
     if (bodyElement) {
-      if (typeof content === "string") {
+      if (typeof content === 'string') {
         bodyElement.innerHTML = content;
       } else if (content instanceof HTMLElement) {
-        bodyElement.innerHTML = "";
+        bodyElement.innerHTML = '';
         bodyElement.appendChild(content);
       }
     }
@@ -204,32 +204,32 @@ export class Modal {
   }
 
   setActions(actions) {
-    const footerElement = this.element.querySelector(".modal-footer");
+    const footerElement = this.element.querySelector('.modal-footer');
 
     if (!actions || actions.length === 0) {
-      footerElement.style.display = "none";
+      footerElement.style.display = 'none';
       return this;
     }
 
-    footerElement.style.display = "block";
+    footerElement.style.display = 'block';
 
     const actionButtons = actions.map(action => {
-      const buttonClass = this.getActionButtonClass(action.type || "secondary");
+      const buttonClass = this.getActionButtonClass(action.type || 'secondary');
       return `
                 <button type="button"
                         class="modal-action-btn ${buttonClass}"
-                        data-action="${action.action || "close"}"
-                        ${action.disabled ? "disabled" : ""}>
+                        data-action="${action.action || 'close'}"
+                        ${action.disabled ? 'disabled' : ''}>
                     ${action.label}
                 </button>
             `;
-    }).join("");
+    }).join('');
 
     footerElement.innerHTML = actionButtons;
 
     // Bind action events
-    footerElement.querySelectorAll(".modal-action-btn").forEach((btn, index) => {
-      btn.addEventListener("click", (e) => {
+    footerElement.querySelectorAll('.modal-action-btn').forEach((btn, index) => {
+      btn.addEventListener('click', (e) => {
         e.preventDefault();
         const action = actions[index];
 
@@ -237,13 +237,13 @@ export class Modal {
           action.handler(this);
         } else {
           switch (action.action) {
-          case "confirm":
+          case 'confirm':
             this.confirm();
             break;
-          case "cancel":
+          case 'cancel':
             this.cancel();
             break;
-          case "close":
+          case 'close':
           default:
             this.close();
             break;
@@ -257,10 +257,10 @@ export class Modal {
 
   getActionButtonClass(type) {
     const classes = {
-      primary: "w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm",
-      secondary: "mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm",
-      danger: "w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm",
-      success: "w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
+      primary: 'w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm',
+      secondary: 'mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm',
+      danger: 'w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm',
+      success: 'w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm'
     };
 
     return classes[type] || classes.secondary;
@@ -268,13 +268,13 @@ export class Modal {
 
   confirm() {
     this.onConfirm(this);
-    this.element.dispatchEvent(new CustomEvent("modal:confirm"));
+    this.element.dispatchEvent(new CustomEvent('modal:confirm'));
     return this;
   }
 
   cancel() {
     this.onCancel(this);
-    this.element.dispatchEvent(new CustomEvent("modal:cancel"));
+    this.element.dispatchEvent(new CustomEvent('modal:cancel'));
     this.close();
     return this;
   }
@@ -291,21 +291,21 @@ export class Modal {
   // Static helper methods
   static confirm(options = {}) {
     const modal = new Modal({
-      title: options.title || "Confirm",
-      size: options.size || "sm",
+      title: options.title || 'Confirm',
+      size: options.size || 'sm',
       ...options
     });
 
     const actions = [
       {
-        label: options.cancelLabel || "Cancel",
-        type: "secondary",
-        action: "cancel"
+        label: options.cancelLabel || 'Cancel',
+        type: 'secondary',
+        action: 'cancel'
       },
       {
-        label: options.confirmLabel || "Confirm",
-        type: options.confirmType || "primary",
-        action: "confirm"
+        label: options.confirmLabel || 'Confirm',
+        type: options.confirmType || 'primary',
+        action: 'confirm'
       }
     ];
 
@@ -321,22 +321,22 @@ export class Modal {
         setTimeout(() => modal.destroy(), 300);
       };
 
-      modal.open(options.message || "Are you sure?", actions);
+      modal.open(options.message || 'Are you sure?', actions);
     });
   }
 
   static alert(options = {}) {
     const modal = new Modal({
-      title: options.title || "Alert",
-      size: options.size || "sm",
+      title: options.title || 'Alert',
+      size: options.size || 'sm',
       ...options
     });
 
     const actions = [
       {
-        label: options.okLabel || "OK",
-        type: options.okType || "primary",
-        action: "close"
+        label: options.okLabel || 'OK',
+        type: options.okType || 'primary',
+        action: 'close'
       }
     ];
 
@@ -346,14 +346,14 @@ export class Modal {
         setTimeout(() => modal.destroy(), 300);
       };
 
-      modal.open(options.message || "Alert", actions);
+      modal.open(options.message || 'Alert', actions);
     });
   }
 
   static prompt(options = {}) {
     const modal = new Modal({
-      title: options.title || "Input Required",
-      size: options.size || "md",
+      title: options.title || 'Input Required',
+      size: options.size || 'md',
       ...options
     });
 
@@ -361,35 +361,35 @@ export class Modal {
     const content = `
             <div class="mb-4">
                 <label for="${inputId}" class="block text-sm font-medium text-gray-700 mb-2">
-                    ${options.message || "Please enter a value:"}
+                    ${options.message || 'Please enter a value:'}
                 </label>
                 <input
-                    type="${options.inputType || "text"}"
+                    type="${options.inputType || 'text'}"
                     id="${inputId}"
                     class="modal-prompt-input shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    placeholder="${options.placeholder || ""}"
-                    value="${options.defaultValue || ""}"
+                    placeholder="${options.placeholder || ''}"
+                    value="${options.defaultValue || ''}"
                 />
             </div>
         `;
 
     const actions = [
       {
-        label: options.cancelLabel || "Cancel",
-        type: "secondary",
-        action: "cancel"
+        label: options.cancelLabel || 'Cancel',
+        type: 'secondary',
+        action: 'cancel'
       },
       {
-        label: options.confirmLabel || "OK",
-        type: options.confirmType || "primary",
-        action: "confirm"
+        label: options.confirmLabel || 'OK',
+        type: options.confirmType || 'primary',
+        action: 'confirm'
       }
     ];
 
     return new Promise((resolve) => {
       modal.onConfirm = () => {
-        const input = modal.element.querySelector(".modal-prompt-input");
-        const value = input ? input.value : "";
+        const input = modal.element.querySelector('.modal-prompt-input');
+        const value = input ? input.value : '';
         resolve(value);
         modal.close();
         setTimeout(() => modal.destroy(), 300);
@@ -404,7 +404,7 @@ export class Modal {
 
       // Focus on input after modal opens
       setTimeout(() => {
-        const input = modal.element.querySelector(".modal-prompt-input");
+        const input = modal.element.querySelector('.modal-prompt-input');
         if (input) {input.focus();}
       }, 100);
     });

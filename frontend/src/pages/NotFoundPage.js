@@ -85,9 +85,9 @@ export default class NotFoundPage {
 
   bindEvents(container) {
     // Go back button
-    const goBackBtn = container.querySelector("#go-back-btn");
+    const goBackBtn = container.querySelector('#go-back-btn');
     if (goBackBtn) {
-      goBackBtn.addEventListener("click", () => {
+      goBackBtn.addEventListener('click', () => {
         if (window.router) {
           window.router.back();
         } else {
@@ -97,26 +97,26 @@ export default class NotFoundPage {
     }
 
     // Go home button
-    const goHomeBtn = container.querySelector("#go-home-btn");
+    const goHomeBtn = container.querySelector('#go-home-btn');
     if (goHomeBtn) {
-      goHomeBtn.addEventListener("click", () => {
+      goHomeBtn.addEventListener('click', () => {
         if (window.router) {
-          window.router.navigate("/dashboard");
+          window.router.navigate('/dashboard');
         } else {
-          window.location.href = "/dashboard";
+          window.location.href = '/dashboard';
         }
       });
     }
 
     // Animate elements in
     if (window.gsap) {
-      const elements = container.querySelectorAll("h1, h2, p, button, a");
+      const elements = container.querySelectorAll('h1, h2, p, button, a');
       window.gsap.from(elements, {
         opacity: 0,
         y: 20,
         duration: 0.6,
         stagger: 0.1,
-        ease: "power2.out"
+        ease: 'power2.out'
       });
     }
   }

@@ -14,7 +14,7 @@ export class ProjectService {
    */
   async getProjects(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    const endpoint = queryString ? `/projects?${queryString}` : "/projects";
+    const endpoint = queryString ? `/projects?${queryString}` : '/projects';
     return this.apiService.get(endpoint);
   }
 
@@ -33,7 +33,7 @@ export class ProjectService {
    * @returns {Promise<Object>}
    */
   async createProject(projectData) {
-    return this.apiService.post("/projects", projectData);
+    return this.apiService.post('/projects', projectData);
   }
 
   /**
@@ -198,7 +198,7 @@ export class ProjectService {
    * @param {string} format - Export format (json, csv, xlsx)
    * @returns {Promise<void>}
    */
-  async exportProject(projectId, format = "json") {
+  async exportProject(projectId, format = 'json') {
     const filename = `project-${projectId}-${Date.now()}.${format}`;
     return this.apiService.download(
       `/projects/${projectId}/export?format=${format}`,

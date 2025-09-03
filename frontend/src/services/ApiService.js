@@ -4,8 +4,8 @@
  */
 export class ApiService {
   constructor() {
-    this.baseURL = "http://localhost:8080/api";
-    this.version = "v1";
+    this.baseURL = 'http://localhost:8080/api';
+    this.version = 'v1';
     this.timeout = 30000; // 30 seconds
 
     // Request interceptors
@@ -24,7 +24,7 @@ export class ApiService {
    * @returns {string}
    */
   getUrl(endpoint) {
-    const cleanEndpoint = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
     return `${this.baseURL}/${this.version}/${cleanEndpoint}`;
   }
 
@@ -81,11 +81,11 @@ export class ApiService {
    * @returns {Object}
    */
   addAuthHeader(config) {
-    const token = localStorage.getItem("specsrv-token");
+    const token = localStorage.getItem('specsrv-token');
     if (token) {
       config.headers = {
         ...config.headers,
-        "Authorization": `Bearer ${token}`,
+        'Authorization': `Bearer ${token}`,
       };
     }
     return config;
@@ -101,9 +101,9 @@ export class ApiService {
     const isFormData = config.body instanceof FormData;
 
     config.headers = {
-      ...(isFormData ? {} : { "Content-Type": "application/json" }),
-      "Accept": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
       ...config.headers,
     };
     return config;
@@ -117,7 +117,7 @@ export class ApiService {
    */
   async handleResponseErrors(response, config) {
     if (!response) {
-      throw new Error("No response received");
+      throw new Error('No response received');
     }
 
     if (!response.ok) {
@@ -125,23 +125,23 @@ export class ApiService {
       switch (response.status) {
       case 401:
         // Unauthorized - clear token and redirect to login
-        localStorage.removeItem("specsrv-token");
-        window.dispatchEvent(new CustomEvent("auth:logout"));
+        localStorage.removeItem('specsrv-token');
+        window.dispatchEvent(new CustomEvent('auth:logout'));
         break;
       case 403:
         // Forbidden
-        window.dispatchEvent(new CustomEvent("auth:forbidden"));
+        window.dispatchEvent(new CustomEvent('auth:forbidden'));
         break;
       case 429:
         // Rate limited
-        window.dispatchEvent(new CustomEvent("api:rateLimit"));
+        window.dispatchEvent(new CustomEvent('api:rateLimit'));
         break;
       case 500:
       case 502:
       case 503:
       case 504:
         // Server errors
-        window.dispatchEvent(new CustomEvent("api:serverError"));
+        window.dispatchEvent(new CustomEvent('api:serverError'));
         break;
       }
 
@@ -153,7 +153,7 @@ export class ApiService {
         errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
       }
 
-      const error = new Error(errorData.message || "Request failed");
+      const error = new Error(errorData.message || 'Request failed');
       error.status = response.status;
       error.data = errorData;
       throw error;
@@ -195,7 +195,7 @@ export class ApiService {
       const finalResponse = await this.applyResponseInterceptors(response, finalConfig);
 
       // Parse JSON response
-      if (finalResponse.headers.get("content-type")?.includes("application/json")) {
+      if (finalResponse.headers.get('content-type')?.includes('application/json')) {
         const data = await finalResponse.json();
         return data;
       }
@@ -204,8 +204,8 @@ export class ApiService {
     } catch (error) {
       clearTimeout(timeoutId);
 
-      if (error.name === "AbortError") {
-        throw new Error("Request timeout");
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout');
       }
 
       throw error;
@@ -219,7 +219,7 @@ export class ApiService {
    * @returns {Promise}
    */
   async get(endpoint, options = {}) {
-    return this.request("GET", endpoint, options);
+    return this.request('GET', endpoint, options);
   }
 
   /**
@@ -235,7 +235,7 @@ export class ApiService {
       body: data ? JSON.stringify(data) : undefined,
     };
 
-    return this.request("POST", endpoint, config);
+    return this.request('POST', endpoint, config);
   }
 
   /**
@@ -251,7 +251,7 @@ export class ApiService {
       body: data ? JSON.stringify(data) : undefined,
     };
 
-    return this.request("PUT", endpoint, config);
+    return this.request('PUT', endpoint, config);
   }
 
   /**
@@ -267,7 +267,7 @@ export class ApiService {
       body: data ? JSON.stringify(data) : undefined,
     };
 
-    return this.request("PATCH", endpoint, config);
+    return this.request('PATCH', endpoint, config);
   }
 
   /**
@@ -277,7 +277,7 @@ export class ApiService {
    * @returns {Promise}
    */
   async delete(endpoint, options = {}) {
-    return this.request("DELETE", endpoint, options);
+    return this.request('DELETE', endpoint, options);
   }
 
   /**
@@ -297,7 +297,7 @@ export class ApiService {
       },
     };
 
-    return this.request("POST", endpoint, config);
+    return this.request('POST', endpoint, config);
   }
 
   /**
@@ -309,7 +309,7 @@ export class ApiService {
    */
   async download(endpoint, filename, options = {}) {
     const config = await this.applyRequestInterceptors({
-      method: "GET",
+      method: 'GET',
       headers: {},
       ...options,
     });
@@ -320,8 +320,8 @@ export class ApiService {
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
 
-    const a = document.createElement("a");
-    a.style.display = "none";
+    const a = document.createElement('a');
+    a.style.display = 'none';
     a.href = url;
     a.download = filename;
 
@@ -337,6 +337,6 @@ export class ApiService {
    * @returns {Promise<Object>}
    */
   async healthCheck() {
-    return this.get("/health");
+    return this.get('/health');
   }
 }

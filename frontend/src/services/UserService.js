@@ -1,5 +1,5 @@
 /*jslint browser: true, devel: true */
-import ApiService from "./ApiService.js";
+import ApiService from './ApiService.js';
 
 /**
  * User Service - Handles user-related operations through the API
@@ -7,7 +7,7 @@ import ApiService from "./ApiService.js";
 export class UserService extends ApiService {
   constructor() {
     super();
-    this.basePath = "/users";
+    this.basePath = '/users';
   }
 
   /**
@@ -164,10 +164,10 @@ export class UserService extends ApiService {
      */
   async uploadAvatar(file) {
     const formData = new FormData();
-    formData.append("avatar", file);
+    formData.append('avatar', file);
 
     return this.request(`${this.basePath}/me/avatar`, {
-      method: "POST",
+      method: 'POST',
       body: formData,
       headers: {}
     });

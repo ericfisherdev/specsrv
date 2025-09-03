@@ -53,7 +53,7 @@ export class BasePage {
    */
   async render(container) {
     try {
-      await this.executeHooks("beforeMount", container);
+      await this.executeHooks('beforeMount', container);
 
       // Show loading state
       this.showLoading(container);
@@ -65,13 +65,13 @@ export class BasePage {
       this.element = this.createElement();
 
       // Replace loading with actual content
-      container.innerHTML = "";
+      container.innerHTML = '';
       container.appendChild(this.element);
 
       // Initialize components
       await this.initializeComponents();
 
-      await this.executeHooks("mounted", this.element);
+      await this.executeHooks('mounted', this.element);
 
     } catch (error) {
       console.error(`Error rendering ${this.constructor.name}:`, error);
@@ -110,7 +110,7 @@ export class BasePage {
           </div>
           <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Oops! Something went wrong</h2>
           <p class="text-gray-600 dark:text-gray-400 mb-6">
-            ${error.message || "An unexpected error occurred while loading this page."}
+            ${error.message || 'An unexpected error occurred while loading this page.'}
           </p>
           <button onclick="window.location.reload()" class="btn btn-primary">
             Try Again
@@ -125,9 +125,9 @@ export class BasePage {
    * @returns {HTMLElement}
    */
   createElement() {
-    const element = document.createElement("div");
-    element.className = "page";
-    element.innerHTML = "<p>Base page - implement createElement() in subclass</p>";
+    const element = document.createElement('div');
+    element.className = 'page';
+    element.innerHTML = '<p>Base page - implement createElement() in subclass</p>';
     return element;
   }
 
@@ -158,7 +158,7 @@ export class BasePage {
    * @returns {string}
    */
   getTitle() {
-    return "SpecSrv";
+    return 'SpecSrv';
   }
 
   /**
@@ -191,7 +191,7 @@ export class BasePage {
   async destroy() {
     if (this.isDestroyed) {return;}
 
-    await this.executeHooks("beforeDestroy");
+    await this.executeHooks('beforeDestroy');
 
     // Cleanup event listeners
     this.cleanup();
@@ -203,7 +203,7 @@ export class BasePage {
 
     this.isDestroyed = true;
 
-    await this.executeHooks("destroyed");
+    await this.executeHooks('destroyed');
   }
 
   /**
@@ -225,11 +225,11 @@ export class BasePage {
 
     // Set attributes
     Object.keys(attributes).forEach(key => {
-      if (key === "className") {
+      if (key === 'className') {
         element.className = attributes[key];
-      } else if (key === "innerHTML") {
+      } else if (key === 'innerHTML') {
         element.innerHTML = attributes[key];
-      } else if (key.startsWith("data-") || key.startsWith("aria-")) {
+      } else if (key.startsWith('data-') || key.startsWith('aria-')) {
         element.setAttribute(key, attributes[key]);
       } else {
         element[key] = attributes[key];
@@ -237,11 +237,11 @@ export class BasePage {
     });
 
     // Add children
-    if (typeof children === "string") {
+    if (typeof children === 'string') {
       element.textContent = children;
     } else if (Array.isArray(children)) {
       children.forEach(child => {
-        if (typeof child === "string") {
+        if (typeof child === 'string') {
           element.appendChild(document.createTextNode(child));
         } else if (child instanceof HTMLElement) {
           element.appendChild(child);
@@ -261,12 +261,12 @@ export class BasePage {
   createPageHeader(title, options = {}) {
     const { subtitle, actions = [], breadcrumbs = [] } = options;
 
-    const header = this.createElement("div", {
-      className: "bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700"
+    const header = this.createElement('div', {
+      className: 'bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700'
     });
 
-    const container = this.createElement("div", {
-      className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
+    const container = this.createElement('div', {
+      className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'
     });
 
     // Breadcrumbs
@@ -276,19 +276,19 @@ export class BasePage {
     }
 
     // Title section
-    const titleSection = this.createElement("div", {
-      className: `flex items-center justify-between ${breadcrumbs.length > 0 ? "mt-4" : ""}`
+    const titleSection = this.createElement('div', {
+      className: `flex items-center justify-between ${breadcrumbs.length > 0 ? 'mt-4' : ''}`
     });
 
-    const titleContainer = this.createElement("div");
-    const titleElement = this.createElement("h1", {
-      className: "text-2xl font-bold text-gray-900 dark:text-white"
+    const titleContainer = this.createElement('div');
+    const titleElement = this.createElement('h1', {
+      className: 'text-2xl font-bold text-gray-900 dark:text-white'
     }, title);
     titleContainer.appendChild(titleElement);
 
     if (subtitle) {
-      const subtitleElement = this.createElement("p", {
-        className: "mt-1 text-sm text-gray-600 dark:text-gray-400"
+      const subtitleElement = this.createElement('p', {
+        className: 'mt-1 text-sm text-gray-600 dark:text-gray-400'
       }, subtitle);
       titleContainer.appendChild(subtitleElement);
     }
@@ -297,8 +297,8 @@ export class BasePage {
 
     // Actions
     if (actions.length > 0) {
-      const actionsContainer = this.createElement("div", {
-        className: "flex items-center space-x-3"
+      const actionsContainer = this.createElement('div', {
+        className: 'flex items-center space-x-3'
       });
 
       actions.forEach(action => {
@@ -320,39 +320,39 @@ export class BasePage {
    * @returns {HTMLElement}
    */
   createBreadcrumbs(breadcrumbs) {
-    const nav = this.createElement("nav", {
-      className: "flex",
-      "aria-label": "Breadcrumb"
+    const nav = this.createElement('nav', {
+      className: 'flex',
+      'aria-label': 'Breadcrumb'
     });
 
-    const ol = this.createElement("ol", {
-      className: "flex items-center space-x-2 text-sm"
+    const ol = this.createElement('ol', {
+      className: 'flex items-center space-x-2 text-sm'
     });
 
     breadcrumbs.forEach((crumb, index) => {
-      const li = this.createElement("li", {
-        className: "flex items-center"
+      const li = this.createElement('li', {
+        className: 'flex items-center'
       });
 
       if (index > 0) {
-        const separator = this.createElement("svg", {
-          className: "w-4 h-4 text-gray-400 mr-2",
-          fill: "currentColor",
-          viewBox: "0 0 20 20"
+        const separator = this.createElement('svg', {
+          className: 'w-4 h-4 text-gray-400 mr-2',
+          fill: 'currentColor',
+          viewBox: '0 0 20 20'
         });
-        separator.innerHTML = "<path fill-rule='evenodd' d='M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z' clip-rule='evenodd'/>";
+        separator.innerHTML = '<path fill-rule=\'evenodd\' d=\'M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z\' clip-rule=\'evenodd\'/>';
         li.appendChild(separator);
       }
 
       if (crumb.url && index < breadcrumbs.length - 1) {
-        const link = this.createElement("a", {
+        const link = this.createElement('a', {
           href: crumb.url,
-          className: "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          className: 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
         }, crumb.label);
         li.appendChild(link);
       } else {
-        const span = this.createElement("span", {
-          className: "text-gray-900 dark:text-white font-medium"
+        const span = this.createElement('span', {
+          className: 'text-gray-900 dark:text-white font-medium'
         }, crumb.label);
         li.appendChild(span);
       }
@@ -370,7 +370,7 @@ export class BasePage {
    * @param {string} type - Notification type
    * @param {Object} options - Additional options
    */
-  notify(message, type = "info", options = {}) {
+  notify(message, type = 'info', options = {}) {
     if (this.notificationManager) {
       return this.notificationManager[type](message, options);
     } else {

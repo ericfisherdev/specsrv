@@ -7,9 +7,9 @@ export class AuthService {
     this.apiService = apiService;
     this.currentUser = null;
     this.isAuthenticated = false;
-    this.tokenKey = "specsrv-token";
-    this.userKey = "specsrv-user";
-    this.refreshTokenKey = "specsrv-refresh-token";
+    this.tokenKey = 'specsrv-token';
+    this.userKey = 'specsrv-user';
+    this.refreshTokenKey = 'specsrv-refresh-token';
 
     // Event listeners
     this.listeners = {
@@ -42,7 +42,7 @@ export class AuthService {
         }
       }
     } catch (error) {
-      console.error("Auth initialization failed:", error);
+      console.error('Auth initialization failed:', error);
       this.clearAuthData();
     }
   }
@@ -89,7 +89,7 @@ export class AuthService {
    */
   async login(email, password, rememberMe = false) {
     try {
-      const response = await this.apiService.post("/auth/login", {
+      const response = await this.apiService.post('/auth/login', {
         email,
         password,
         remember_me: rememberMe,
@@ -104,17 +104,17 @@ export class AuthService {
         }
 
         this.isAuthenticated = true;
-        this.emit("login", response.user);
+        this.emit('login', response.user);
 
         // Update global auth store if using Alpine
-        if (window.Alpine?.store?.("auth")?.setUser) {
-          window.Alpine.store("auth").setUser(response.user);
+        if (window.Alpine?.store?.('auth')?.setUser) {
+          window.Alpine.store('auth').setUser(response.user);
         }
 
         return response;
       }
 
-      throw new Error("Invalid login response");
+      throw new Error('Invalid login response');
     } catch (error) {
       this.clearAuthData();
       throw error;
@@ -128,7 +128,7 @@ export class AuthService {
    */
   async register(userData) {
     try {
-      const response = await this.apiService.post("/auth/register", userData);
+      const response = await this.apiService.post('/auth/register', userData);
 
       if (response.token && response.user) {
         this.setToken(response.token);
@@ -139,17 +139,17 @@ export class AuthService {
         }
 
         this.isAuthenticated = true;
-        this.emit("login", response.user);
+        this.emit('login', response.user);
 
         // Update global auth store if using Alpine
-        if (window.Alpine?.store?.("auth")?.setUser) {
-          window.Alpine.store("auth").setUser(response.user);
+        if (window.Alpine?.store?.('auth')?.setUser) {
+          window.Alpine.store('auth').setUser(response.user);
         }
 
         return response;
       }
 
-      throw new Error("Invalid registration response");
+      throw new Error('Invalid registration response');
     } catch (error) {
       this.clearAuthData();
       throw error;
@@ -165,25 +165,25 @@ export class AuthService {
       // Call logout endpoint if we have a token
       if (this.getToken()) {
         try {
-          await this.apiService.post("/auth/logout");
+          await this.apiService.post('/auth/logout');
         } catch (error) {
           // Ignore errors on logout endpoint
-          console.warn("Logout endpoint failed:", error);
+          console.warn('Logout endpoint failed:', error);
         }
       }
     } finally {
       // Always clear local auth data
       this.clearAuthData();
-      this.emit("logout");
+      this.emit('logout');
 
       // Update global auth store if using Alpine
-      if (window.Alpine?.store?.("auth")?.clear) {
-        window.Alpine.store("auth").clear();
+      if (window.Alpine?.store?.('auth')?.clear) {
+        window.Alpine.store('auth').clear();
       }
 
       // Redirect to login page
-      if (window.location.pathname !== "/login") {
-        window.location.href = "/login";
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
       }
     }
   }
@@ -195,11 +195,11 @@ export class AuthService {
   async refreshToken() {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
-      throw new Error("No refresh token available");
+      throw new Error('No refresh token available');
     }
 
     try {
-      const response = await this.apiService.post("/auth/refresh", {
+      const response = await this.apiService.post('/auth/refresh', {
         refresh_token: refreshToken,
       });
 
@@ -217,7 +217,7 @@ export class AuthService {
         return response;
       }
 
-      throw new Error("Invalid refresh response");
+      throw new Error('Invalid refresh response');
     } catch (error) {
       // Refresh failed, clear auth data and redirect to login
       this.clearAuthData();
@@ -230,7 +230,7 @@ export class AuthService {
    * @returns {Promise<Object>}
    */
   async getCurrentUserFromAPI() {
-    return this.apiService.get("/auth/me");
+    return this.apiService.get('/auth/me');
   }
 
   /**
@@ -239,15 +239,15 @@ export class AuthService {
    * @returns {Promise<Object>}
    */
   async updateProfile(userData) {
-    const response = await this.apiService.put("/auth/profile", userData);
+    const response = await this.apiService.put('/auth/profile', userData);
 
     if (response.user) {
       this.setUser(response.user);
-      this.emit("userUpdate", response.user);
+      this.emit('userUpdate', response.user);
 
       // Update global auth store if using Alpine
-      if (window.Alpine?.store?.("auth")?.setUser) {
-        window.Alpine.store("auth").setUser(response.user);
+      if (window.Alpine?.store?.('auth')?.setUser) {
+        window.Alpine.store('auth').setUser(response.user);
       }
     }
 
@@ -261,14 +261,14 @@ export class AuthService {
    */
   async changePassword(passwordData) {
     // Handle both object and individual params
-    const data = typeof passwordData === "object" && passwordData.currentPassword
+    const data = typeof passwordData === 'object' && passwordData.currentPassword
       ? {
         current_password: passwordData.currentPassword,
         new_password: passwordData.newPassword,
       }
       : passwordData;
 
-    return this.apiService.post("/auth/change-password", data);
+    return this.apiService.post('/auth/change-password', data);
   }
 
   /**
@@ -277,7 +277,7 @@ export class AuthService {
    * @returns {Promise<Object>}
    */
   async requestPasswordReset(email) {
-    return this.apiService.post("/auth/forgot-password", { email });
+    return this.apiService.post('/auth/forgot-password', { email });
   }
 
   /**
@@ -287,7 +287,7 @@ export class AuthService {
    * @returns {Promise<Object>}
    */
   async resetPassword(token, password) {
-    return this.apiService.post("/auth/reset-password", {
+    return this.apiService.post('/auth/reset-password', {
       token,
       password,
     });
@@ -376,7 +376,7 @@ export class AuthService {
     try {
       return JSON.parse(userData);
     } catch (error) {
-      console.error("Failed to parse stored user data:", error);
+      console.error('Failed to parse stored user data:', error);
       return null;
     }
   }
@@ -442,15 +442,15 @@ export class AuthService {
     }
 
     // Generate avatar based on initials
-    const name = targetUser?.name || targetUser?.email || "User";
-    const initials = name.split(" ")
+    const name = targetUser?.name || targetUser?.email || 'User';
+    const initials = name.split(' ')
       .map(word => word[0])
-      .join("")
+      .join('')
       .toUpperCase()
       .slice(0, 2);
 
     // Generate a simple SVG avatar
-    const svgContent = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 40 40\"><rect width=\"40\" height=\"40\" fill=\"#3B82F6\"/><text x=\"50%\" y=\"50%\" dy=\"0.1em\" text-anchor=\"middle\" font-family=\"Arial, sans-serif\" font-size=\"14\" fill=\"white\">" + initials + "</text></svg>";
-    return "data:image/svg+xml," + encodeURIComponent(svgContent);
+    const svgContent = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" fill="#3B82F6"/><text x="50%" y="50%" dy="0.1em" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="white">' + initials + '</text></svg>';
+    return 'data:image/svg+xml,' + encodeURIComponent(svgContent);
   }
 }

@@ -14,7 +14,7 @@ export class TaskService {
    */
   async getTasks(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    const endpoint = queryString ? `/tasks?${queryString}` : "/tasks";
+    const endpoint = queryString ? `/tasks?${queryString}` : '/tasks';
     return this.apiService.get(endpoint);
   }
 
@@ -33,7 +33,7 @@ export class TaskService {
    * @returns {Promise<Object>}
    */
   async createTask(taskData) {
-    return this.apiService.post("/tasks", taskData);
+    return this.apiService.post('/tasks', taskData);
   }
 
   /**
@@ -270,7 +270,7 @@ export class TaskService {
    * @returns {Promise<Object>}
    */
   async getMyTasks(params = {}) {
-    return this.apiService.get("/tasks/me?" + new URLSearchParams(params).toString());
+    return this.apiService.get('/tasks/me?' + new URLSearchParams(params).toString());
   }
 
   /**
@@ -280,7 +280,7 @@ export class TaskService {
    * @returns {Promise<Object>}
    */
   async bulkUpdateTasks(taskIds, updates) {
-    return this.apiService.post("/tasks/bulk-update", {
+    return this.apiService.post('/tasks/bulk-update', {
       task_ids: taskIds,
       updates,
     });
@@ -292,7 +292,7 @@ export class TaskService {
    * @returns {Promise<Object>}
    */
   async bulkDeleteTasks(taskIds) {
-    return this.apiService.post("/tasks/bulk-delete", {
+    return this.apiService.post('/tasks/bulk-delete', {
       task_ids: taskIds,
     });
   }
@@ -316,7 +316,7 @@ export class TaskService {
    */
   async getKanbanBoard(filters = {}) {
     const queryString = new URLSearchParams(filters).toString();
-    const endpoint = queryString ? `/kanban/boards?${queryString}` : "/kanban/boards";
+    const endpoint = queryString ? `/kanban/boards?${queryString}` : '/kanban/boards';
     return this.apiService.get(endpoint);
   }
 
@@ -342,7 +342,7 @@ export class TaskService {
    * @returns {Promise<Object>}
    */
   async markComplete(id) {
-    return this.updateTaskStatus(id, "completed");
+    return this.updateTaskStatus(id, 'completed');
   }
 
   /**
@@ -351,7 +351,7 @@ export class TaskService {
    * @returns {Promise<Object>}
    */
   async markTodo(id) {
-    return this.updateTaskStatus(id, "todo");
+    return this.updateTaskStatus(id, 'todo');
   }
 
   /**
@@ -370,7 +370,7 @@ export class TaskService {
    * @returns {Promise<Object>}
    */
   async setCritical(id) {
-    return this.updateTaskPriority(id, "critical");
+    return this.updateTaskPriority(id, 'critical');
   }
 
   /**

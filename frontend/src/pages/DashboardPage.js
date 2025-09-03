@@ -1,4 +1,4 @@
-import { BasePage } from "./BasePage.js";
+import { BasePage } from './BasePage.js';
 
 /**
  * Dashboard Page for SpecSrv Frontend
@@ -22,7 +22,7 @@ export class DashboardPage extends BasePage {
    * @returns {string}
    */
   getTitle() {
-    return "Dashboard - SpecSrv";
+    return 'Dashboard - SpecSrv';
   }
 
   /**
@@ -31,7 +31,7 @@ export class DashboardPage extends BasePage {
    */
   getBreadcrumbs() {
     return [
-      { label: "Dashboard", url: "/dashboard" }
+      { label: 'Dashboard', url: '/dashboard' }
     ];
   }
 
@@ -41,10 +41,10 @@ export class DashboardPage extends BasePage {
   async loadData() {
     try {
       // Load dashboard statistics
-      this.dashboardData = await this.apiService.get("/dashboard/stats");
+      this.dashboardData = await this.apiService.get('/dashboard/stats');
     } catch (error) {
-      console.error("Failed to load dashboard data:", error);
-      this.notify("Failed to load dashboard data", "error");
+      console.error('Failed to load dashboard data:', error);
+      this.notify('Failed to load dashboard data', 'error');
 
       // Set fallback data
       this.dashboardData = {
@@ -66,29 +66,29 @@ export class DashboardPage extends BasePage {
    * @returns {HTMLElement}
    */
   createElement() {
-    const container = document.createElement("div");
-    container.className = "dashboard-page";
+    const container = document.createElement('div');
+    container.className = 'dashboard-page';
 
     // Create page header
-    const header = this.createPageHeader("Dashboard", {
-      subtitle: "Welcome back! Here\"s what\"s happening with your tasks and projects.",
+    const header = this.createPageHeader('Dashboard', {
+      subtitle: 'Welcome back! Here"s what"s happening with your tasks and projects.',
       actions: [
-        this.createActionButton("New Task", "/tasks/new", "primary"),
-        this.createActionButton("New Project", "/projects/new", "secondary"),
+        this.createActionButton('New Task', '/tasks/new', 'primary'),
+        this.createActionButton('New Project', '/projects/new', 'secondary'),
       ]
     });
 
     // Create main content
-    const main = document.createElement("div");
-    main.className = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
+    const main = document.createElement('div');
+    main.className = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8';
 
     // Stats grid
     const statsGrid = this.createStatsGrid();
     main.appendChild(statsGrid);
 
     // Content grid (charts, recent items, etc.)
-    const contentGrid = document.createElement("div");
-    contentGrid.className = "grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8";
+    const contentGrid = document.createElement('div');
+    contentGrid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8';
 
     // Recent tasks
     const recentTasks = this.createRecentTasks();
@@ -117,8 +117,8 @@ export class DashboardPage extends BasePage {
    * @param {string} style - Button style
    * @returns {HTMLElement}
    */
-  createActionButton(text, href, style = "primary") {
-    const button = document.createElement("a");
+  createActionButton(text, href, style = 'primary') {
+    const button = document.createElement('a');
     button.href = href;
     button.className = `btn btn-${style}`;
     button.textContent = text;
@@ -130,41 +130,41 @@ export class DashboardPage extends BasePage {
    * @returns {HTMLElement}
    */
   createStatsGrid() {
-    const grid = document.createElement("div");
-    grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6";
+    const grid = document.createElement('div');
+    grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6';
 
     const stats = [
       {
-        title: "Total Tasks",
+        title: 'Total Tasks',
         value: this.dashboardData?.stats?.totalTasks || 0,
-        icon: "📋",
-        color: "blue",
-        change: "+12%",
-        changeType: "positive"
+        icon: '📋',
+        color: 'blue',
+        change: '+12%',
+        changeType: 'positive'
       },
       {
-        title: "Active Tasks",
+        title: 'Active Tasks',
         value: this.dashboardData?.stats?.activeTasks || 0,
-        icon: "⚡",
-        color: "yellow",
-        change: "+5%",
-        changeType: "positive"
+        icon: '⚡',
+        color: 'yellow',
+        change: '+5%',
+        changeType: 'positive'
       },
       {
-        title: "Completed Tasks",
+        title: 'Completed Tasks',
         value: this.dashboardData?.stats?.completedTasks || 0,
-        icon: "✅",
-        color: "green",
-        change: "+23%",
-        changeType: "positive"
+        icon: '✅',
+        color: 'green',
+        change: '+23%',
+        changeType: 'positive'
       },
       {
-        title: "Total Projects",
+        title: 'Total Projects',
         value: this.dashboardData?.stats?.totalProjects || 0,
-        icon: "📁",
-        color: "purple",
-        change: "+3%",
-        changeType: "positive"
+        icon: '📁',
+        color: 'purple',
+        change: '+3%',
+        changeType: 'positive'
       }
     ];
 
@@ -182,8 +182,8 @@ export class DashboardPage extends BasePage {
    * @returns {HTMLElement}
    */
   createStatCard(stat) {
-    const card = document.createElement("div");
-    card.className = "card card-elevated";
+    const card = document.createElement('div');
+    card.className = 'card card-elevated';
 
     card.innerHTML = `
       <div class="card-body">
@@ -199,7 +199,7 @@ export class DashboardPage extends BasePage {
           </div>
         </div>
         <div class="mt-4">
-          <span class="text-sm font-medium ${stat.changeType === "positive" ? "text-green-600" : "text-red-600"}">
+          <span class="text-sm font-medium ${stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}">
             ${stat.change}
           </span>
           <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">from last month</span>
@@ -215,8 +215,8 @@ export class DashboardPage extends BasePage {
    * @returns {HTMLElement}
    */
   createRecentTasks() {
-    const section = document.createElement("div");
-    section.className = "card";
+    const section = document.createElement('div');
+    section.className = 'card';
 
     const tasks = this.dashboardData?.recentTasks || [];
 
@@ -226,7 +226,7 @@ export class DashboardPage extends BasePage {
         <a href="/tasks" class="text-sm text-primary-600 hover:text-primary-500">View all</a>
       </div>
       <div class="card-body">
-        ${tasks.length > 0 ? this.renderTaskList(tasks) : this.renderEmptyState("No recent tasks")}
+        ${tasks.length > 0 ? this.renderTaskList(tasks) : this.renderEmptyState('No recent tasks')}
       </div>
     `;
 
@@ -238,8 +238,8 @@ export class DashboardPage extends BasePage {
    * @returns {HTMLElement}
    */
   createRecentActivity() {
-    const section = document.createElement("div");
-    section.className = "card";
+    const section = document.createElement('div');
+    section.className = 'card';
 
     const activities = this.dashboardData?.recentActivity || [];
 
@@ -248,7 +248,7 @@ export class DashboardPage extends BasePage {
         <h3 class="text-lg font-medium text-gray-900 dark:text-white">Recent Activity</h3>
       </div>
       <div class="card-body">
-        ${activities.length > 0 ? this.renderActivityList(activities) : this.renderEmptyState("No recent activity")}
+        ${activities.length > 0 ? this.renderActivityList(activities) : this.renderEmptyState('No recent activity')}
       </div>
     `;
 
@@ -260,8 +260,8 @@ export class DashboardPage extends BasePage {
    * @returns {HTMLElement}
    */
   createUpcomingDeadlines() {
-    const section = document.createElement("div");
-    section.className = "card mt-8";
+    const section = document.createElement('div');
+    section.className = 'card mt-8';
 
     const deadlines = this.dashboardData?.upcomingDeadlines || [];
 
@@ -271,7 +271,7 @@ export class DashboardPage extends BasePage {
         <a href="/tasks?filter=upcoming" class="text-sm text-primary-600 hover:text-primary-500">View all</a>
       </div>
       <div class="card-body">
-        ${deadlines.length > 0 ? this.renderDeadlineList(deadlines) : this.renderEmptyState("No upcoming deadlines")}
+        ${deadlines.length > 0 ? this.renderDeadlineList(deadlines) : this.renderEmptyState('No upcoming deadlines')}
       </div>
     `;
 
@@ -294,12 +294,12 @@ export class DashboardPage extends BasePage {
                 <a href="/tasks/${task.id}" class="text-sm font-medium text-gray-900 dark:text-white hover:text-primary-600">
                   ${task.title}
                 </a>
-                <p class="text-xs text-gray-500 dark:text-gray-400">${task.project?.name || "No project"}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">${task.project?.name || 'No project'}</p>
               </div>
             </div>
             <span class="badge-${task.priority} text-xs">${task.priority}</span>
           </div>
-        `).join("")}
+        `).join('')}
       </div>
     `;
   }
@@ -322,7 +322,7 @@ export class DashboardPage extends BasePage {
               <p class="text-xs text-gray-500 dark:text-gray-400">${this.formatRelativeTime(activity.created_at)}</p>
             </div>
           </div>
-        `).join("")}
+        `).join('')}
       </div>
     `;
   }
@@ -341,7 +341,7 @@ export class DashboardPage extends BasePage {
               <a href="/tasks/${task.id}" class="text-sm font-medium text-gray-900 dark:text-white hover:text-primary-600">
                 ${task.title}
               </a>
-              <p class="text-xs text-gray-500 dark:text-gray-400">${task.project?.name || "No project"}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">${task.project?.name || 'No project'}</p>
             </div>
             <div class="text-right">
               <p class="text-xs font-medium ${this.getDeadlineColor(task.due_date)}">
@@ -350,7 +350,7 @@ export class DashboardPage extends BasePage {
               <span class="badge-${task.priority} text-xs">${task.priority}</span>
             </div>
           </div>
-        `).join("")}
+        `).join('')}
       </div>
     `;
   }
@@ -375,12 +375,12 @@ export class DashboardPage extends BasePage {
    */
   getStatusColor(status) {
     const colors = {
-      todo: "bg-blue-500",
-      progress: "bg-yellow-500",
-      review: "bg-purple-500",
-      completed: "bg-green-500",
+      todo: 'bg-blue-500',
+      progress: 'bg-yellow-500',
+      review: 'bg-purple-500',
+      completed: 'bg-green-500',
     };
-    return colors[status] || "bg-gray-500";
+    return colors[status] || 'bg-gray-500';
   }
 
   /**
@@ -390,13 +390,13 @@ export class DashboardPage extends BasePage {
    */
   getActivityIcon(type) {
     const icons = {
-      task_created: "➕",
-      task_completed: "✅",
-      task_updated: "✏️",
-      project_created: "📁",
-      comment_added: "💬",
+      task_created: '➕',
+      task_completed: '✅',
+      task_updated: '✏️',
+      project_created: '📁',
+      comment_added: '💬',
     };
-    return icons[type] || "📌";
+    return icons[type] || '📌';
   }
 
   /**
@@ -410,10 +410,10 @@ export class DashboardPage extends BasePage {
     const diff = due.getTime() - now.getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
 
-    if (days < 0) {return "text-red-600";}
-    if (days <= 3) {return "text-orange-600";}
-    if (days <= 7) {return "text-yellow-600";}
-    return "text-gray-600";
+    if (days < 0) {return 'text-red-600';}
+    if (days <= 3) {return 'text-orange-600';}
+    if (days <= 7) {return 'text-yellow-600';}
+    return 'text-gray-600';
   }
 
   /**
@@ -428,8 +428,8 @@ export class DashboardPage extends BasePage {
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
 
     if (days < 0) {return `${Math.abs(days)} days overdue`;}
-    if (days === 0) {return "Due today";}
-    if (days === 1) {return "Due tomorrow";}
+    if (days === 0) {return 'Due today';}
+    if (days === 1) {return 'Due tomorrow';}
     return `Due in ${days} days`;
   }
 
@@ -446,10 +446,10 @@ export class DashboardPage extends BasePage {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (days > 0) {return `${days} day${days > 1 ? "s" : ""} ago`;}
-    if (hours > 0) {return `${hours} hour${hours > 1 ? "s" : ""} ago`;}
-    if (minutes > 0) {return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;}
-    return "Just now";
+    if (days > 0) {return `${days} day${days > 1 ? 's' : ''} ago`;}
+    if (hours > 0) {return `${hours} hour${hours > 1 ? 's' : ''} ago`;}
+    if (minutes > 0) {return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;}
+    return 'Just now';
   }
 
   /**
@@ -459,13 +459,13 @@ export class DashboardPage extends BasePage {
   handleKeyboard(event) {
     if (event.ctrlKey || event.metaKey) {
       switch (event.key) {
-      case "n":
+      case 'n':
         event.preventDefault();
-        this.navigate("/tasks/new");
+        this.navigate('/tasks/new');
         break;
-      case "p":
+      case 'p':
         event.preventDefault();
-        this.navigate("/projects/new");
+        this.navigate('/projects/new');
         break;
       }
     }

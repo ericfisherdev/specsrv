@@ -1,4 +1,4 @@
-import { BasePage } from "./BasePage.js";
+import { BasePage } from './BasePage.js';
 
 /**
  * Login Page for SpecSrv Frontend
@@ -24,7 +24,7 @@ export class LoginPage extends BasePage {
    * @returns {string}
    */
   getTitle() {
-    return "Login - SpecSrv";
+    return 'Login - SpecSrv';
   }
 
   /**
@@ -32,8 +32,8 @@ export class LoginPage extends BasePage {
    * @returns {HTMLElement}
    */
   createElement() {
-    const container = document.createElement("div");
-    container.className = "min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8";
+    const container = document.createElement('div');
+    container.className = 'min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8';
 
     container.innerHTML = `
       <div class="max-w-md w-full space-y-8">
@@ -145,15 +145,15 @@ export class LoginPage extends BasePage {
    */
   registerAlpineComponents() {
     if (window.Alpine) {
-      window.Alpine.data("loginForm", () => ({
+      window.Alpine.data('loginForm', () => ({
         form: {
-          email: "",
-          password: "",
+          email: '',
+          password: '',
           rememberMe: false,
         },
         isLoading: false,
         errors: {},
-        generalError: "",
+        generalError: '',
 
         async handleSubmit() {
           this.clearErrors();
@@ -172,17 +172,17 @@ export class LoginPage extends BasePage {
             );
 
             // Redirect to dashboard on success
-            window.app.router.navigate("/dashboard", { replace: true });
+            window.app.router.navigate('/dashboard', { replace: true });
 
           } catch (error) {
-            console.error("Login error:", error);
+            console.error('Login error:', error);
 
             if (error.status === 401) {
-              this.generalError = "Invalid email or password";
+              this.generalError = 'Invalid email or password';
             } else if (error.status === 429) {
-              this.generalError = "Too many login attempts. Please try again later.";
+              this.generalError = 'Too many login attempts. Please try again later.';
             } else {
-              this.generalError = error.message || "Login failed. Please try again.";
+              this.generalError = error.message || 'Login failed. Please try again.';
             }
           } finally {
             this.isLoading = false;
@@ -193,18 +193,18 @@ export class LoginPage extends BasePage {
           let isValid = true;
 
           if (!this.form.email) {
-            this.errors.email = "Email is required";
+            this.errors.email = 'Email is required';
             isValid = false;
           } else if (!this.isValidEmail(this.form.email)) {
-            this.errors.email = "Please enter a valid email address";
+            this.errors.email = 'Please enter a valid email address';
             isValid = false;
           }
 
           if (!this.form.password) {
-            this.errors.password = "Password is required";
+            this.errors.password = 'Password is required';
             isValid = false;
           } else if (this.form.password.length < 6) {
-            this.errors.password = "Password must be at least 6 characters";
+            this.errors.password = 'Password must be at least 6 characters';
             isValid = false;
           }
 
@@ -217,7 +217,7 @@ export class LoginPage extends BasePage {
 
         clearErrors() {
           this.errors = {};
-          this.generalError = "";
+          this.generalError = '';
         }
       }));
     }
@@ -236,9 +236,9 @@ export class LoginPage extends BasePage {
    */
   handleKeyboard(event) {
     // Focus email field on "e" key
-    if (event.key === "e" && !event.ctrlKey && !event.metaKey && event.target.tagName !== "INPUT") {
+    if (event.key === 'e' && !event.ctrlKey && !event.metaKey && event.target.tagName !== 'INPUT') {
       event.preventDefault();
-      const emailInput = this.element.querySelector("#email-address");
+      const emailInput = this.element.querySelector('#email-address');
       if (emailInput) {
         emailInput.focus();
       }
