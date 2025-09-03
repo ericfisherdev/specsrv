@@ -346,7 +346,7 @@ func formatProjectTable(project models.Project) error {
 // convertToProjectModel converts API response data to Project model
 func convertToProjectModel(data map[string]interface{}) models.Project {
 	project := models.Project{}
-	
+
 	if id, ok := data["id"].(float64); ok {
 		project.ID = int(id)
 	}
@@ -364,7 +364,7 @@ func convertToProjectModel(data map[string]interface{}) models.Project {
 	} else if taskCount, ok := data["task_count"].(float64); ok {
 		project.TaskCount = int(taskCount)
 	}
-	
+
 	// Parse timestamps
 	if createdAt, ok := data["createdAt"].(string); ok {
 		project.CreatedAt = parseTime(createdAt)
@@ -376,7 +376,7 @@ func convertToProjectModel(data map[string]interface{}) models.Project {
 	} else if updatedAt, ok := data["updated_at"].(string); ok {
 		project.UpdatedAt = parseTime(updatedAt)
 	}
-	
+
 	return project
 }
 

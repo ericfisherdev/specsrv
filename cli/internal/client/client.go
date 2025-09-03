@@ -260,18 +260,18 @@ func (c *Client) Login(email, password string) (string, error) {
 		"email":    email,
 		"password": password,
 	}
-	
+
 	var result map[string]interface{}
 	err := c.Post("/api/v1/auth/login", loginReq, &result)
 	if err != nil {
 		return "", err
 	}
-	
+
 	if token, ok := result["token"].(string); ok {
 		c.SetToken(token)
 		return token, nil
 	}
-	
+
 	return "", fmt.Errorf("invalid login response: no token found")
 }
 
@@ -282,12 +282,12 @@ func (c *Client) RefreshToken() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	if token, ok := result["token"].(string); ok {
 		c.SetToken(token)
 		return token, nil
 	}
-	
+
 	return "", fmt.Errorf("invalid refresh response: no token found")
 }
 
@@ -302,7 +302,7 @@ func (c *Client) GetWithQuery(path string, query url.Values, result interface{})
 // GetProjects retrieves all projects with optional filtering
 func (c *Client) GetProjects(query map[string]string) ([]map[string]interface{}, error) {
 	path := "/api/v1/projects"
-	
+
 	if len(query) > 0 {
 		queryParams := url.Values{}
 		for k, v := range query {
@@ -310,7 +310,7 @@ func (c *Client) GetProjects(query map[string]string) ([]map[string]interface{},
 		}
 		path += "?" + queryParams.Encode()
 	}
-	
+
 	var result []map[string]interface{}
 	err := c.Get(path, &result)
 	return result, err
@@ -345,7 +345,7 @@ func (c *Client) DeleteProject(id int) error {
 // GetTasks retrieves all tasks with optional filtering
 func (c *Client) GetTasks(query map[string]string) ([]map[string]interface{}, error) {
 	path := "/api/v1/tasks"
-	
+
 	if len(query) > 0 {
 		queryParams := url.Values{}
 		for k, v := range query {
@@ -353,7 +353,7 @@ func (c *Client) GetTasks(query map[string]string) ([]map[string]interface{}, er
 		}
 		path += "?" + queryParams.Encode()
 	}
-	
+
 	var result []map[string]interface{}
 	err := c.Get(path, &result)
 	return result, err
@@ -397,7 +397,7 @@ func (c *Client) SearchProjects(query string) ([]map[string]interface{}, error) 
 	queryParams := url.Values{}
 	queryParams.Add("q", query)
 	path := "/api/v1/search/suggestions?" + queryParams.Encode()
-	
+
 	var results []map[string]interface{}
 	err := c.Get(path, &results)
 	return results, err

@@ -372,7 +372,7 @@ func formatTaskTable(task models.Task) error {
 // convertToTaskModel converts API response data to Task model
 func convertToTaskModel(data map[string]interface{}) models.Task {
 	task := models.Task{}
-	
+
 	if id, ok := data["id"].(float64); ok {
 		task.ID = int(id)
 	}
@@ -393,7 +393,7 @@ func convertToTaskModel(data map[string]interface{}) models.Task {
 	if priority, ok := data["priority"].(string); ok {
 		task.Priority = enums.TaskPriority(priority)
 	}
-	
+
 	// Handle tags array
 	if tagsInterface, ok := data["tags"]; ok {
 		if tagsArray, ok := tagsInterface.([]interface{}); ok {
@@ -406,7 +406,7 @@ func convertToTaskModel(data map[string]interface{}) models.Task {
 			task.Tags = tags
 		}
 	}
-	
+
 	// Parse timestamps
 	if createdAt, ok := data["createdAt"].(string); ok {
 		task.CreatedAt = parseTime(createdAt)
@@ -418,7 +418,7 @@ func convertToTaskModel(data map[string]interface{}) models.Task {
 	} else if updatedAt, ok := data["updated_at"].(string); ok {
 		task.UpdatedAt = parseTime(updatedAt)
 	}
-	
+
 	return task
 }
 
