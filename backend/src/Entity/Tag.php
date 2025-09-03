@@ -459,4 +459,22 @@ class Tag
 
         return $descendants;
     }
+
+    /**
+     * Convert tag to array representation.
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'color' => $this->color,
+            'icon' => $this->icon,
+            'description' => $this->description,
+            'usage_count' => $this->usageCount,
+            'parent_id' => $this->parent?->getId(),
+            'created_at' => $this->createdAt?->format('c'),
+            'updated_at' => $this->updatedAt?->format('c'),
+        ];
+    }
 }
