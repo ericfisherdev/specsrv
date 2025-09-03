@@ -4,7 +4,7 @@
  */
 export class ApiService {
   constructor() {
-    this.baseURL = process.env.API_BASE_URL || "http://localhost:8080/api";
+    this.baseURL = "http://localhost:8080/api";
     this.version = "v1";
     this.timeout = 30000; // 30 seconds
 

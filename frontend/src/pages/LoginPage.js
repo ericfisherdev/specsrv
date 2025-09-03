@@ -64,7 +64,7 @@ export class LoginPage extends BasePage {
                 required
                 x-model="form.email"
                 class="form-input relative block w-full rounded-t-md border-0 py-1.5 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:z-10 sm:text-sm sm:leading-6"
-                :class="{ "form-input-error": errors.email }"
+                :class="{ 'form-input-error': errors.email }"
                 placeholder="Email address"
               />
               <div x-show="errors.email" class="form-error" x-text="errors.email"></div>
@@ -79,7 +79,7 @@ export class LoginPage extends BasePage {
                 required
                 x-model="form.password"
                 class="form-input relative block w-full rounded-b-md border-0 py-1.5 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:z-10 sm:text-sm sm:leading-6"
-                :class="{ "form-input-error": errors.password }"
+                :class="{ 'form-input-error': errors.password }"
                 placeholder="Password"
               />
               <div x-show="errors.password" class="form-error" x-text="errors.password"></div>
@@ -116,10 +116,10 @@ export class LoginPage extends BasePage {
               type="submit"
               :disabled="isLoading"
               class="btn btn-primary w-full flex justify-center items-center"
-              :class="{ "opacity-50 cursor-not-allowed": isLoading }"
+              :class="{ 'opacity-50 cursor-not-allowed': isLoading }"
             >
               <div x-show="isLoading" class="loading-spinner mr-2"></div>
-              <span x-text="isLoading ? "Signing in..." : "Sign in""></span>
+              <span x-text="isLoading ? 'Signing in...' : 'Sign in'"></span>
             </button>
           </div>
         </form>
@@ -130,12 +130,20 @@ export class LoginPage extends BasePage {
   }
 
   /**
-   * Initialize components after rendering
+   * Render the page - override to register Alpine components first
    */
-  async initializeComponents() {
-    await super.initializeComponents();
+  async render(container) {
+    // Register Alpine.js components before creating the element
+    this.registerAlpineComponents();
+    
+    // Call parent render method
+    await super.render(container);
+  }
 
-    // Add Alpine.js data for the login form
+  /**
+   * Register Alpine.js components before rendering
+   */
+  registerAlpineComponents() {
     if (window.Alpine) {
       window.Alpine.data("loginForm", () => ({
         form: {
@@ -204,7 +212,7 @@ export class LoginPage extends BasePage {
         },
 
         isValidEmail(email) {
-          return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         },
 
         clearErrors() {
@@ -212,10 +220,14 @@ export class LoginPage extends BasePage {
           this.generalError = "";
         }
       }));
-
-      // Re-initialize Alpine for this component
-      window.Alpine.initTree(this.element);
     }
+  }
+
+  /**
+   * Initialize components after rendering
+   */
+  async initializeComponents() {
+    await super.initializeComponents();
   }
 
   /**

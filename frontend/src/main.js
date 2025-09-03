@@ -30,6 +30,10 @@ import { Router } from "./utils/Router";
 import keyboardNav from "./js/keyboard-navigation";
 import offlineDetection from "./js/offline-detection";
 
+// Import services
+import { ApiService } from "./services/ApiService";
+import { AuthService } from "./services/AuthService";
+
 // Register GSAP plugins
 gsap.registerPlugin(Draggable, ScrollTrigger);
 window.gsap = gsap;
@@ -265,6 +269,29 @@ router.afterEach((to, from) => {
 // Enhanced initialization
 document.addEventListener("DOMContentLoaded", function() {
   console.log("Enhanced SPA initialized with HTMX, Alpine.js, GSAP, Theme Management, and Router");
+  
+  // Initialize services
+  const apiService = new ApiService();
+  const authService = new AuthService(apiService);
+  
+  // Create global app object
+  window.app = {
+    router: router,
+    apiService: apiService,
+    authService: authService
+  };
+
+  // Hide loading screen and show the app
+  const loadingScreen = document.querySelector('#initial-loading');
+  const appContainer = document.querySelector('#app');
+  
+  if (loadingScreen) {
+    loadingScreen.style.display = 'none';
+  }
+  
+  if (appContainer) {
+    appContainer.classList.remove('hidden');
+  }
 
   // Initialize animations for existing elements
   gsap.from(".card", {
@@ -294,7 +321,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Escape key handling
     if (e.key === "Escape") {
       // Close any open dropdowns
-      document.querySelectorAll("[data-dropdown-open='true']").forEach(dropdown => {
+      document.querySelectorAll('[data-dropdown-open="true"]').forEach(dropdown => {
         Alpine.$data(dropdown).open = false;
       });
     }

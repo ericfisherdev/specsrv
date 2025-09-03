@@ -69,9 +69,9 @@ export function createSearchAutocomplete(options = {}) {
                         <template x-for="(task, index) in suggestions.tasks" :key="task.id">
                             <a
                                 :href="task.url"
-                                @click="selectSuggestion(task, "task")"
+                                @click="selectSuggestion(task, 'task')"
                                 class="flex items-center px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                                :class="{ "bg-blue-50 dark:bg-blue-900": selectedIndex === index }"
+                                :class="{ 'bg-blue-50 dark:bg-blue-900': selectedIndex === index }"
                             >
                                 <div class="flex-1 min-w-0">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white truncate" x-text="task.title"></div>
@@ -98,14 +98,14 @@ export function createSearchAutocomplete(options = {}) {
                                 :href="project.url"
                                 @click="selectSuggestion(project, "project")"
                                 class="flex items-center px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                                :class="{ "bg-blue-50 dark:bg-blue-900": selectedIndex === (suggestions.tasks ? suggestions.tasks.length : 0) + index }"
+                                :class="{ 'bg-blue-50 dark:bg-blue-900': selectedIndex === (suggestions.tasks ? suggestions.tasks.length : 0) + index }"
                             >
                                 <div class="flex-1 min-w-0">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white truncate" x-text="project.title"></div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400 truncate" x-text="project.description"></div>
                                 </div>
                                 <div class="ml-2 flex-shrink-0">
-                                    <span class="text-xs text-gray-400" x-text="project.task_count + " tasks""></span>
+                                    <span class="text-xs text-gray-400" x-text="project.task_count + ' tasks'"></span>
                                 </div>
                             </a>
                         </template>

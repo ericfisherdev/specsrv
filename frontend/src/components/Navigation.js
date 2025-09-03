@@ -64,11 +64,11 @@ export function createNavigation() {
                                     class="flex items-center text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-colors duration-200 focus-visible"
                                     :aria-expanded="open">
                                 <div class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center mr-3"
-                                     x-text="$store.user?.email?.charAt(0).toUpperCase() || "U"">
+                                     x-text="$store.user?.email?.charAt(0).toUpperCase() || 'U'">
                                 </div>
-                                <span x-text="$store.user?.email || "User""></span>
+                                <span x-text="$store.user?.email || 'User'"></span>
                                 <svg class="ml-2 h-4 w-4 transition-transform duration-200"
-                                     :class="{ "rotate-180": open }"
+                                     :class="{ 'rotate-180': open }"
                                      fill="currentColor"
                                      viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
