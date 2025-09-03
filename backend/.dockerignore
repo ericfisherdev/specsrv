@@ -30,18 +30,12 @@ var/data/*
 vendor/
 node_modules/
 
-# Development and testing
-tests/
-phpunit.dist.xml
+# Development and testing artifacts
 .phpunit.result.cache
-phpstan.neon
-.php-cs-fixer.dist.php
 .php-cs-fixer.cache
 
-# Documentation
-README.md
-*.md
-docs/
+# Documentation build artifacts
+*.md.tmp
 
 # Environment files
 .env.local

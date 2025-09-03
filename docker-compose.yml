@@ -11,14 +11,27 @@ services:
       - APP_DEBUG=1
       - DATABASE_URL=postgresql://${POSTGRES_USER:-specsrv-db-user}:${POSTGRES_PASSWORD:?set in .env}@specsrv-postgres:5432/${POSTGRES_DB:-specsrv_dev}
     volumes:
-      # Mount source code for development - this will override the COPY in Dockerfile
-      - ./backend:/app:cached
+      # Mount entire backend directory for development
+      - type: bind
+        source: ./backend
+        target: /app
+        consistency: cached
       # Create named volumes for directories that shouldn't be overridden
-      - specsrv-cache:/app/var/cache
-      - specsrv-logs:/app/var/log  
-      - specsrv-uploads:/app/var/uploads
-      - node-modules-vol:/app/node_modules
-      - vendor-vol:/app/vendor
+      - type: volume
+        source: specsrv-cache
+        target: /app/var/cache
+      - type: volume
+        source: specsrv-logs
+        target: /app/var/log
+      - type: volume
+        source: specsrv-uploads
+        target: /app/var/uploads
+      - type: volume
+        source: node-modules-vol
+        target: /app/node_modules
+      - type: volume
+        source: vendor-vol
+        target: /app/vendor
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/liveness"]
       interval: 30s
