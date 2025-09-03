@@ -129,6 +129,14 @@ jobs:
         echo "APP_SECRET=dev_secret_for_build_only" >> .env
         echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/database.sqlite" >> .env
         echo "CORS_ALLOW_ORIGIN=http://localhost:3000" >> .env
+        # JWT keys for basic Symfony functionality (not actually used in security check)
+        mkdir -p config/jwt
+        echo "JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem" >> .env
+        echo "JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem" >> .env
+        echo "JWT_PASSPHRASE=dummy_passphrase_for_build" >> .env
+        # Create dummy JWT keys
+        openssl genrsa -out config/jwt/private.pem -aes256 -passout pass:dummy_passphrase_for_build 2048
+        openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:dummy_passphrase_for_build
 
     - name: Install dependencies
       working-directory: backend
