@@ -161,24 +161,24 @@ describe('TaskService', () => {
 
   describe('task files operations', () => {
     it('should get task files', async () => {
-      await taskService.getTaskFiles(456);
+      await taskService.getTaskAttachments(456);
       
-      expect(mockApiService.get).toHaveBeenCalledWith('/tasks/456/files');
+      expect(mockApiService.get).toHaveBeenCalledWith('/tasks/456/attachments');
     });
 
     it('should upload file to task', async () => {
       const formData = new FormData();
       formData.append('file', 'test file');
       
-      await taskService.uploadTaskFile(456, formData);
+      await taskService.addTaskAttachment(456, formData);
       
-      expect(mockApiService.upload).toHaveBeenCalledWith('/tasks/456/files', formData);
+      expect(mockApiService.upload).toHaveBeenCalledWith('/tasks/456/attachments', formData);
     });
 
     it('should delete task file', async () => {
-      await taskService.deleteTaskFile(456, 789);
+      await taskService.deleteTaskAttachment(456, 789);
       
-      expect(mockApiService.delete).toHaveBeenCalledWith('/tasks/456/files/789');
+      expect(mockApiService.delete).toHaveBeenCalledWith('/tasks/456/attachments/789');
     });
   });
 
@@ -282,9 +282,9 @@ describe('TaskService', () => {
       
       await taskService.bulkUpdateTasks(taskIds, updateData);
       
-      expect(mockApiService.patch).toHaveBeenCalledWith('/tasks/bulk', {
-        taskIds,
-        ...updateData
+      expect(mockApiService.post).toHaveBeenCalledWith('/tasks/bulk-update', {
+        task_ids: taskIds,
+        updates: updateData
       });
     });
 
@@ -293,33 +293,32 @@ describe('TaskService', () => {
       
       await taskService.bulkDeleteTasks(taskIds);
       
-      expect(mockApiService.delete).toHaveBeenCalledWith('/tasks/bulk', {
-        taskIds
+      expect(mockApiService.post).toHaveBeenCalledWith('/tasks/bulk-delete', {
+        task_ids: taskIds
       });
     });
   });
 
   describe('task search and filtering', () => {
     it('should search tasks', async () => {
-      const searchParams = {
-        query: 'search term',
+      const searchFilters = {
         project: 123,
         status: 'todo',
         priority: 'high',
         assignee: 456
       };
       
-      await taskService.searchTasks(searchParams);
+      await taskService.searchTasks('search term', searchFilters);
       
       expect(mockApiService.get).toHaveBeenCalledWith(
-        '/tasks/search?query=search+term&project=123&status=todo&priority=high&assignee=456'
+        '/tasks/search?q=search+term&project=123&status=todo&priority=high&assignee=456'
       );
     });
 
     it('should get tasks by project', async () => {
       await taskService.getTasksByProject(123);
       
-      expect(mockApiService.get).toHaveBeenCalledWith('/tasks?project=123');
+      expect(mockApiService.get).toHaveBeenCalledWith('/tasks?project_id=123');
     });
 
     it('should get tasks by status', async () => {
@@ -331,7 +330,7 @@ describe('TaskService', () => {
     it('should get tasks by assignee', async () => {
       await taskService.getTasksByAssignee(456);
       
-      expect(mockApiService.get).toHaveBeenCalledWith('/tasks?assignee=456');
+      expect(mockApiService.get).toHaveBeenCalledWith('/tasks?assignee_id=456');
     });
   });
 
@@ -346,7 +345,7 @@ describe('TaskService', () => {
       await taskService.addDependency(456, 789);
       
       expect(mockApiService.post).toHaveBeenCalledWith('/tasks/456/dependencies', {
-        dependsOnTaskId: 789
+        depends_on_id: 789
       });
     });
 
@@ -413,9 +412,9 @@ describe('TaskService', () => {
     it('should handle empty arrays in bulk operations', async () => {
       await taskService.bulkUpdateTasks([], { status: 'completed' });
       
-      expect(mockApiService.patch).toHaveBeenCalledWith('/tasks/bulk', {
-        taskIds: [],
-        status: 'completed'
+      expect(mockApiService.post).toHaveBeenCalledWith('/tasks/bulk-update', {
+        task_ids: [],
+        updates: { status: 'completed' }
       });
     });
   });

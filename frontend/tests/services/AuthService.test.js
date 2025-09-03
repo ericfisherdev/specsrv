@@ -14,8 +14,9 @@ describe('AuthService', () => {
     
     authService = new AuthService(mockApiService);
     
-    // Clear localStorage
+    // Clear localStorage and reset mocks
     localStorage.clear();
+    jest.clearAllMocks();
   });
 
   describe('constructor', () => {
@@ -128,7 +129,7 @@ describe('AuthService', () => {
       };
       
       mockApiService.post.mockResolvedValue(loginResponse);
-      const mockTriggerEvent = jest.spyOn(authService, 'triggerEvent');
+      const mockTriggerEvent = jest.spyOn(authService, 'emit');
       
       const result = await authService.login(credentials.email, credentials.password);
       
@@ -174,7 +175,7 @@ describe('AuthService', () => {
       };
       
       mockApiService.post.mockResolvedValue(registerResponse);
-      const mockTriggerEvent = jest.spyOn(authService, 'triggerEvent');
+      const mockTriggerEvent = jest.spyOn(authService, 'emit');
       
       const result = await authService.register(userData);
       
@@ -205,8 +206,12 @@ describe('AuthService', () => {
       authService.currentUser = { id: 1, email: 'test@example.com' };
       authService.isAuthenticated = true;
       
+      // Mock window.location
+      delete window.location;
+      window.location = { pathname: '/dashboard', href: '' };
+      
       mockApiService.post.mockResolvedValue({});
-      const mockTriggerEvent = jest.spyOn(authService, 'triggerEvent');
+      const mockTriggerEvent = jest.spyOn(authService, 'emit');
       
       await authService.logout();
       
@@ -239,11 +244,20 @@ describe('AuthService', () => {
         user: { id: 1, email: 'test@example.com' }
       };
       
-      mockApiService.post.mockResolvedValue({ data: newTokenResponse });
+      // Set up refresh token in localStorage and ensure getItem returns correct value
+      localStorage.setItem('specsrv-refresh-token', 'refresh-token');
+      localStorage.getItem.mockImplementation((key) => {
+        if (key === 'specsrv-refresh-token') return 'refresh-token';
+        return null;
+      });
+      
+      mockApiService.post.mockResolvedValue(newTokenResponse);
       
       const result = await authService.refreshToken();
       
-      expect(mockApiService.post).toHaveBeenCalledWith('/auth/refresh');
+      expect(mockApiService.post).toHaveBeenCalledWith('/auth/refresh', {
+        refresh_token: 'refresh-token'
+      });
       expect(localStorage.setItem).toHaveBeenCalledWith('specsrv-token', 'new-token');
       expect(result).toEqual(newTokenResponse);
     });
@@ -260,12 +274,13 @@ describe('AuthService', () => {
   describe('getCurrentUser', () => {
     it('should return current user from API', async () => {
       const userData = { id: 1, email: 'test@example.com' };
-      mockApiService.get.mockResolvedValue({ data: { user: userData } });
+      const apiResponse = { data: { user: userData } };
+      mockApiService.get.mockResolvedValue(apiResponse);
       
       const result = await authService.getCurrentUserFromAPI();
       
       expect(mockApiService.get).toHaveBeenCalledWith('/auth/me');
-      expect(result).toEqual(userData);
+      expect(result).toEqual(apiResponse);
     });
 
     it('should handle API error', async () => {
@@ -345,7 +360,10 @@ describe('AuthService', () => {
       
       const result = await authService.changePassword(passwordData);
       
-      expect(mockApiService.post).toHaveBeenCalledWith('/auth/change-password', passwordData);
+      expect(mockApiService.post).toHaveBeenCalledWith('/auth/change-password', {
+        current_password: 'old-password',
+        new_password: 'new-password'
+      });
       expect(result).toEqual({ success: true });
     });
   });
@@ -376,6 +394,11 @@ describe('AuthService', () => {
   describe('authentication state checks', () => {
     it('should return true when authenticated', () => {
       authService.isAuthenticated = true;
+      localStorage.setItem('specsrv-token', 'mock-token');
+      localStorage.getItem.mockImplementation((key) => {
+        if (key === 'specsrv-token') return 'mock-token';
+        return null;
+      });
       
       expect(authService.isLoggedIn()).toBe(true);
     });

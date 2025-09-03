@@ -377,7 +377,7 @@ describe('ApiService', () => {
       const shortTimeoutApiService = new ApiService();
       shortTimeoutApiService.timeout = 50; // 50ms timeout
       
-      await expect(shortTimeoutApiService.get('/test')).rejects.toThrow('The operation was aborted');
+      await expect(shortTimeoutApiService.get('/test')).rejects.toThrow('Request timeout');
     }, 1000); // Add explicit timeout for this test
   });
 

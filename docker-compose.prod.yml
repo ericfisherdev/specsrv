@@ -31,6 +31,30 @@ services:
       specsrv-postgres:
         condition: service_healthy
 
+  specsrv-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: specsrv-frontend-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - API_URL=http://specsrv-backend:8080
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+    depends_on:
+      - specsrv-backend
+
   specsrv-postgres:
     image: postgres:15
     container_name: specsrv-postgres-prod
