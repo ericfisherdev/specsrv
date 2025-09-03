@@ -74,6 +74,7 @@ export class BasePage {
       await this.executeHooks('mounted', this.element);
 
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(`Error rendering ${this.constructor.name}:`, error);
       this.showError(container, error);
     }
@@ -179,9 +180,9 @@ export class BasePage {
 
   /**
    * Handle page-specific keyboard shortcuts
-   * @param {KeyboardEvent} event - Keyboard event
+   * @param {KeyboardEvent} _event - Keyboard event (unused in base class)
    */
-  handleKeyboard(event) {
+  handleKeyboard(_event) {
     // Override in subclasses for page-specific shortcuts
   }
 
@@ -374,6 +375,7 @@ export class BasePage {
     if (this.notificationManager) {
       return this.notificationManager[type](message, options);
     } else {
+      // eslint-disable-next-line no-console
       console.log(`[${type.toUpperCase()}] ${message}`);
     }
   }

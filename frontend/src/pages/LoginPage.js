@@ -175,6 +175,7 @@ export class LoginPage extends BasePage {
             window.app.router.navigate('/dashboard', { replace: true });
 
           } catch (error) {
+            // eslint-disable-next-line no-console
             console.error('Login error:', error);
 
             if (error.status === 401) {

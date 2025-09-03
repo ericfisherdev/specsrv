@@ -115,7 +115,7 @@ export class ApiService {
    * @param {Object} config
    * @returns {Response}
    */
-  async handleResponseErrors(response, config) {
+  async handleResponseErrors(response, _config) {
     if (!response) {
       throw new Error('No response received');
     }

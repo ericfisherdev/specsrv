@@ -42,6 +42,7 @@ export class AuthService {
         }
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Auth initialization failed:', error);
       this.clearAuthData();
     }
@@ -168,6 +169,7 @@ export class AuthService {
           await this.apiService.post('/auth/logout');
         } catch (error) {
           // Ignore errors on logout endpoint
+          // eslint-disable-next-line no-console
           console.warn('Logout endpoint failed:', error);
         }
       }
@@ -376,6 +378,7 @@ export class AuthService {
     try {
       return JSON.parse(userData);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to parse stored user data:', error);
       return null;
     }

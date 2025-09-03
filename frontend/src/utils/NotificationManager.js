@@ -73,7 +73,7 @@ export class NotificationManager {
    * Watch Alpine.js store for changes
    * @param {Object} store - Alpine store
    */
-  watchAlpineStore(store) {
+  watchAlpineStore(_store) {
     // This would need to be implemented based on Alpine.js store reactivity
     // For now, we"ll handle notifications through direct method calls
   }
