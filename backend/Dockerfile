@@ -7,16 +7,17 @@ FROM node:20-alpine AS frontend
 WORKDIR /app
 
 # Copy package files for dependency resolution
-COPY frontend/package.json frontend/package-lock.json ./
+COPY ../frontend/package.json ../frontend/package-lock.json ./
 
 # Install Node.js dependencies (including dev dependencies for build tools)
 RUN npm ci
 
 # Copy source files needed for build
-COPY frontend/assets/ ./assets/
-COPY frontend/webpack.config.js ./
-COPY frontend/postcss.config.js ./
-COPY frontend/tailwind.config.js ./
+COPY ../frontend/src/ ./src/
+COPY ../frontend/assets/ ./assets/
+COPY ../frontend/webpack.config.js ./
+COPY ../frontend/postcss.config.js ./
+COPY ../frontend/tailwind.config.js ./
 
 # Build production assets
 RUN npm run build
