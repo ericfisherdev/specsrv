@@ -97,8 +97,11 @@ export class ApiService {
    * @returns {Object}
    */
   addCommonHeaders(config) {
+    // Don't add Content-Type for FormData
+    const isFormData = config.body instanceof FormData;
+    
     config.headers = {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       'Accept': 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
       ...config.headers,
@@ -113,6 +116,10 @@ export class ApiService {
    * @returns {Response}
    */
   async handleResponseErrors(response, config) {
+    if (!response) {
+      throw new Error('No response received');
+    }
+    
     if (!response.ok) {
       // Handle specific error cases
       switch (response.status) {
@@ -289,9 +296,6 @@ export class ApiService {
         ...options.headers,
       },
     };
-    
-    // Remove Content-Type to let browser handle it
-    delete config.headers['Content-Type'];
     
     return this.request('POST', endpoint, config);
   }

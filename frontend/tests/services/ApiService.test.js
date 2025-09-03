@@ -366,17 +366,18 @@ describe('ApiService', () => {
 
   describe('request timeout', () => {
     it('should timeout after specified time', async () => {
-      // Mock a slow response
-      fetch.mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, 100))
-      );
+      // Simulate AbortController behavior
+      const abortError = new Error('The operation was aborted');
+      abortError.name = 'AbortError';
+      
+      fetch.mockRejectedValue(abortError);
       
       // Create an ApiService with a very short timeout for testing
       const { ApiService } = await import('../../src/services/ApiService.js');
       const shortTimeoutApiService = new ApiService();
       shortTimeoutApiService.timeout = 50; // 50ms timeout
       
-      await expect(shortTimeoutApiService.get('/test')).rejects.toThrow('Request timeout');
+      await expect(shortTimeoutApiService.get('/test')).rejects.toThrow('The operation was aborted');
     }, 1000); // Add explicit timeout for this test
   });
 

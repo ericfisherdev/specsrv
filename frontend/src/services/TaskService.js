@@ -401,4 +401,75 @@ export class TaskService {
   async deleteTaskFile(taskId, fileId) {
     return this.deleteTaskAttachment(taskId, fileId);
   }
+
+  /**
+   * Log time to task
+   * @param {number} taskId - Task ID
+   * @param {Object} timeData - Time entry data
+   * @returns {Promise<Object>}
+   */
+  async logTime(taskId, timeData) {
+    return this.apiService.post(`/tasks/${taskId}/time`, timeData);
+  }
+
+  /**
+   * Get task time entries
+   * @param {number} taskId - Task ID
+   * @returns {Promise<Array>}
+   */
+  async getTimeEntries(taskId) {
+    return this.apiService.get(`/tasks/${taskId}/time`);
+  }
+
+  /**
+   * Update time entry
+   * @param {number} taskId - Task ID
+   * @param {number} entryId - Time entry ID
+   * @param {Object} timeData - Updated time data
+   * @returns {Promise<Object>}
+   */
+  async updateTimeEntry(taskId, entryId, timeData) {
+    return this.apiService.put(`/tasks/${taskId}/time/${entryId}`, timeData);
+  }
+
+  /**
+   * Delete time entry
+   * @param {number} taskId - Task ID
+   * @param {number} entryId - Time entry ID
+   * @returns {Promise<void>}
+   */
+  async deleteTimeEntry(taskId, entryId) {
+    return this.apiService.delete(`/tasks/${taskId}/time/${entryId}`);
+  }
+
+  /**
+   * Get task dependencies
+   * @param {number} taskId - Task ID
+   * @returns {Promise<Array>}
+   */
+  async getTaskDependencies(taskId) {
+    return this.apiService.get(`/tasks/${taskId}/dependencies`);
+  }
+
+  /**
+   * Add task dependency
+   * @param {number} taskId - Task ID
+   * @param {number} dependsOnId - ID of task this depends on
+   * @returns {Promise<Object>}
+   */
+  async addDependency(taskId, dependsOnId) {
+    return this.apiService.post(`/tasks/${taskId}/dependencies`, {
+      depends_on_id: dependsOnId
+    });
+  }
+
+  /**
+   * Remove task dependency
+   * @param {number} taskId - Task ID
+   * @param {number} dependencyId - Dependency ID to remove
+   * @returns {Promise<void>}
+   */
+  async removeDependency(taskId, dependencyId) {
+    return this.apiService.delete(`/tasks/${taskId}/dependencies/${dependencyId}`);
+  }
 }

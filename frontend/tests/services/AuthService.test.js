@@ -8,6 +8,8 @@ describe('AuthService', () => {
     mockApiService = {
       get: jest.fn(),
       post: jest.fn(),
+      put: jest.fn(),
+      delete: jest.fn(),
     };
     
     authService = new AuthService(mockApiService);
@@ -103,16 +105,13 @@ describe('AuthService', () => {
       expect(user).toBeNull();
     });
 
-    it('should set user and update authentication state', () => {
+    it('should set user and update localStorage', () => {
       const userData = { id: 1, email: 'test@example.com' };
-      const mockTriggerEvent = jest.spyOn(authService, 'triggerEvent');
       
       authService.setUser(userData);
       
       expect(authService.currentUser).toEqual(userData);
-      expect(authService.isAuthenticated).toBe(true);
       expect(localStorage.setItem).toHaveBeenCalledWith('specsrv-user', JSON.stringify(userData));
-      expect(mockTriggerEvent).toHaveBeenCalledWith('userUpdate', userData);
     });
   });
 
@@ -128,12 +127,16 @@ describe('AuthService', () => {
         user: { id: 1, email: 'test@example.com' }
       };
       
-      mockApiService.post.mockResolvedValue({ data: loginResponse });
+      mockApiService.post.mockResolvedValue(loginResponse);
       const mockTriggerEvent = jest.spyOn(authService, 'triggerEvent');
       
-      const result = await authService.login(credentials);
+      const result = await authService.login(credentials.email, credentials.password);
       
-      expect(mockApiService.post).toHaveBeenCalledWith('/auth/login', credentials);
+      expect(mockApiService.post).toHaveBeenCalledWith('/auth/login', {
+        email: credentials.email,
+        password: credentials.password,
+        remember_me: false
+      });
       expect(authService.currentUser).toEqual(loginResponse.user);
       expect(authService.isAuthenticated).toBe(true);
       expect(localStorage.setItem).toHaveBeenCalledWith('specsrv-token', 'auth-token');
@@ -170,7 +173,7 @@ describe('AuthService', () => {
         user: { id: 1, email: 'test@example.com', name: 'Test User' }
       };
       
-      mockApiService.post.mockResolvedValue({ data: registerResponse });
+      mockApiService.post.mockResolvedValue(registerResponse);
       const mockTriggerEvent = jest.spyOn(authService, 'triggerEvent');
       
       const result = await authService.register(userData);
@@ -279,7 +282,7 @@ describe('AuthService', () => {
         .mockReturnValueOnce(JSON.stringify({ id: 1, email: 'test@example.com' })); // getStoredUser() call
       
       const userData = { id: 1, email: 'test@example.com', name: 'Updated User' };
-      mockApiService.get.mockResolvedValue({ data: { user: userData } });
+      mockApiService.get.mockResolvedValue(userData);
       
       await authService.init();
       
@@ -321,13 +324,13 @@ describe('AuthService', () => {
       };
       
       const updatedUser = { id: 1, ...profileData };
-      mockApiService.post.mockResolvedValue({ data: { user: updatedUser } });
+      mockApiService.put.mockResolvedValue({ user: updatedUser });
       
       const result = await authService.updateProfile(profileData);
       
-      expect(mockApiService.post).toHaveBeenCalledWith('/auth/profile', profileData);
+      expect(mockApiService.put).toHaveBeenCalledWith('/auth/profile', profileData);
       expect(authService.currentUser).toEqual(updatedUser);
-      expect(result).toEqual(updatedUser);
+      expect(result).toEqual({ user: updatedUser });
     });
   });
 

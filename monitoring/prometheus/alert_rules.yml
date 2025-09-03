@@ -1,0 +1,117 @@
+groups:
+  - name: specsrv_alerts
+    interval: 30s
+    rules:
+      # Backend service alerts
+      - alert: BackendDown
+        expr: up{job="specsrv-backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "SpecSrv Backend is down"
+          description: "Backend service has been down for more than 2 minutes"
+
+      - alert: HighResponseTime
+        expr: http_request_duration_seconds{quantile="0.95"} > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is above 1 second for 5 minutes"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for the last 5 minutes"
+
+      # Database alerts
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "Database has been down for more than 1 minute"
+
+      - alert: HighDatabaseConnections
+        expr: pg_stat_database_numbackends{datname="specsrv"} > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "High number of database connections"
+          description: "Database connections exceed 80 for more than 5 minutes"
+
+      - alert: DatabaseSlowQueries
+        expr: rate(pg_stat_database_blks_hit{datname="specsrv"}[5m]) < 0.9
+        for: 10m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Database cache hit ratio is low"
+          description: "Cache hit ratio is below 90% for 10 minutes"
+
+      # System alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for more than 10 minutes"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 90% for more than 5 minutes"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "Low disk space"
+          description: "Less than 10% disk space available on root partition"
+
+      # Frontend alerts
+      - alert: FrontendDown
+        expr: up{job="specsrv-frontend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: frontend
+        annotations:
+          summary: "SpecSrv Frontend is down"
+          description: "Frontend service has been down for more than 2 minutes"
+
+      - alert: HighNginxConnections
+        expr: nginx_connections_active > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: frontend
+        annotations:
+          summary: "High number of Nginx connections"
+          description: "Active Nginx connections exceed 1000 for more than 5 minutes"

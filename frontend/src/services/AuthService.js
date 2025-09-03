@@ -107,7 +107,7 @@ export class AuthService {
         this.emit('login', response.user);
         
         // Update global auth store if using Alpine
-        if (window.Alpine?.store) {
+        if (window.Alpine?.store?.('auth')?.setUser) {
           window.Alpine.store('auth').setUser(response.user);
         }
         
@@ -142,7 +142,7 @@ export class AuthService {
         this.emit('login', response.user);
         
         // Update global auth store if using Alpine
-        if (window.Alpine?.store) {
+        if (window.Alpine?.store?.('auth')?.setUser) {
           window.Alpine.store('auth').setUser(response.user);
         }
         
@@ -177,7 +177,7 @@ export class AuthService {
       this.emit('logout');
       
       // Update global auth store if using Alpine
-      if (window.Alpine?.store) {
+      if (window.Alpine?.store?.('auth')?.clear) {
         window.Alpine.store('auth').clear();
       }
       
@@ -246,7 +246,7 @@ export class AuthService {
       this.emit('userUpdate', response.user);
       
       // Update global auth store if using Alpine
-      if (window.Alpine?.store) {
+      if (window.Alpine?.store?.('auth')?.setUser) {
         window.Alpine.store('auth').setUser(response.user);
       }
     }
@@ -256,15 +256,19 @@ export class AuthService {
   
   /**
    * Change password
-   * @param {string} currentPassword 
-   * @param {string} newPassword 
+   * @param {Object} passwordData 
    * @returns {Promise<Object>}
    */
-  async changePassword(currentPassword, newPassword) {
-    return this.apiService.post('/auth/change-password', {
-      current_password: currentPassword,
-      new_password: newPassword,
-    });
+  async changePassword(passwordData) {
+    // Handle both object and individual params
+    const data = typeof passwordData === 'object' && passwordData.currentPassword
+      ? {
+          current_password: passwordData.currentPassword,
+          new_password: passwordData.newPassword,
+        }
+      : passwordData;
+    
+    return this.apiService.post('/auth/change-password', data);
   }
   
   /**
@@ -306,6 +310,23 @@ export class AuthService {
   }
   
   /**
+   * Alias for isUserAuthenticated
+   * @returns {boolean}
+   */
+  isLoggedIn() {
+    return this.isUserAuthenticated();
+  }
+  
+  /**
+   * Trigger event (alias for emit)
+   * @param {string} event 
+   * @param {*} data 
+   */
+  triggerEvent(event, data) {
+    this.emit(event, data);
+  }
+  
+  /**
    * Get authentication token
    * @returns {string|null}
    */
@@ -319,6 +340,13 @@ export class AuthService {
    */
   setToken(token) {
     localStorage.setItem(this.tokenKey, token);
+  }
+  
+  /**
+   * Remove authentication token
+   */
+  removeToken() {
+    localStorage.removeItem(this.tokenKey);
   }
   
   /**
@@ -343,7 +371,14 @@ export class AuthService {
    */
   getStoredUser() {
     const userData = localStorage.getItem(this.userKey);
-    return userData ? JSON.parse(userData) : null;
+    if (!userData) return null;
+    
+    try {
+      return JSON.parse(userData);
+    } catch (error) {
+      console.error('Failed to parse stored user data:', error);
+      return null;
+    }
   }
   
   /**
