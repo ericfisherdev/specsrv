@@ -79,25 +79,6 @@ monolog:
             max_level: warning
             channels: ["php"]
 
-    processors:
-        # Add extra context to all log entries
-        - Monolog\Processor\WebProcessor:
-            extra_fields:
-                - url
-                - ip
-                - http_method
-                - server
-                - referrer
-                - user_agent
-        - Monolog\Processor\IntrospectionProcessor:
-            level: error
-            skip_classes_partial_namespaces:
-                - 'Monolog\\'
-        - Monolog\Processor\UidProcessor
-        - Monolog\Processor\ProcessIdProcessor
-        - Monolog\Processor\HostnameProcessor
-        - Monolog\Processor\GitProcessor
-
     channels:
         - security
         - doctrine
