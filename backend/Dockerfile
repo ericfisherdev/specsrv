@@ -14,7 +14,6 @@ RUN npm ci
 
 # Copy source files needed for build
 COPY frontend/src/ ./src/
-COPY frontend/assets/ ./assets/
 COPY frontend/webpack.config.js ./
 COPY frontend/postcss.config.js ./
 COPY frontend/tailwind.config.js ./

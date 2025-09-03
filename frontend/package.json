@@ -36,6 +36,7 @@
     "@jslint-org/jslint": "^2025.3.31",
     "@playwright/test": "^1.55.0",
     "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/postcss": "^4.1.12",
     "@tailwindcss/typography": "^0.5.16",
     "autoprefixer": "^10.4.21",
     "babel-loader": "^9.2.1",
