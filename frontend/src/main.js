@@ -33,6 +33,7 @@ import offlineDetection from "./js/offline-detection";
 // Import services
 import { ApiService } from "./services/ApiService";
 import { AuthService } from "./services/AuthService";
+import { FlashMessageManager } from "./utils/flashMessages";
 
 // Register GSAP plugins
 gsap.registerPlugin(Draggable, ScrollTrigger);
@@ -273,12 +274,14 @@ document.addEventListener("DOMContentLoaded", function() {
   // Initialize services
   const apiService = new ApiService();
   const authService = new AuthService(apiService);
+  const notificationManager = new FlashMessageManager();
   
   // Create global app object
   window.app = {
     router: router,
     apiService: apiService,
-    authService: authService
+    authService: authService,
+    notificationManager: notificationManager
   };
 
   // Hide loading screen and show the app

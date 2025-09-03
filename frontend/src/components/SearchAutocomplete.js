@@ -153,7 +153,7 @@ window.searchAutocomplete = function() {
       this.loading = true;
 
       try {
-        const apiService = window.apiService;
+        const apiService = window.app?.apiService;
         const response = await apiService.get(`/search/suggestions?q=${encodeURIComponent(this.query)}`);
 
         if (response) {
