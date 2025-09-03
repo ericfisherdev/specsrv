@@ -26,7 +26,8 @@
   "dependencies": {
     "alpinejs": "^3.14.9",
     "gsap": "^3.13.0",
-    "htmx.org": "^2.0.6"
+    "htmx.org": "^2.0.6",
+    "jslint": "^0.12.1"
   },
   "devDependencies": {
     "@babel/core": "^7.17.0",
@@ -42,6 +43,7 @@
     "css-loader": "^7.1.2",
     "cssnano": "^6.0.3",
     "eslint": "^8.57.1",
+    "glob": "^11.0.3",
     "html-webpack-plugin": "^5.6.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",

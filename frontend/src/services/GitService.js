@@ -1,4 +1,4 @@
-import ApiService from './ApiService.js';
+import ApiService from "./ApiService.js";
 
 /**
  * Git Service - Handles Git repository operations through the API
@@ -6,7 +6,7 @@ import ApiService from './ApiService.js';
 export class GitService extends ApiService {
   constructor() {
     super();
-    this.basePath = '/git';
+    this.basePath = "/git";
   }
 
   /**
@@ -186,7 +186,7 @@ export class GitService extends ApiService {
      * @param {string} filePath - File path in repository
      * @param {string} commitHash - Commit hash (optional, defaults to HEAD)
      */
-  async getFileContent(linkId, filePath, commitHash = 'HEAD') {
+  async getFileContent(linkId, filePath, commitHash = "HEAD") {
     const params = new URLSearchParams({
       path: filePath,
       commit: commitHash
@@ -250,7 +250,7 @@ export class GitService extends ApiService {
      * @param {string} filePath - File path in repository
      * @param {string} commitHash - Commit hash (optional, defaults to HEAD)
      */
-  async getBlame(linkId, filePath, commitHash = 'HEAD') {
+  async getBlame(linkId, filePath, commitHash = "HEAD") {
     const params = new URLSearchParams({
       path: filePath,
       commit: commitHash
@@ -341,10 +341,10 @@ export class GitService extends ApiService {
       const match = url.match(pattern);
       if (match) {
         return {
-          provider: match[1] || 'github.com',
+          provider: match[1] || "github.com",
           owner: match[2] || match[1],
           repo: match[3] || match[2],
-          isSSH: url.startsWith('git@'),
+          isSSH: url.startsWith("git@"),
           original: url
         };
       }
@@ -360,14 +360,14 @@ export class GitService extends ApiService {
      * @returns {string} Formatted message
      */
   static formatCommitMessage(message, maxLength = 72) {
-    const lines = message.split('\n');
+    const lines = message.split("\n");
     const subject = lines[0];
-        
+
     if (subject.length <= maxLength) {
       return subject;
     }
-        
-    return subject.substring(0, maxLength - 3) + '...';
+
+    return subject.substring(0, maxLength - 3) + "...";
   }
 
   /**
@@ -378,20 +378,20 @@ export class GitService extends ApiService {
      */
   static getCommitUrl(gitLink, commitHash) {
     if (!gitLink || !commitHash) {return null;}
-        
+
     const parsed = this.parseGitUrl(gitLink.url);
     if (!parsed) {return null;}
-        
+
     const provider = parsed.provider.toLowerCase();
-        
-    if (provider.includes('github')) {
+
+    if (provider.includes("github")) {
       return `https://${parsed.provider}/${parsed.owner}/${parsed.repo}/commit/${commitHash}`;
-    } else if (provider.includes('gitlab')) {
+    } else if (provider.includes("gitlab")) {
       return `https://${parsed.provider}/${parsed.owner}/${parsed.repo}/-/commit/${commitHash}`;
-    } else if (provider.includes('bitbucket')) {
+    } else if (provider.includes("bitbucket")) {
       return `https://${parsed.provider}/${parsed.owner}/${parsed.repo}/commits/${commitHash}`;
     }
-        
+
     return null;
   }
 }

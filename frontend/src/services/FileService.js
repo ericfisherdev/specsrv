@@ -1,4 +1,4 @@
-import ApiService from './ApiService.js';
+import ApiService from "./ApiService.js";
 
 /**
  * File Service - Handles file operations through the API
@@ -6,7 +6,7 @@ import ApiService from './ApiService.js';
 export class FileService extends ApiService {
   constructor() {
     super();
-    this.basePath = '/files';
+    this.basePath = "/files";
   }
 
   /**
@@ -16,28 +16,28 @@ export class FileService extends ApiService {
      */
   async uploadFiles(files, options = {}) {
     const formData = new FormData();
-        
+
     // Add files to form data
     if (files instanceof FileList || Array.isArray(files)) {
       Array.from(files).forEach(file => {
-        formData.append('files[]', file);
+        formData.append("files[]", file);
       });
     } else {
-      formData.append('files[]', files);
+      formData.append("files[]", files);
     }
 
     // Add context data
     if (options.projectId) {
-      formData.append('project_id', options.projectId);
+      formData.append("project_id", options.projectId);
     }
     if (options.taskId) {
-      formData.append('task_id', options.taskId);
+      formData.append("task_id", options.taskId);
     }
 
     return this.request(`${this.basePath}/upload`, {
-      method: 'POST',
+      method: "POST",
       body: formData,
-      // Don't set content-type, let browser set it with boundary for multipart
+      // Don"t set content-type, let browser set it with boundary for multipart
       headers: {}
     });
   }
@@ -74,9 +74,9 @@ export class FileService extends ApiService {
      */
   async downloadFile(filename) {
     const url = this.getDownloadUrl(filename);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = '';
+    link.download = "";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -130,14 +130,14 @@ export class FileService extends ApiService {
      */
   static canPreview(mimeType) {
     const supportedTypes = [
-      'text/plain',
-      'text/markdown',
-      'text/html',
-      'text/css',
-      'text/javascript',
-      'application/json'
+      "text/plain",
+      "text/markdown",
+      "text/html",
+      "text/css",
+      "text/javascript",
+      "application/json"
     ];
-    return supportedTypes.includes(mimeType) || mimeType.startsWith('text/');
+    return supportedTypes.includes(mimeType) || mimeType.startsWith("text/");
   }
 
   /**
@@ -146,16 +146,16 @@ export class FileService extends ApiService {
      * @returns {string} Icon identifier
      */
   static getFileIcon(mimeType) {
-    if (mimeType.startsWith('image/')) {return 'image';}
-    if (mimeType === 'application/pdf') {return 'pdf';}
-    if (mimeType.startsWith('text/')) {return 'text';}
-    if (mimeType.startsWith('video/')) {return 'video';}
-    if (mimeType.startsWith('audio/')) {return 'audio';}
-    if (mimeType.includes('zip') || mimeType.includes('archive')) {return 'archive';}
-    if (mimeType.includes('word') || mimeType.includes('document')) {return 'document';}
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) {return 'spreadsheet';}
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) {return 'presentation';}
-    return 'file';
+    if (mimeType.startsWith("image/")) {return "image";}
+    if (mimeType === "application/pdf") {return "pdf";}
+    if (mimeType.startsWith("text/")) {return "text";}
+    if (mimeType.startsWith("video/")) {return "video";}
+    if (mimeType.startsWith("audio/")) {return "audio";}
+    if (mimeType.includes("zip") || mimeType.includes("archive")) {return "archive";}
+    if (mimeType.includes("word") || mimeType.includes("document")) {return "document";}
+    if (mimeType.includes("spreadsheet") || mimeType.includes("excel")) {return "spreadsheet";}
+    if (mimeType.includes("presentation") || mimeType.includes("powerpoint")) {return "presentation";}
+    return "file";
   }
 
   /**
@@ -164,13 +164,13 @@ export class FileService extends ApiService {
      * @returns {string} Formatted size
      */
   static formatFileSize(bytes) {
-    if (bytes === 0) {return '0 Bytes';}
-        
+    if (bytes === 0) {return "0 Bytes";}
+
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-        
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 
   /**
@@ -184,7 +184,7 @@ export class FileService extends ApiService {
     const {
       maxSize = 10 * 1024 * 1024, // 10MB default
       allowedTypes = [],
-      blockedTypes = ['application/x-msdownload', 'application/x-executable']
+      blockedTypes = ["application/x-msdownload", "application/x-executable"]
     } = options;
 
     // Size validation
@@ -203,7 +203,7 @@ export class FileService extends ApiService {
 
     // Name validation
     if (file.name.length > 255) {
-      errors.push('File name is too long (max 255 characters)');
+      errors.push("File name is too long (max 255 characters)");
     }
 
     return {

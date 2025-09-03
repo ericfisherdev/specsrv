@@ -4,35 +4,38 @@
  */
 export class ThemeManager {
   constructor() {
-    this.storageKey = 'specsrv-theme';
-    this.themes = ['light', 'dark', 'system'];
-    this.currentTheme = 'system';
+    this.storageKey = "specsrv-theme";
+    this.themes = ["light", "dark", "system"];
+    this.currentTheme = "system";
     this.isDark = false;
-    this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
+    this.mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
     // Event listeners
     this.listeners = {
       change: [],
     };
   }
-  
+
   /**
    * Initialize theme manager
    */
   init() {
     // Load saved theme preference
     this.currentTheme = this.getStoredTheme();
-    
+
     // Set up system theme listener
-    this.mediaQuery.addEventListener('change', this.handleSystemThemeChange.bind(this));
-    
+    this.mediaQuery.addEventListener(
+      "change",
+      this.handleSystemThemeChange.bind(this)
+    );
+
     // Apply initial theme
     this.applyTheme();
-    
+
     // Prevent flash of unstyled content
     this.preventFlash();
   }
-  
+
   /**
    * Add event listener
    * @param {string} event - Event name
@@ -43,7 +46,7 @@ export class ThemeManager {
       this.listeners[event].push(callback);
     }
   }
-  
+
   /**
    * Remove event listener
    * @param {string} event - Event name
@@ -51,10 +54,12 @@ export class ThemeManager {
    */
   removeEventListener(event, callback) {
     if (this.listeners[event]) {
-      this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+      this.listeners[event] = this.listeners[event].filter(
+        (cb) => cb !== callback
+      );
     }
   }
-  
+
   /**
    * Emit event
    * @param {string} event - Event name
@@ -64,22 +69,22 @@ export class ThemeManager {
     if (this.listeners[event]) {
       this.listeners[event].forEach(callback => callback(data));
     }
-    
+
     // Also dispatch DOM event for easier integration
     document.dispatchEvent(new CustomEvent(`theme:${event}`, {
       detail: data
     }));
   }
-  
+
   /**
    * Get stored theme preference
    * @returns {string}
    */
   getStoredTheme() {
     const stored = localStorage.getItem(this.storageKey);
-    return this.themes.includes(stored) ? stored : 'system';
+    return this.themes.includes(stored) ? stored : "system";
   }
-  
+
   /**
    * Store theme preference
    * @param {string} theme - Theme to store
@@ -87,63 +92,63 @@ export class ThemeManager {
   storeTheme(theme) {
     localStorage.setItem(this.storageKey, theme);
   }
-  
+
   /**
-   * Get effective theme (resolving 'system' to actual theme)
+   * Get effective theme (resolving "system" to actual theme)
    * @param {string} theme - Theme to resolve
    * @returns {string}
    */
   getEffectiveTheme(theme = this.currentTheme) {
-    if (theme === 'system') {
-      return this.mediaQuery.matches ? 'dark' : 'light';
+    if (theme === "system") {
+      return this.mediaQuery.matches ? "dark" : "light";
     }
     return theme;
   }
-  
+
   /**
    * Set theme
    * @param {string} theme - Theme to set
    */
   setTheme(theme) {
     if (!this.themes.includes(theme)) {
-      console.warn(`Invalid theme: ${theme}. Using 'system' instead.`);
-      theme = 'system';
+      console.warn(`Invalid theme: ${theme}. Using "system" instead.`);
+      theme = "system";
     }
-    
+
     const oldTheme = this.currentTheme;
     const oldEffectiveTheme = this.getEffectiveTheme(oldTheme);
-    
+
     this.currentTheme = theme;
     this.storeTheme(theme);
-    
+
     const newEffectiveTheme = this.getEffectiveTheme(theme);
-    
+
     // Apply theme if effective theme changed
     if (oldEffectiveTheme !== newEffectiveTheme) {
       this.applyTheme(newEffectiveTheme);
     }
-    
+
     // Emit change event
-    this.emit('change', {
+    this.emit("change", {
       theme: this.currentTheme,
       effectiveTheme: newEffectiveTheme,
-      isDark: newEffectiveTheme === 'dark',
+      isDark: newEffectiveTheme === "dark",
       oldTheme,
       oldEffectiveTheme,
     });
   }
-  
+
   /**
    * Toggle between light and dark themes
    * @returns {string} - New theme
    */
   toggle() {
     const effectiveTheme = this.getEffectiveTheme();
-    const newTheme = effectiveTheme === 'dark' ? 'light' : 'dark';
+    const newTheme = effectiveTheme === "dark" ? "light" : "dark";
     this.setTheme(newTheme);
     return newTheme;
   }
-  
+
   /**
    * Cycle through all themes
    * @returns {string} - New theme
@@ -155,70 +160,70 @@ export class ThemeManager {
     this.setTheme(newTheme);
     return newTheme;
   }
-  
+
   /**
    * Apply theme to document
    * @param {string} effectiveTheme - Effective theme to apply
    */
   applyTheme(effectiveTheme = this.getEffectiveTheme()) {
     const html = document.documentElement;
-    
+
     // Update dark class
-    if (effectiveTheme === 'dark') {
-      html.classList.add('dark');
+    if (effectiveTheme === "dark") {
+      html.classList.add("dark");
       this.isDark = true;
     } else {
-      html.classList.remove('dark');
+      html.classList.remove("dark");
       this.isDark = false;
     }
-    
+
     // Update data attribute for CSS selector targeting
-    html.setAttribute('data-theme', effectiveTheme);
-    
+    html.setAttribute("data-theme", effectiveTheme);
+
     // Update meta theme-color for mobile browsers
     this.updateThemeColor(effectiveTheme);
   }
-  
+
   /**
    * Update meta theme-color
    * @param {string} effectiveTheme - Current effective theme
    */
   updateThemeColor(effectiveTheme) {
-    let themeColorMeta = document.querySelector('meta[name="theme-color"]');
-    
+    let themeColorMeta = document.querySelector("meta[name="theme-color"]");
+
     if (!themeColorMeta) {
-      themeColorMeta = document.createElement('meta');
-      themeColorMeta.name = 'theme-color';
+      themeColorMeta = document.createElement("meta");
+      themeColorMeta.name = "theme-color";
       document.head.appendChild(themeColorMeta);
     }
-    
+
     // Set theme color based on theme
     const colors = {
-      light: '#ffffff',
-      dark: '#111827',
+      light: "#ffffff",
+      dark: "#111827",
     };
-    
+
     themeColorMeta.content = colors[effectiveTheme] || colors.light;
   }
-  
+
   /**
    * Handle system theme change
    * @param {MediaQueryListEvent} event - Media query event
    */
   handleSystemThemeChange(event) {
-    if (this.currentTheme === 'system') {
-      const newEffectiveTheme = event.matches ? 'dark' : 'light';
+    if (this.currentTheme === "system") {
+      const newEffectiveTheme = event.matches ? "dark" : "light";
       this.applyTheme(newEffectiveTheme);
-      
-      this.emit('change', {
+
+      this.emit("change", {
         theme: this.currentTheme,
         effectiveTheme: newEffectiveTheme,
-        isDark: newEffectiveTheme === 'dark',
+        isDark: newEffectiveTheme === "dark",
         systemChange: true,
       });
     }
   }
-  
+
   /**
    * Prevent flash of unstyled content
    */
@@ -228,7 +233,7 @@ export class ThemeManager {
     const effectiveTheme = this.getEffectiveTheme();
     this.applyTheme(effectiveTheme);
   }
-  
+
   /**
    * Get current theme
    * @returns {string}
@@ -236,7 +241,7 @@ export class ThemeManager {
   getCurrentTheme() {
     return this.currentTheme;
   }
-  
+
   /**
    * Get effective theme
    * @returns {string}
@@ -244,31 +249,31 @@ export class ThemeManager {
   getCurrentEffectiveTheme() {
     return this.getEffectiveTheme();
   }
-  
+
   /**
    * Check if current theme is dark
    * @returns {boolean}
    */
   isDarkMode() {
-    return this.getEffectiveTheme() === 'dark';
+    return this.getEffectiveTheme() === "dark";
   }
-  
+
   /**
    * Check if current theme is light
    * @returns {boolean}
    */
   isLightMode() {
-    return this.getEffectiveTheme() === 'light';
+    return this.getEffectiveTheme() === "light";
   }
-  
+
   /**
    * Check if using system theme
    * @returns {boolean}
    */
   isSystemTheme() {
-    return this.currentTheme === 'system';
+    return this.currentTheme === "system";
   }
-  
+
   /**
    * Get theme options for UI
    * @returns {Array<Object>}
@@ -276,26 +281,26 @@ export class ThemeManager {
   getThemeOptions() {
     return [
       {
-        value: 'light',
-        label: 'Light',
-        icon: '☀️',
-        description: 'Light mode',
+        value: "light",
+        label: "Light",
+        icon: "☀️",
+        description: "Light mode",
       },
       {
-        value: 'dark',
-        label: 'Dark',
-        icon: '🌙',
-        description: 'Dark mode',
+        value: "dark",
+        label: "Dark",
+        icon: "🌙",
+        description: "Dark mode",
       },
       {
-        value: 'system',
-        label: 'System',
-        icon: '💻',
-        description: 'Follow system preference',
+        value: "system",
+        label: "System",
+        icon: "💻",
+        description: "Follow system preference",
       },
     ];
   }
-  
+
   /**
    * Get CSS custom properties for theme
    * @param {string} effectiveTheme - Effective theme
@@ -303,33 +308,33 @@ export class ThemeManager {
    */
   getThemeProperties(effectiveTheme = this.getEffectiveTheme()) {
     const lightProperties = {
-      '--color-background': '#ffffff',
-      '--color-foreground': '#000000',
-      '--color-surface': '#f8fafc',
-      '--color-border': '#e2e8f0',
-      '--color-primary': '#3b82f6',
-      '--color-secondary': '#64748b',
+      "--color-background": "#ffffff",
+      "--color-foreground": "#000000",
+      "--color-surface": "#f8fafc",
+      "--color-border": "#e2e8f0",
+      "--color-primary": "#3b82f6",
+      "--color-secondary": "#64748b",
     };
-    
+
     const darkProperties = {
-      '--color-background': '#111827',
-      '--color-foreground': '#ffffff',
-      '--color-surface': '#1f2937',
-      '--color-border': '#374151',
-      '--color-primary': '#60a5fa',
-      '--color-secondary': '#9ca3af',
+      "--color-background": "#111827",
+      "--color-foreground": "#ffffff",
+      "--color-surface": "#1f2937",
+      "--color-border": "#374151",
+      "--color-primary": "#60a5fa",
+      "--color-secondary": "#9ca3af",
     };
-    
-    return effectiveTheme === 'dark' ? darkProperties : lightProperties;
+
+    return effectiveTheme === "dark" ? darkProperties : lightProperties;
   }
-  
+
   /**
    * Apply custom properties to document
    * @param {string} effectiveTheme - Effective theme
    */
   applyCustomProperties(effectiveTheme = this.getEffectiveTheme()) {
     const properties = this.getThemeProperties(effectiveTheme);
-    
+
     Object.entries(properties).forEach(([property, value]) => {
       document.documentElement.style.setProperty(property, value);
     });

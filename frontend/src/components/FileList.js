@@ -7,19 +7,19 @@ export class FileList {
     this.container = container;
     this.options = {
       canDelete: false,
-      baseUrl: '/api/v1/files',
+      baseUrl: "/api/v1/files",
       ...options
     };
     this.files = [];
     this.previewFile = null;
-        
+
     this.init();
   }
 
   init() {
     // Initialize Alpine.js data
-    if (this.container && typeof Alpine !== 'undefined') {
-      this.container._x_dataStack = [{ 
+    if (this.container && typeof Alpine !== "undefined") {
+      this.container._x_dataStack = [{
         previewFile: null,
         togglePreview: (filename) => this.togglePreview(filename),
         deleteFile: (filename) => this.deleteFile(filename)
@@ -33,7 +33,7 @@ export class FileList {
      */
   render(files = []) {
     this.files = files;
-        
+
     if (files.length === 0) {
       this.container.innerHTML = this.renderEmptyState();
       return;
@@ -43,11 +43,11 @@ export class FileList {
             <div class="space-y-3" x-data="{ previewFile: null }">
                 <h4 class="text-sm font-medium text-gray-900">Attached Files (${files.length})</h4>
                 <div class="grid gap-3">
-                    ${files.map(file => this.renderFileItem(file)).join('')}
+                    ${files.map(file => this.renderFileItem(file)).join("")}
                 </div>
             </div>
         `;
-        
+
     this.container.innerHTML = html;
   }
 
@@ -58,7 +58,7 @@ export class FileList {
   renderFileItem(file) {
     const icon = this.getFileIcon(file.mime_type);
     const canPreview = this.canPreviewFile(file.mime_type);
-        
+
     return `
             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
                 <div class="flex items-center space-x-3 min-w-0 flex-1">
@@ -66,7 +66,7 @@ export class FileList {
                     <div class="flex-shrink-0">
                         ${icon}
                     </div>
-                    
+
                     <!-- File Info -->
                     <div class="min-w-0 flex-1">
                         <p class="text-sm font-medium text-gray-900 truncate">
@@ -75,21 +75,21 @@ export class FileList {
                         <div class="flex items-center space-x-2 text-xs text-gray-500">
                             <span>${this.formatFileSize(file.size)}</span>
                             <span>•</span>
-                            <span>${file.mime_type || 'Unknown type'}</span>
-                            ${file.created_at ? `<span>•</span><span>${this.formatDate(file.created_at)}</span>` : ''}
+                            <span>${file.mime_type || "Unknown type"}</span>
+                            ${file.created_at ? "<span>•</span><span>" + this.formatDate(file.created_at) + "</span>" : ""}
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Actions -->
                 <div class="flex items-center space-x-2 ml-4">
-                    ${canPreview ? this.renderPreviewButton(file) : ''}
+                    ${canPreview ? this.renderPreviewButton(file) : ""}
                     ${this.renderDownloadButton(file)}
-                    ${this.options.canDelete ? this.renderDeleteButton(file) : ''}
+                    ${this.options.canDelete ? this.renderDeleteButton(file) : ""}
                 </div>
             </div>
-            
-            ${canPreview ? this.renderPreviewPanel(file) : ''}
+
+            ${canPreview ? this.renderPreviewPanel(file) : ""}
         `;
   }
 
@@ -98,8 +98,8 @@ export class FileList {
      */
   renderPreviewButton(file) {
     return `
-            <button 
-                @click="previewFile = previewFile === '${file.filename}' ? null : '${file.filename}'"
+            <button
+                @click="previewFile = previewFile === \"${file.filename}\" ? null : \"${file.filename}\""
                 class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-500"
                 title="Preview file"
             >
@@ -117,7 +117,7 @@ export class FileList {
      */
   renderDownloadButton(file) {
     return `
-            <a 
+            <a
                 href="${this.options.baseUrl}/download/${file.filename}"
                 class="inline-flex items-center px-2 py-1 text-xs font-medium text-green-600 hover:text-green-500"
                 title="Download file"
@@ -136,8 +136,8 @@ export class FileList {
      */
   renderDeleteButton(file) {
     return `
-            <button 
-                @click="$dispatch('file-delete', { filename: '${file.filename}' })"
+            <button
+                @click="$dispatch(\"file-delete\", { filename: \"${file.filename}\" })"
                 class="inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-500"
                 title="Delete file"
             >
@@ -154,8 +154,8 @@ export class FileList {
      */
   renderPreviewPanel(file) {
     return `
-            <div 
-                x-show="previewFile === '${file.filename}'"
+            <div
+                x-show="previewFile === \"${file.filename}\""
                 x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 transform scale-95"
                 x-transition:enter-end="opacity-100 transform scale-100"
@@ -167,7 +167,7 @@ export class FileList {
             >
                 <div class="flex items-center justify-between mb-3">
                     <h5 class="text-sm font-medium text-gray-900">${file.original_name || file.filename}</h5>
-                    <button 
+                    <button
                         @click="previewFile = null"
                         class="text-gray-400 hover:text-gray-600"
                     >
@@ -176,7 +176,7 @@ export class FileList {
                         </svg>
                     </button>
                 </div>
-                <div 
+                <div
                     id="preview-content-${file.filename}"
                     class="prose prose-sm max-w-none"
                 >
@@ -210,20 +210,20 @@ export class FileList {
      * Get appropriate file icon based on MIME type
      */
   getFileIcon(mimeType) {
-    if (mimeType && mimeType.startsWith('image/')) {
+    if (mimeType && mimeType.startsWith("image/")) {
       return `
                 <svg class="h-8 w-8 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
                 </svg>
             `;
-    } else if (mimeType === 'application/pdf') {
+    } else if (mimeType === "application/pdf") {
       return `
                 <svg class="h-8 w-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
                     <path d="M8 8a.5.5 0 01.5-.5H10a.5.5 0 010 1H8.5A.5.5 0 018 8zm0 2.5a.5.5 0 01.5-.5H11a.5.5 0 010 1H8.5a.5.5 0 01-.5-.5zm0 2.5a.5.5 0 01.5-.5H9a.5.5 0 010 1H8.5A.5.5 0 018 13z"/>
                 </svg>
             `;
-    } else if (mimeType && mimeType.startsWith('text/')) {
+    } else if (mimeType && mimeType.startsWith("text/")) {
       return `
                 <svg class="h-8 w-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
@@ -242,27 +242,27 @@ export class FileList {
      * Check if file can be previewed
      */
   canPreviewFile(mimeType) {
-    return mimeType && (mimeType.startsWith('text/markdown') || mimeType.startsWith('text/plain'));
+    return mimeType && (mimeType.startsWith("text/markdown") || mimeType.startsWith("text/plain"));
   }
 
   /**
      * Format file size
      */
   formatFileSize(bytes) {
-    if (!bytes) {return 'Unknown size';}
-    return Math.round(bytes / 1024 * 10) / 10 + ' KB';
+    if (!bytes) {return "Unknown size";}
+    return Math.round(bytes / 1024 * 10) / 10 + " KB";
   }
 
   /**
      * Format date
      */
   formatDate(dateString) {
-    if (!dateString) {return '';}
+    if (!dateString) {return "";}
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
     });
   }
 
@@ -279,10 +279,10 @@ export class FileList {
         const content = await response.text();
         previewContainer.innerHTML = content;
       } else {
-        previewContainer.innerHTML = '<p class="text-red-600">Failed to load preview</p>';
+        previewContainer.innerHTML = "<p class=\"text-red-600\">Failed to load preview</p>";
       }
     } catch (error) {
-      previewContainer.innerHTML = '<p class="text-red-600">Error loading preview</p>';
+      previewContainer.innerHTML = "<p class=\"text-red-600\">Error loading preview</p>";
     }
   }
 
@@ -290,15 +290,15 @@ export class FileList {
      * Delete a file
      */
   async deleteFile(filename) {
-    if (!confirm('Are you sure you want to delete this file?')) {
+    if (!confirm("Are you sure you want to delete this file?")) {
       return;
     }
 
     try {
       const response = await fetch(`${this.options.baseUrl}/${filename}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
@@ -308,16 +308,16 @@ export class FileList {
         if (fileElement) {
           fileElement.remove();
         }
-                
+
         // Emit custom event
-        this.container.dispatchEvent(new CustomEvent('file-deleted', {
+        this.container.dispatchEvent(new CustomEvent("file-deleted", {
           detail: { filename }
         }));
       } else {
-        alert('Failed to delete file');
+        alert("Failed to delete file");
       }
     } catch (error) {
-      alert('Error deleting file');
+      alert("Error deleting file");
     }
   }
 }

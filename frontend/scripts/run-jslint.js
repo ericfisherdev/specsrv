@@ -9,6 +9,8 @@ const config = {
   browser: true,
   devel: true,
   es6: true,
+  module: true,
+  fudge: true,
   indent: 2,
   maxlen: 120,
   predef: [

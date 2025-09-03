@@ -7,10 +7,10 @@ export class AuthService {
     this.apiService = apiService;
     this.currentUser = null;
     this.isAuthenticated = false;
-    this.tokenKey = 'specsrv-token';
-    this.userKey = 'specsrv-user';
-    this.refreshTokenKey = 'specsrv-refresh-token';
-    
+    this.tokenKey = "specsrv-token";
+    this.userKey = "specsrv-user";
+    this.refreshTokenKey = "specsrv-refresh-token";
+
     // Event listeners
     this.listeners = {
       login: [],
@@ -18,7 +18,7 @@ export class AuthService {
       userUpdate: [],
     };
   }
-  
+
   /**
    * Initialize auth service
    */
@@ -27,11 +27,11 @@ export class AuthService {
       // Check if user is already logged in
       const token = this.getToken();
       const userData = this.getStoredUser();
-      
+
       if (token && userData) {
         this.currentUser = userData;
         this.isAuthenticated = true;
-        
+
         // Verify token is still valid
         try {
           const user = await this.getCurrentUserFromAPI();
@@ -42,120 +42,120 @@ export class AuthService {
         }
       }
     } catch (error) {
-      console.error('Auth initialization failed:', error);
+      console.error("Auth initialization failed:", error);
       this.clearAuthData();
     }
   }
-  
+
   /**
    * Add event listener
-   * @param {string} event 
-   * @param {Function} callback 
+   * @param {string} event
+   * @param {Function} callback
    */
   addEventListener(event, callback) {
     if (this.listeners[event]) {
       this.listeners[event].push(callback);
     }
   }
-  
+
   /**
    * Remove event listener
-   * @param {string} event 
-   * @param {Function} callback 
+   * @param {string} event
+   * @param {Function} callback
    */
   removeEventListener(event, callback) {
     if (this.listeners[event]) {
       this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
     }
   }
-  
+
   /**
    * Emit event
-   * @param {string} event 
-   * @param {*} data 
+   * @param {string} event
+   * @param {*} data
    */
   emit(event, data) {
     if (this.listeners[event]) {
       this.listeners[event].forEach(callback => callback(data));
     }
   }
-  
+
   /**
    * Login user
-   * @param {string} email 
-   * @param {string} password 
-   * @param {boolean} rememberMe 
+   * @param {string} email
+   * @param {string} password
+   * @param {boolean} rememberMe
    * @returns {Promise<Object>}
    */
   async login(email, password, rememberMe = false) {
     try {
-      const response = await this.apiService.post('/auth/login', {
+      const response = await this.apiService.post("/auth/login", {
         email,
         password,
         remember_me: rememberMe,
       });
-      
+
       if (response.token && response.user) {
         this.setToken(response.token);
         this.setUser(response.user);
-        
+
         if (response.refresh_token) {
           this.setRefreshToken(response.refresh_token);
         }
-        
+
         this.isAuthenticated = true;
-        this.emit('login', response.user);
-        
+        this.emit("login", response.user);
+
         // Update global auth store if using Alpine
-        if (window.Alpine?.store?.('auth')?.setUser) {
-          window.Alpine.store('auth').setUser(response.user);
+        if (window.Alpine?.store?.("auth")?.setUser) {
+          window.Alpine.store("auth").setUser(response.user);
         }
-        
+
         return response;
       }
-      
-      throw new Error('Invalid login response');
+
+      throw new Error("Invalid login response");
     } catch (error) {
       this.clearAuthData();
       throw error;
     }
   }
-  
+
   /**
    * Register user
-   * @param {Object} userData 
+   * @param {Object} userData
    * @returns {Promise<Object>}
    */
   async register(userData) {
     try {
-      const response = await this.apiService.post('/auth/register', userData);
-      
+      const response = await this.apiService.post("/auth/register", userData);
+
       if (response.token && response.user) {
         this.setToken(response.token);
         this.setUser(response.user);
-        
+
         if (response.refresh_token) {
           this.setRefreshToken(response.refresh_token);
         }
-        
+
         this.isAuthenticated = true;
-        this.emit('login', response.user);
-        
+        this.emit("login", response.user);
+
         // Update global auth store if using Alpine
-        if (window.Alpine?.store?.('auth')?.setUser) {
-          window.Alpine.store('auth').setUser(response.user);
+        if (window.Alpine?.store?.("auth")?.setUser) {
+          window.Alpine.store("auth").setUser(response.user);
         }
-        
+
         return response;
       }
-      
-      throw new Error('Invalid registration response');
+
+      throw new Error("Invalid registration response");
     } catch (error) {
       this.clearAuthData();
       throw error;
     }
   }
-  
+
   /**
    * Logout user
    * @returns {Promise<void>}
@@ -165,29 +165,29 @@ export class AuthService {
       // Call logout endpoint if we have a token
       if (this.getToken()) {
         try {
-          await this.apiService.post('/auth/logout');
+          await this.apiService.post("/auth/logout");
         } catch (error) {
           // Ignore errors on logout endpoint
-          console.warn('Logout endpoint failed:', error);
+          console.warn("Logout endpoint failed:", error);
         }
       }
     } finally {
       // Always clear local auth data
       this.clearAuthData();
-      this.emit('logout');
-      
+      this.emit("logout");
+
       // Update global auth store if using Alpine
-      if (window.Alpine?.store?.('auth')?.clear) {
-        window.Alpine.store('auth').clear();
+      if (window.Alpine?.store?.("auth")?.clear) {
+        window.Alpine.store("auth").clear();
       }
-      
+
       // Redirect to login page
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
       }
     }
   }
-  
+
   /**
    * Refresh authentication token
    * @returns {Promise<Object>}
@@ -195,104 +195,104 @@ export class AuthService {
   async refreshToken() {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
-      throw new Error('No refresh token available');
+      throw new Error("No refresh token available");
     }
-    
+
     try {
-      const response = await this.apiService.post('/auth/refresh', {
+      const response = await this.apiService.post("/auth/refresh", {
         refresh_token: refreshToken,
       });
-      
+
       if (response.token) {
         this.setToken(response.token);
-        
+
         if (response.refresh_token) {
           this.setRefreshToken(response.refresh_token);
         }
-        
+
         if (response.user) {
           this.setUser(response.user);
         }
-        
+
         return response;
       }
-      
-      throw new Error('Invalid refresh response');
+
+      throw new Error("Invalid refresh response");
     } catch (error) {
       // Refresh failed, clear auth data and redirect to login
       this.clearAuthData();
       throw error;
     }
   }
-  
+
   /**
    * Get current user from API
    * @returns {Promise<Object>}
    */
   async getCurrentUserFromAPI() {
-    return this.apiService.get('/auth/me');
+    return this.apiService.get("/auth/me");
   }
-  
+
   /**
    * Update user profile
-   * @param {Object} userData 
+   * @param {Object} userData
    * @returns {Promise<Object>}
    */
   async updateProfile(userData) {
-    const response = await this.apiService.put('/auth/profile', userData);
-    
+    const response = await this.apiService.put("/auth/profile", userData);
+
     if (response.user) {
       this.setUser(response.user);
-      this.emit('userUpdate', response.user);
-      
+      this.emit("userUpdate", response.user);
+
       // Update global auth store if using Alpine
-      if (window.Alpine?.store?.('auth')?.setUser) {
-        window.Alpine.store('auth').setUser(response.user);
+      if (window.Alpine?.store?.("auth")?.setUser) {
+        window.Alpine.store("auth").setUser(response.user);
       }
     }
-    
+
     return response;
   }
-  
+
   /**
    * Change password
-   * @param {Object} passwordData 
+   * @param {Object} passwordData
    * @returns {Promise<Object>}
    */
   async changePassword(passwordData) {
     // Handle both object and individual params
-    const data = typeof passwordData === 'object' && passwordData.currentPassword
+    const data = typeof passwordData === "object" && passwordData.currentPassword
       ? {
         current_password: passwordData.currentPassword,
         new_password: passwordData.newPassword,
       }
       : passwordData;
-    
-    return this.apiService.post('/auth/change-password', data);
+
+    return this.apiService.post("/auth/change-password", data);
   }
-  
+
   /**
    * Request password reset
-   * @param {string} email 
+   * @param {string} email
    * @returns {Promise<Object>}
    */
   async requestPasswordReset(email) {
-    return this.apiService.post('/auth/forgot-password', { email });
+    return this.apiService.post("/auth/forgot-password", { email });
   }
-  
+
   /**
    * Reset password with token
-   * @param {string} token 
-   * @param {string} password 
+   * @param {string} token
+   * @param {string} password
    * @returns {Promise<Object>}
    */
   async resetPassword(token, password) {
-    return this.apiService.post('/auth/reset-password', {
+    return this.apiService.post("/auth/reset-password", {
       token,
       password,
     });
   }
-  
+
   /**
    * Get current user
    * @returns {Object|null}
@@ -300,7 +300,7 @@ export class AuthService {
   getCurrentUser() {
     return this.currentUser;
   }
-  
+
   /**
    * Check if user is authenticated
    * @returns {boolean}
@@ -308,7 +308,7 @@ export class AuthService {
   isUserAuthenticated() {
     return this.isAuthenticated && !!this.getToken();
   }
-  
+
   /**
    * Alias for isUserAuthenticated
    * @returns {boolean}
@@ -316,16 +316,16 @@ export class AuthService {
   isLoggedIn() {
     return this.isUserAuthenticated();
   }
-  
+
   /**
    * Trigger event (alias for emit)
-   * @param {string} event 
-   * @param {*} data 
+   * @param {string} event
+   * @param {*} data
    */
   triggerEvent(event, data) {
     this.emit(event, data);
   }
-  
+
   /**
    * Get authentication token
    * @returns {string|null}
@@ -333,22 +333,22 @@ export class AuthService {
   getToken() {
     return localStorage.getItem(this.tokenKey);
   }
-  
+
   /**
    * Set authentication token
-   * @param {string} token 
+   * @param {string} token
    */
   setToken(token) {
     localStorage.setItem(this.tokenKey, token);
   }
-  
+
   /**
    * Remove authentication token
    */
   removeToken() {
     localStorage.removeItem(this.tokenKey);
   }
-  
+
   /**
    * Get refresh token
    * @returns {string|null}
@@ -356,15 +356,15 @@ export class AuthService {
   getRefreshToken() {
     return localStorage.getItem(this.refreshTokenKey);
   }
-  
+
   /**
    * Set refresh token
-   * @param {string} token 
+   * @param {string} token
    */
   setRefreshToken(token) {
     localStorage.setItem(this.refreshTokenKey, token);
   }
-  
+
   /**
    * Get stored user data
    * @returns {Object|null}
@@ -372,24 +372,24 @@ export class AuthService {
   getStoredUser() {
     const userData = localStorage.getItem(this.userKey);
     if (!userData) {return null;}
-    
+
     try {
       return JSON.parse(userData);
     } catch (error) {
-      console.error('Failed to parse stored user data:', error);
+      console.error("Failed to parse stored user data:", error);
       return null;
     }
   }
-  
+
   /**
    * Set user data
-   * @param {Object} user 
+   * @param {Object} user
    */
   setUser(user) {
     this.currentUser = user;
     localStorage.setItem(this.userKey, JSON.stringify(user));
   }
-  
+
   /**
    * Clear all authentication data
    */
@@ -400,61 +400,57 @@ export class AuthService {
     localStorage.removeItem(this.userKey);
     localStorage.removeItem(this.refreshTokenKey);
   }
-  
+
   /**
    * Check if user has permission
-   * @param {string} permission 
+   * @param {string} permission
    * @returns {boolean}
    */
   hasPermission(permission) {
     if (!this.currentUser || !this.currentUser.roles) {
       return false;
     }
-    
-    return this.currentUser.roles.some(role => 
+
+    return this.currentUser.roles.some(role =>
       role.permissions?.includes(permission)
     );
   }
-  
+
   /**
    * Check if user has role
-   * @param {string} role 
+   * @param {string} role
    * @returns {boolean}
    */
   hasRole(role) {
     if (!this.currentUser || !this.currentUser.roles) {
       return false;
     }
-    
+
     return this.currentUser.roles.some(r => r.name === role);
   }
-  
+
   /**
    * Get user avatar URL
-   * @param {Object} user 
+   * @param {Object} user
    * @returns {string}
    */
   getAvatarUrl(user = null) {
     const targetUser = user || this.currentUser;
-    
+
     if (targetUser?.avatar) {
       return targetUser.avatar;
     }
-    
+
     // Generate avatar based on initials
-    const name = targetUser?.name || targetUser?.email || 'User';
-    const initials = name.split(' ')
+    const name = targetUser?.name || targetUser?.email || "User";
+    const initials = name.split(" ")
       .map(word => word[0])
-      .join('')
+      .join("")
       .toUpperCase()
       .slice(0, 2);
-    
+
     // Generate a simple SVG avatar
-    return `data:image/svg+xml,${encodeURIComponent(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-        <rect width="40" height="40" fill="#3B82F6"/>
-        <text x="50%" y="50%" dy="0.1em" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="white">${initials}</text>
-      </svg>
-    `)}`;
+    const svgContent = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 40 40\"><rect width=\"40\" height=\"40\" fill=\"#3B82F6\"/><text x=\"50%\" y=\"50%\" dy=\"0.1em\" text-anchor=\"middle\" font-family=\"Arial, sans-serif\" font-size=\"14\" fill=\"white\">" + initials + "</text></svg>";
+    return "data:image/svg+xml," + encodeURIComponent(svgContent);
   }
 }

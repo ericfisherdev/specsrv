@@ -1,4 +1,5 @@
-import ApiService from './ApiService.js';
+/*jslint browser: true, devel: true */
+import ApiService from "./ApiService.js";
 
 /**
  * User Service - Handles user-related operations through the API
@@ -6,7 +7,7 @@ import ApiService from './ApiService.js';
 export class UserService extends ApiService {
   constructor() {
     super();
-    this.basePath = '/users';
+    this.basePath = "/users";
   }
 
   /**
@@ -88,41 +89,41 @@ export class UserService extends ApiService {
   }
 
   /**
-     * Get user's activity log
+     * Get user"s activity log
      * @param {number} userId - User ID (optional, defaults to current user)
      * @param {Object} options - Query options
      */
   async getUserActivity(userId = null, options = {}) {
-    const endpoint = userId 
-      ? `${this.basePath}/${userId}/activity` 
+    const endpoint = userId
+      ? `${this.basePath}/${userId}/activity`
       : `${this.basePath}/me/activity`;
-        
+
     const params = new URLSearchParams(options);
     return this.get(`${endpoint}?${params}`);
   }
 
   /**
-     * Get user's projects
+     * Get user"s projects
      * @param {number} userId - User ID (optional, defaults to current user)
      */
   async getUserProjects(userId = null) {
-    const endpoint = userId 
-      ? `${this.basePath}/${userId}/projects` 
+    const endpoint = userId
+      ? `${this.basePath}/${userId}/projects`
       : `${this.basePath}/me/projects`;
-        
+
     return this.get(endpoint);
   }
 
   /**
-     * Get user's tasks
+     * Get user"s tasks
      * @param {number} userId - User ID (optional, defaults to current user)
      * @param {Object} options - Query options
      */
   async getUserTasks(userId = null, options = {}) {
-    const endpoint = userId 
-      ? `${this.basePath}/${userId}/tasks` 
+    const endpoint = userId
+      ? `${this.basePath}/${userId}/tasks`
       : `${this.basePath}/me/tasks`;
-        
+
     const params = new URLSearchParams(options);
     return this.get(`${endpoint}?${params}`);
   }
@@ -163,10 +164,10 @@ export class UserService extends ApiService {
      */
   async uploadAvatar(file) {
     const formData = new FormData();
-    formData.append('avatar', file);
+    formData.append("avatar", file);
 
     return this.request(`${this.basePath}/me/avatar`, {
-      method: 'POST',
+      method: "POST",
       body: formData,
       headers: {}
     });
@@ -184,10 +185,10 @@ export class UserService extends ApiService {
      * @param {number} userId - User ID (optional, defaults to current user)
      */
   async getUserStats(userId = null) {
-    const endpoint = userId 
-      ? `${this.basePath}/${userId}/stats` 
+    const endpoint = userId
+      ? `${this.basePath}/${userId}/stats`
       : `${this.basePath}/me/stats`;
-        
+
     return this.get(endpoint);
   }
 

@@ -6,15 +6,15 @@ export class Router {
   constructor() {
     this.routes = new Map();
     this.currentRoute = null;
-    this.basePath = '';
-    this.defaultRoute = '/dashboard';
-    this.notFoundRoute = '/404';
-    
+    this.basePath = "";
+    this.defaultRoute = "/dashboard";
+    this.notFoundRoute = "/404";
+
     // Route middleware
     this.beforeEachCallbacks = [];
     this.afterEachCallbacks = [];
   }
-  
+
   /**
    * Initialize the router
    */
@@ -23,81 +23,81 @@ export class Router {
     this.bindEvents();
     this.handleInitialRoute();
   }
-  
+
   /**
    * Setup default routes
    */
   setupDefaultRoutes() {
     // Authentication routes
-    this.addRoute('/login', {
-      component: 'LoginPage',
+    this.addRoute("/login", {
+      component: "LoginPage",
       requiresAuth: false,
-      title: 'Login - SpecSrv',
+      title: "Login - SpecSrv",
     });
-    
-    this.addRoute('/register', {
-      component: 'RegisterPage',
+
+    this.addRoute("/register", {
+      component: "RegisterPage",
       requiresAuth: false,
-      title: 'Register - SpecSrv',
+      title: "Register - SpecSrv",
     });
-    
+
     // Main application routes
-    this.addRoute('/dashboard', {
-      component: 'DashboardPage',
+    this.addRoute("/dashboard", {
+      component: "DashboardPage",
       requiresAuth: true,
-      title: 'Dashboard - SpecSrv',
+      title: "Dashboard - SpecSrv",
     });
-    
-    this.addRoute('/projects', {
-      component: 'ProjectListPage',
+
+    this.addRoute("/projects", {
+      component: "ProjectListPage",
       requiresAuth: true,
-      title: 'Projects - SpecSrv',
+      title: "Projects - SpecSrv",
     });
-    
-    this.addRoute('/projects/:id', {
-      component: 'ProjectDetailPage',
+
+    this.addRoute("/projects/:id", {
+      component: "ProjectDetailPage",
       requiresAuth: true,
-      title: 'Project Details - SpecSrv',
+      title: "Project Details - SpecSrv",
     });
-    
-    this.addRoute('/kanban', {
-      component: 'KanbanPage',
+
+    this.addRoute("/kanban", {
+      component: "KanbanPage",
       requiresAuth: true,
-      title: 'Kanban Board - SpecSrv',
+      title: "Kanban Board - SpecSrv",
     });
-    
-    this.addRoute('/tasks', {
-      component: 'TaskListPage',
+
+    this.addRoute("/tasks", {
+      component: "TaskListPage",
       requiresAuth: true,
-      title: 'Tasks - SpecSrv',
+      title: "Tasks - SpecSrv",
     });
-    
-    this.addRoute('/tasks/:id', {
-      component: 'TaskDetailPage',
+
+    this.addRoute("/tasks/:id", {
+      component: "TaskDetailPage",
       requiresAuth: true,
-      title: 'Task Details - SpecSrv',
+      title: "Task Details - SpecSrv",
     });
-    
-    this.addRoute('/profile', {
-      component: 'ProfilePage',
+
+    this.addRoute("/profile", {
+      component: "ProfilePage",
       requiresAuth: true,
-      title: 'Profile - SpecSrv',
+      title: "Profile - SpecSrv",
     });
-    
-    this.addRoute('/search', {
-      component: 'SearchPage',
+
+    this.addRoute("/search", {
+      component: "SearchPage",
       requiresAuth: true,
-      title: 'Search - SpecSrv',
+      title: "Search - SpecSrv",
     });
-    
+
     // Error routes
-    this.addRoute('/404', {
-      component: 'NotFoundPage',
+    this.addRoute("/404", {
+      component: "NotFoundPage",
       requiresAuth: false,
-      title: 'Page Not Found - SpecSrv',
+      title: "Page Not Found - SpecSrv",
     });
   }
-  
+
   /**
    * Add a route
    * @param {string} path - Route path
@@ -112,18 +112,18 @@ export class Router {
       params: this.extractParamNames(path),
     });
   }
-  
+
   /**
    * Convert path to regex
    * @param {string} path - Route path
    * @returns {RegExp}
    */
   pathToRegex(path) {
-    const escapedPath = path.replace(/\//g, '\\/');
-    const paramRegex = escapedPath.replace(/:([^/]+)/g, '([^/]+)');
+    const escapedPath = path.replace(/\//g, "\\/");
+    const paramRegex = escapedPath.replace(/:([^/]+)/g, "([^/]+)");
     return new RegExp(`^${paramRegex}$`);
   }
-  
+
   /**
    * Extract parameter names from path
    * @param {string} path - Route path
@@ -133,7 +133,7 @@ export class Router {
     const matches = path.match(/:([^/]+)/g);
     return matches ? matches.map(match => match.slice(1)) : [];
   }
-  
+
   /**
    * Add before navigation middleware
    * @param {Function} callback - Middleware function
@@ -141,7 +141,7 @@ export class Router {
   beforeEach(callback) {
     this.beforeEachCallbacks.push(callback);
   }
-  
+
   /**
    * Add after navigation middleware
    * @param {Function} callback - Middleware function
@@ -149,7 +149,7 @@ export class Router {
   afterEach(callback) {
     this.afterEachCallbacks.push(callback);
   }
-  
+
   /**
    * Navigate to a route
    * @param {string} path - Path to navigate to
@@ -157,7 +157,7 @@ export class Router {
    */
   async navigate(path, options = {}) {
     const { replace = false, state = {} } = options;
-    
+
     try {
       // Run before navigation middleware
       for (const callback of this.beforeEachCallbacks) {
@@ -165,50 +165,50 @@ export class Router {
         if (result === false) {
           return; // Navigation cancelled
         }
-        if (typeof result === 'string') {
+        if (typeof result === "string") {
           path = result; // Redirect to different path
         }
       }
-      
+
       const route = this.matchRoute(path);
       if (!route) {
         return this.navigate(this.notFoundRoute, { replace: true });
       }
-      
+
       // Check authentication requirements
       if (route.requiresAuth && !this.isAuthenticated()) {
-        return this.navigate('/login', { replace: true });
+        return this.navigate("/login", { replace: true });
       }
-      
-      if (!route.requiresAuth && path !== '/login' && path !== '/register' && this.isAuthenticated()) {
+
+      if (!route.requiresAuth && path !== "/login" && path !== "/register" && this.isAuthenticated()) {
         return this.navigate(this.defaultRoute, { replace: true });
       }
-      
+
       // Update browser history
       if (replace) {
-        history.replaceState(state, '', this.basePath + path);
+        history.replaceState(state, "", this.basePath + path);
       } else {
-        history.pushState(state, '', this.basePath + path);
+        history.pushState(state, "", this.basePath + path);
       }
-      
+
       // Load the route
       await this.loadRoute(route, path, state);
-      
+
       // Run after navigation middleware
       for (const callback of this.afterEachCallbacks) {
         await callback(route, this.currentRoute);
       }
-      
+
       this.currentRoute = { ...route, path };
-      
+
     } catch (error) {
-      console.error('Navigation error:', error);
+      console.error("Navigation error:", error);
       if (path !== this.notFoundRoute) {
         this.navigate(this.notFoundRoute, { replace: true });
       }
     }
   }
-  
+
   /**
    * Match a path to a route
    * @param {string} path - Path to match
@@ -227,7 +227,7 @@ export class Router {
     }
     return null;
   }
-  
+
   /**
    * Load a route
    * @param {Object} route - Route configuration
@@ -239,21 +239,21 @@ export class Router {
     if (route.title) {
       document.title = route.title;
     }
-    
+
     // Dispatch route change event
-    window.dispatchEvent(new CustomEvent('route:change', {
+    window.dispatchEvent(new CustomEvent("route:change", {
       detail: { route, path, state }
     }));
-    
+
     // If we have a component specified, try to load it
     if (route.component) {
       await this.loadComponent(route.component, route.params, state);
     }
-    
+
     // Update active navigation states
     this.updateNavigationState(path);
   }
-  
+
   /**
    * Load a component for the route
    * @param {string} componentName - Component name
@@ -261,17 +261,17 @@ export class Router {
    * @param {Object} state - Navigation state
    */
   async loadComponent(componentName, params, state) {
-    const mainContent = document.getElementById('main-content');
+    const mainContent = document.getElementById("main-content");
     if (!mainContent) {return;}
-    
+
     try {
       // Show loading state
-      mainContent.innerHTML = '<div class="flex items-center justify-center py-12"><div class="loading-spinner loading-spinner-lg"></div></div>';
-      
+      mainContent.innerHTML = "<div class='flex items-center justify-center py-12'><div class='loading-spinner loading-spinner-lg'></div></div>";
+
       // Dynamic import of the component
       const componentModule = await import(`../pages/${componentName}.js`);
       const Component = componentModule.default || componentModule[componentName];
-      
+
       if (Component) {
         const componentInstance = new Component(params, state);
         await componentInstance.render(mainContent);
@@ -289,98 +289,98 @@ export class Router {
       `;
     }
   }
-  
+
   /**
    * Update navigation active states
    * @param {string} currentPath - Current path
    */
   updateNavigationState(currentPath) {
     // Remove active class from all nav links
-    document.querySelectorAll('.nav-link').forEach(link => {
-      link.classList.remove('active');
+    document.querySelectorAll(".nav-link").forEach(link => {
+      link.classList.remove("active");
     });
-    
+
     // Add active class to current nav link
     const currentLink = document.querySelector(`[href="${currentPath}"]`);
     if (currentLink) {
-      currentLink.classList.add('active');
+      currentLink.classList.add("active");
     }
   }
-  
+
   /**
    * Check if user is authenticated
    * @returns {boolean}
    */
   isAuthenticated() {
-    return !!localStorage.getItem('specsrv-token');
+    return !!localStorage.getItem("specsrv-token");
   }
-  
+
   /**
    * Bind browser events
    */
   bindEvents() {
     // Handle browser back/forward buttons
-    window.addEventListener('popstate', (event) => {
-      const path = window.location.pathname.replace(this.basePath, '') || '/';
+    window.addEventListener("popstate", (event) => {
+      const path = window.location.pathname.replace(this.basePath, "") || "/";
       this.navigate(path, { replace: true, state: event.state || {} });
     });
-    
+
     // Handle navigation link clicks
-    document.addEventListener('click', (event) => {
-      const link = event.target.closest('a[href]');
+    document.addEventListener("click", (event) => {
+      const link = event.target.closest("a[href]");
       if (link && this.shouldHandleLink(link)) {
         event.preventDefault();
-        const href = link.getAttribute('href');
+        const href = link.getAttribute("href");
         this.navigate(href);
       }
     });
   }
-  
+
   /**
    * Check if link should be handled by router
    * @param {HTMLElement} link - Link element
    * @returns {boolean}
    */
   shouldHandleLink(link) {
-    const href = link.getAttribute('href');
-    
-    // Don't handle external links
-    if (href.startsWith('http') || href.startsWith('//')) {
+    const href = link.getAttribute("href");
+
+    // Don"t handle external links
+    if (href.startsWith("http") || href.startsWith("//")) {
       return false;
     }
-    
-    // Don't handle links with target="_blank"
-    if (link.getAttribute('target') === '_blank') {
+
+    // Don"t handle links with target="_blank"
+    if (link.getAttribute("target") === "_blank") {
       return false;
     }
-    
-    // Don't handle links with download attribute
-    if (link.hasAttribute('download')) {
+
+    // Don"t handle links with download attribute
+    if (link.hasAttribute("download")) {
       return false;
     }
-    
-    // Don't handle mailto: or tel: links
-    if (href.startsWith('mailto:') || href.startsWith('tel:')) {
+
+    // Don"t handle mailto: or tel: links
+    if (href.startsWith("mailto:") || href.startsWith("tel:")) {
       return false;
     }
-    
+
     return true;
   }
-  
+
   /**
    * Handle initial route on page load
    */
   handleInitialRoute() {
-    const path = window.location.pathname.replace(this.basePath, '') || '/';
-    
-    // If we're at root, redirect to default route
-    if (path === '/') {
+    const path = window.location.pathname.replace(this.basePath, "") || "/";
+
+    // If we"re at root, redirect to default route
+    if (path === "/") {
       return this.navigate(this.defaultRoute, { replace: true });
     }
-    
+
     this.navigate(path, { replace: true });
   }
-  
+
   /**
    * Get current route
    * @returns {Object|null}
@@ -388,7 +388,7 @@ export class Router {
   getCurrentRoute() {
     return this.currentRoute;
   }
-  
+
   /**
    * Get route parameters
    * @returns {Object}
@@ -396,21 +396,21 @@ export class Router {
   getParams() {
     return this.currentRoute?.params || {};
   }
-  
+
   /**
    * Go back in history
    */
   back() {
     history.back();
   }
-  
+
   /**
    * Go forward in history
    */
   forward() {
     history.forward();
   }
-  
+
   /**
    * Replace current route
    * @param {string} path - New path
