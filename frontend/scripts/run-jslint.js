@@ -33,15 +33,29 @@ const config = {
 function getJSFiles(dir) {
   const files = [];
   const items = readdirSync(dir);
+  const skipDirectories = new Set(['node_modules', 'dist', 'build', '.git', '.cache', 'coverage']);
+  const jsExtensions = new Set(['.js', '.mjs', '.cjs']);
   
   for (const item of items) {
     const fullPath = join(dir, item);
-    const stat = statSync(fullPath);
     
-    if (stat.isDirectory()) {
-      files.push(...getJSFiles(fullPath));
-    } else if (extname(item) === '.js') {
-      files.push(fullPath);
+    try {
+      const stat = statSync(fullPath);
+      
+      if (stat.isDirectory()) {
+        if (skipDirectories.has(item)) {
+          continue;
+        }
+        files.push(...getJSFiles(fullPath));
+      } else {
+        const ext = extname(item);
+        if (jsExtensions.has(ext)) {
+          files.push(fullPath);
+        }
+      }
+    } catch (error) {
+      // Skip files/directories that can't be accessed
+      continue;
     }
   }
   

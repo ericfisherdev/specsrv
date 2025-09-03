@@ -129,6 +129,9 @@ class KanbanApiTest extends AbstractWebTestCase
 
     public function testMoveTaskWithInvalidTaskId(): void
     {
+        $client = $this->getAuthenticatedClient();
+        $user = $this->getUser($client);
+
         $requestData = [
             'taskId' => 99999,
             'status' => TaskStatusEnum::IN_PROGRESS->value,
@@ -171,6 +174,9 @@ class KanbanApiTest extends AbstractWebTestCase
 
     public function testMoveTaskMissingFields(): void
     {
+        $client = $this->getAuthenticatedClient();
+        $user = $this->getUser($client);
+
         $requestData = [
             'taskId' => 123,
             // Missing status

@@ -139,6 +139,7 @@ export class FileList {
             <button
                 @click="$dispatch(\"file-delete\", { filename: \"${file.filename}\" })"
                 class="inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-500"
+                data-filename="${file.filename || file.original_name}"
                 title="Delete file"
             >
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,7 +275,23 @@ export class FileList {
     if (!previewContainer) {return;}
 
     try {
-      const response = await fetch(`${this.options.baseUrl}/preview/${filename}`);
+      // Get auth token from options, localStorage, or cookie
+      const authToken = this.options.authToken || 
+        localStorage.getItem('specsrv-token') || 
+        this.getCookieValue('auth-token');
+      
+      const headers = {
+        'Accept': 'text/plain, text/markdown'
+      };
+      
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+      
+      const response = await fetch(`${this.options.baseUrl}/preview/${filename}`, {
+        headers
+      });
+      
       if (response.ok) {
         const content = await response.text();
         previewContainer.innerHTML = content;
@@ -284,6 +301,16 @@ export class FileList {
     } catch (error) {
       previewContainer.innerHTML = '<p class="text-red-600">Error loading preview</p>';
     }
+  }
+
+  /**
+     * Get cookie value by name
+     */
+  getCookieValue(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
   }
 
   /**

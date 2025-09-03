@@ -75,8 +75,8 @@ jobs:
         mkdir -p var/data var/log var/cache var/coverage config/jwt
         chmod -R 755 var/
         # Generate JWT keys for testing
-        openssl genrsa -out config/jwt/private.pem -aes256 -passout pass:5d947e28cc0fdda0d08d7fd1028d3600d72a23808102bdf34bb38c5af3171e65 4096
-        openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:5d947e28cc0fdda0d08d7fd1028d3600d72a23808102bdf34bb38c5af3171e65
+        openssl genrsa -out config/jwt/private.pem -aes256 -passout pass:${{ secrets.JWT_PASSPHRASE }} 4096
+        openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:${{ secrets.JWT_PASSPHRASE }}
         APP_ENV=test php bin/console cache:clear
         # Initialize migration metadata storage
         APP_ENV=test php bin/console doctrine:migrations:sync-metadata-storage
@@ -224,7 +224,18 @@ jobs:
       working-directory: frontend
       run: |
         docker run -d --name test-frontend -p 3000:80 specsrv-frontend:test
-        sleep 5
-        curl -f http://localhost:3000/ || exit 1
-        docker stop test-frontend
-        docker rm test-frontend
+        # Wait for container to be ready with retry logic
+        for i in {1..30}; do
+          if curl -f --max-time 2 http://localhost:3000/ >/dev/null 2>&1; then
+            echo "Frontend container is ready"
+            break
+          fi
+          if [ $i -eq 30 ]; then
+            echo "Frontend container failed to start within 30 seconds"
+            exit 1
+          fi
+          echo "Waiting for frontend container... ($i/30)"
+          sleep 1
+        done
+        # Ensure cleanup happens regardless of success or failure
+        trap 'docker stop test-frontend 2>/dev/null; docker rm test-frontend 2>/dev/null' EXIT

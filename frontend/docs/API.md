@@ -95,7 +95,7 @@ Authenticate user and receive JWT token.
   "success": true,
   "message": "Login successful",
   "data": {
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...",
+    "token": "<JWT_TOKEN_PLACEHOLDER>",
     "user": {
       "id": 1,
       "email": "user@example.com",
@@ -124,7 +124,7 @@ Register a new user account.
   "success": true,
   "message": "User registered successfully",
   "data": {
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...",
+    "token": "<JWT_TOKEN_PLACEHOLDER>",
     "user": {
       "id": 2,
       "email": "newuser@example.com",
@@ -149,7 +149,7 @@ Authorization: Bearer <current-token>
   "success": true,
   "message": "Token refreshed successfully",
   "data": {
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...",
+    "token": "<JWT_TOKEN_PLACEHOLDER>",
     "user": {
       "id": 1,
       "email": "user@example.com",

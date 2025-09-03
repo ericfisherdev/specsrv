@@ -34,24 +34,31 @@ class SearchApiController extends BaseApiController
             ]);
         }
 
-        // Search projects
+        // Normalize query to lowercase and escape wildcard characters
+        $normalizedQuery = strtolower($query);
+        $escapedQuery = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $normalizedQuery);
+        $searchPattern = '%' . $escapedQuery . '%';
+
+        // Search projects with case-insensitive search and wildcard escaping
         $projects = $this->projectRepository->createQueryBuilder('p')
             ->where('p.user = :user')
-            ->andWhere('p.title LIKE :query OR p.description LIKE :query')
+            ->andWhere('LOWER(p.title) LIKE :query ESCAPE :escape OR LOWER(p.description) LIKE :query ESCAPE :escape')
             ->setParameter('user', $user)
-            ->setParameter('query', '%'.$query.'%')
+            ->setParameter('query', $searchPattern)
+            ->setParameter('escape', '\\')
             ->orderBy('p.title', 'ASC')
             ->setMaxResults(5)
             ->getQuery()
             ->getResult();
 
-        // Search tasks
+        // Search tasks with case-insensitive search and wildcard escaping
         $tasks = $this->taskRepository->createQueryBuilder('t')
             ->join('t.project', 'p')
             ->where('p.user = :user')
-            ->andWhere('t.title LIKE :query OR t.description LIKE :query')
+            ->andWhere('LOWER(t.title) LIKE :query ESCAPE :escape OR LOWER(t.description) LIKE :query ESCAPE :escape')
             ->setParameter('user', $user)
-            ->setParameter('query', '%'.$query.'%')
+            ->setParameter('query', $searchPattern)
+            ->setParameter('escape', '\\')
             ->orderBy('t.title', 'ASC')
             ->setMaxResults(5)
             ->getQuery()

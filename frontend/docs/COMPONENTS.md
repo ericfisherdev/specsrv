@@ -136,8 +136,8 @@ Renders a single file item with actions.
 ##### `togglePreview(filename)`
 Toggles file preview for supported file types.
 
-##### `deleteFile(filename)`
-Handles file deletion with confirmation.
+##### `deleteFile(fileId)`
+Handles file deletion with confirmation using the file's unique ID.
 
 #### Supported File Types
 
@@ -153,12 +153,14 @@ The component emits custom events:
 ```javascript
 // Listen for file deletion
 container.addEventListener('file-deleted', (event) => {
-  console.log('File deleted:', event.detail.filename);
+  console.log('File deleted:', event.detail.fileId);
 });
 
 // Listen for file actions via Alpine.js
 @file-delete="handleFileDelete($event.detail)"
 ```
+
+**Note**: File operations use the file's unique `id` as the canonical identifier for REST endpoints (e.g., `DELETE /api/v1/files/{id}`) to prevent collisions and race conditions that could occur with filename-based operations.
 
 #### Styling
 
@@ -262,9 +264,11 @@ const apiService = new ApiService();
 The service auto-configures with:
 
 - Base URL from environment or default
-- JWT token from localStorage
+- JWT token from secure httpOnly cookies (recommended) or in-memory storage with refresh token rotation
 - Request/response interceptors
 - Timeout handling (30 seconds)
+
+**Security Note**: Avoid storing JWTs in localStorage as it's vulnerable to XSS attacks. Use httpOnly, Secure, SameSite cookies set by the API, or implement a short-lived access token in-memory with refresh token strategy. See AuthService implementation for cookie-based logout/renew flow examples.
 
 #### HTTP Methods
 
@@ -804,17 +808,38 @@ Alpine.data('myComponent', (options) => ({
 }));
 ```
 
-### HTMX Integration
+### API Integration (fetch)
 
-Use HTMX for server interactions:
+Use the ApiService for server interactions with JSON responses:
 
-```html
-<form hx-post="/api/v1/projects" 
-      hx-target="#project-list" 
-      hx-swap="beforeend"
-      hx-indicator="#loading">
-  <!-- Form content -->
-</form>
+```javascript
+// POST to create a new project
+async function createProject(projectData) {
+  try {
+    const response = await apiService.post('/projects', projectData);
+    if (response.ok && response.success) {
+      // Update DOM with new project
+      renderProject(response.data);
+      document.getElementById('project-list').appendChild(renderProject(response.data));
+    } else {
+      throw new Error(response.message || 'Failed to create project');
+    }
+  } catch (error) {
+    console.error('Project creation failed:', error);
+    showError(error.message);
+  }
+}
+
+// Helper function to render project HTML
+function renderProject(project) {
+  const projectElement = document.createElement('div');
+  projectElement.className = 'project-item';
+  projectElement.innerHTML = `
+    <h3>${project.title}</h3>
+    <p>${project.description}</p>
+  `;
+  return projectElement;
+}
 ```
 
 ### Error Handling

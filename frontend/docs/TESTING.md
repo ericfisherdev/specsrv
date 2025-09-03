@@ -756,6 +756,9 @@ afterEach(() => {
 
 ```javascript
 // tests/mocks/apiMocks.js
+import { mockProjects } from '../fixtures/mockProjects';
+import { mockTasks } from '../fixtures/mockTasks';
+
 export const createApiMocks = () => {
   const mockResponses = {
     '/auth/login': {
@@ -910,7 +913,7 @@ jobs:
     
     - name: Start services
       run: |
-        docker-compose -f docker-compose.test.yml up -d
+        docker-compose -f docker-compose.dev.yml up -d
         sleep 10  # Wait for services to be ready
     
     - name: Install Playwright

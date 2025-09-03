@@ -221,7 +221,7 @@ export class BasePage {
    * @param {Array|string} children - Child elements or text
    * @returns {HTMLElement}
    */
-  createElement(tagName, attributes = {}, children = []) {
+  createDomElement(tagName, attributes = {}, children = []) {
     const element = document.createElement(tagName);
 
     // Set attributes
@@ -229,7 +229,12 @@ export class BasePage {
       if (key === 'className') {
         element.className = attributes[key];
       } else if (key === 'innerHTML') {
-        element.innerHTML = attributes[key];
+        // Security: Only allow innerHTML if explicitly marked as safe HTML
+        if (attributes.safeHtml === true) {
+          element.innerHTML = attributes[key];
+        } else {
+          element.textContent = attributes[key];
+        }
       } else if (key.startsWith('data-') || key.startsWith('aria-')) {
         element.setAttribute(key, attributes[key]);
       } else {
@@ -262,11 +267,11 @@ export class BasePage {
   createPageHeader(title, options = {}) {
     const { subtitle, actions = [], breadcrumbs = [] } = options;
 
-    const header = this.createElement('div', {
+    const header = this.createDomElement('div', {
       className: 'bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700'
     });
 
-    const container = this.createElement('div', {
+    const container = this.createDomElement('div', {
       className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'
     });
 
@@ -277,18 +282,18 @@ export class BasePage {
     }
 
     // Title section
-    const titleSection = this.createElement('div', {
+    const titleSection = this.createDomElement('div', {
       className: `flex items-center justify-between ${breadcrumbs.length > 0 ? 'mt-4' : ''}`
     });
 
-    const titleContainer = this.createElement('div');
-    const titleElement = this.createElement('h1', {
+    const titleContainer = this.createDomElement('div');
+    const titleElement = this.createDomElement('h1', {
       className: 'text-2xl font-bold text-gray-900 dark:text-white'
     }, title);
     titleContainer.appendChild(titleElement);
 
     if (subtitle) {
-      const subtitleElement = this.createElement('p', {
+      const subtitleElement = this.createDomElement('p', {
         className: 'mt-1 text-sm text-gray-600 dark:text-gray-400'
       }, subtitle);
       titleContainer.appendChild(subtitleElement);
@@ -298,7 +303,7 @@ export class BasePage {
 
     // Actions
     if (actions.length > 0) {
-      const actionsContainer = this.createElement('div', {
+      const actionsContainer = this.createDomElement('div', {
         className: 'flex items-center space-x-3'
       });
 
@@ -321,38 +326,43 @@ export class BasePage {
    * @returns {HTMLElement}
    */
   createBreadcrumbs(breadcrumbs) {
-    const nav = this.createElement('nav', {
+    const nav = this.createDomElement('nav', {
       className: 'flex',
       'aria-label': 'Breadcrumb'
     });
 
-    const ol = this.createElement('ol', {
+    const ol = this.createDomElement('ol', {
       className: 'flex items-center space-x-2 text-sm'
     });
 
     breadcrumbs.forEach((crumb, index) => {
-      const li = this.createElement('li', {
+      const li = this.createDomElement('li', {
         className: 'flex items-center'
       });
 
       if (index > 0) {
-        const separator = this.createElement('svg', {
-          className: 'w-4 h-4 text-gray-400 mr-2',
-          fill: 'currentColor',
-          viewBox: '0 0 20 20'
-        });
-        separator.innerHTML = '<path fill-rule=\'evenodd\' d=\'M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z\' clip-rule=\'evenodd\'/>';
+        const separator = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        separator.setAttribute('class', 'w-4 h-4 text-gray-400 mr-2');
+        separator.setAttribute('fill', 'currentColor');
+        separator.setAttribute('viewBox', '0 0 20 20');
+        
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('fill-rule', 'evenodd');
+        path.setAttribute('d', 'M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z');
+        path.setAttribute('clip-rule', 'evenodd');
+        
+        separator.appendChild(path);
         li.appendChild(separator);
       }
 
       if (crumb.url && index < breadcrumbs.length - 1) {
-        const link = this.createElement('a', {
+        const link = this.createDomElement('a', {
           href: crumb.url,
           className: 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
         }, crumb.label);
         li.appendChild(link);
       } else {
-        const span = this.createElement('span', {
+        const span = this.createDomElement('span', {
           className: 'text-gray-900 dark:text-white font-medium'
         }, crumb.label);
         li.appendChild(span);

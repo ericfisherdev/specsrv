@@ -158,7 +158,14 @@ echo "Timestamp: $(date)"
 
 # Pre-rollback backup
 echo "Creating backup of current deployment..."
-docker tag specsrv-frontend rollback-backup-$(date +%Y%m%d-%H%M%S)
+CURRENT_IMAGE=$(docker inspect specsrv-frontend --format='{{.Config.Image}}' 2>/dev/null || echo "")
+BACKUP_TAG="rollback-backup-$(date +%Y%m%d-%H%M%S)"
+
+if [ -n "$CURRENT_IMAGE" ]; then
+    docker tag "$CURRENT_IMAGE" "$BACKUP_TAG"
+else
+    echo "Warning: Could not determine current image for backup"
+fi
 
 # Stop current container
 echo "Stopping current container..."
@@ -198,7 +205,11 @@ else
     # Attempt to restore
     docker stop specsrv-frontend || true
     docker rm specsrv-frontend || true
-    docker run -d --name specsrv-frontend rollback-backup-$(date +%Y%m%d-%H%M%S) || echo "Failed to restore backup"
+    if [ -n "$BACKUP_TAG" ]; then
+        docker run -d --name specsrv-frontend "$BACKUP_TAG" || echo "Failed to restore backup"
+    else
+        echo "Failed to restore backup: No backup tag available"
+    fi
     
     exit 1
 fi
@@ -215,13 +226,14 @@ Roll back only configuration changes while keeping the same application version.
 set -e
 
 CONFIG_VERSION=${1:-"previous"}
+BACKUP_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 
 echo "🔧 Starting configuration rollback"
 
 # Backup current config
 echo "Backing up current configuration..."
-cp /opt/specsrv/nginx.conf /opt/specsrv/nginx.conf.backup.$(date +%Y%m%d-%H%M%S)
-cp /opt/specsrv/.env /opt/specsrv/.env.backup.$(date +%Y%m%d-%H%M%S)
+cp /opt/specsrv/nginx.conf /opt/specsrv/nginx.conf.backup.${BACKUP_TIMESTAMP}
+cp /opt/specsrv/.env /opt/specsrv/.env.backup.${BACKUP_TIMESTAMP}
 
 # Restore previous config
 if [ "$CONFIG_VERSION" = "previous" ]; then
@@ -252,7 +264,7 @@ if docker exec specsrv-frontend nginx -t; then
     echo "✅ Configuration rollback successful"
 else
     echo "❌ Configuration rollback failed - restoring backup"
-    cp /opt/specsrv/nginx.conf.backup.$(date +%Y%m%d-%H%M%S) /opt/specsrv/nginx.conf
+    cp /opt/specsrv/nginx.conf.backup.${BACKUP_TIMESTAMP} /opt/specsrv/nginx.conf
     docker exec specsrv-frontend nginx -s reload
     exit 1
 fi
@@ -517,7 +529,9 @@ BACKUP_DIR="/opt/specsrv/backups/rollback-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
 # Backup current container
-docker save specsrv-frontend > "$BACKUP_DIR/current-container.tar"
+CURRENT_IMAGE=$(docker inspect --format='{{.Config.Image}}' specsrv-frontend 2>/dev/null || docker inspect --format='{{.Image}}' specsrv-frontend)
+echo "Backing up image: $CURRENT_IMAGE"
+docker save "$CURRENT_IMAGE" > "$BACKUP_DIR/current-container.tar"
 
 # Backup configuration
 cp -r /opt/specsrv/config "$BACKUP_DIR/"
@@ -1124,6 +1138,7 @@ jobs:
         run: ./scripts/pre-deployment-checks.sh
       
       - name: Check for Breaking Changes
+        id: check_changes
         run: |
           # Compare with previous release
           git diff HEAD~1 --name-only | grep -E "(api|schema|config)" > changes.txt
@@ -1133,10 +1148,10 @@ jobs:
           fi
       
       - name: Manual Approval Gate
-        if: steps.check-changes.outputs.breaking_changes == 'true'
+        if: steps.check_changes.outputs.breaking_changes == 'true'
         uses: trstringer/manual-approval@v1
         with:
-          secret: ${{ github.TOKEN }}
+          secret: ${{ secrets.GITHUB_TOKEN }}
           approvers: admin1,admin2
           minimum-approvals: 1
 

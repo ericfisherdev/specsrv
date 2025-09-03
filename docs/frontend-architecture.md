@@ -214,7 +214,7 @@ colors: {
 
 #### 3. Real-time Updates
 ```html
-<div hx-get="/api/tasks/status" 
+<div hx-get="/api/v1/tasks/status" 
      hx-trigger="every 30s" 
      hx-target="#status-indicator">
 </div>

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -159,10 +160,22 @@ func newProjectsCreateCommand() *cobra.Command {
 
 			apiClient := client.NewClient(cfg)
 
+			// Validate status before creating request
+			validStatuses := map[string]bool{
+				"active":    true,
+				"inactive":  true,
+				"archived":  true,
+			}
+			
+			statusLower := strings.ToLower(strings.TrimSpace(status))
+			if status != "" && !validStatuses[statusLower] {
+				return fmt.Errorf("invalid status '%s'. Valid options are: active, inactive, archived", status)
+			}
+
 			req := models.ProjectCreateRequest{
 				Name:        name,
 				Description: description,
-				Status:      enums.ProjectStatus(status),
+				Status:      enums.ProjectStatus(statusLower),
 			}
 
 			// Make API call to create project
@@ -343,38 +356,90 @@ func formatProjectTable(project models.Project) error {
 	return w.Flush()
 }
 
-// convertToProjectModel converts API response data to Project model
+// convertStringToInt safely converts various types to int
+func convertStringToInt(value interface{}) (int, error) {
+	switch v := value.(type) {
+	case int:
+		return v, nil
+	case float64:
+		return int(v), nil
+	case json.Number:
+		if i, err := v.Int64(); err == nil {
+			return int(i), nil
+		}
+		return 0, fmt.Errorf("failed to convert json.Number to int: %v", v)
+	case string:
+		if v == "" {
+			return 0, nil
+		}
+		if i, err := strconv.Atoi(strings.TrimSpace(v)); err == nil {
+			return i, nil
+		}
+		return 0, fmt.Errorf("failed to convert string to int: %v", v)
+	default:
+		return 0, fmt.Errorf("unsupported type for int conversion: %T", v)
+	}
+}
+
+// getValue safely gets value from data map checking multiple keys
+func getValue(data map[string]interface{}, keys ...string) (interface{}, bool) {
+	for _, key := range keys {
+		if value, exists := data[key]; exists {
+			return value, true
+		}
+	}
+	return nil, false
+}
+
+// convertToProjectModel converts API response data to Project model with robust type handling
 func convertToProjectModel(data map[string]interface{}) models.Project {
 	project := models.Project{}
 
-	if id, ok := data["id"].(float64); ok {
-		project.ID = int(id)
-	}
-	if name, ok := data["name"].(string); ok {
-		project.Name = name
-	}
-	if description, ok := data["description"].(string); ok {
-		project.Description = description
-	}
-	if status, ok := data["status"].(string); ok {
-		project.Status = enums.ProjectStatus(status)
-	}
-	if taskCount, ok := data["taskCount"].(float64); ok {
-		project.TaskCount = int(taskCount)
-	} else if taskCount, ok := data["task_count"].(float64); ok {
-		project.TaskCount = int(taskCount)
+	// Handle ID with multiple keys and types
+	if idValue, exists := getValue(data, "id", "ID"); exists {
+		if id, err := convertStringToInt(idValue); err == nil {
+			project.ID = id
+		}
 	}
 
-	// Parse timestamps
-	if createdAt, ok := data["createdAt"].(string); ok {
-		project.CreatedAt = parseTime(createdAt)
-	} else if createdAt, ok := data["created_at"].(string); ok {
-		project.CreatedAt = parseTime(createdAt)
+	// Handle name/title with multiple keys
+	if nameValue, exists := getValue(data, "name", "title"); exists {
+		if name, ok := nameValue.(string); ok {
+			project.Name = name
+		}
 	}
-	if updatedAt, ok := data["updatedAt"].(string); ok {
-		project.UpdatedAt = parseTime(updatedAt)
-	} else if updatedAt, ok := data["updated_at"].(string); ok {
-		project.UpdatedAt = parseTime(updatedAt)
+
+	// Handle description
+	if descValue, exists := getValue(data, "description"); exists {
+		if description, ok := descValue.(string); ok {
+			project.Description = description
+		}
+	}
+
+	// Handle status (don't coerce to enum, keep as raw string)
+	if statusValue, exists := getValue(data, "status", "Status"); exists {
+		if status, ok := statusValue.(string); ok {
+			project.Status = enums.ProjectStatus(status)
+		}
+	}
+
+	// Handle taskCount with multiple keys and types
+	if taskCountValue, exists := getValue(data, "taskCount", "task_count"); exists {
+		if taskCount, err := convertStringToInt(taskCountValue); err == nil {
+			project.TaskCount = taskCount
+		}
+	}
+
+	// Parse timestamps with multiple key variations
+	if createdAtValue, exists := getValue(data, "createdAt", "created_at"); exists {
+		if createdAt, ok := createdAtValue.(string); ok {
+			project.CreatedAt = parseTime(createdAt)
+		}
+	}
+	if updatedAtValue, exists := getValue(data, "updatedAt", "updated_at"); exists {
+		if updatedAt, ok := updatedAtValue.(string); ok {
+			project.UpdatedAt = parseTime(updatedAt)
+		}
 	}
 
 	return project

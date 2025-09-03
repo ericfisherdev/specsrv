@@ -8,14 +8,25 @@ pgAdmin has been added to the development Docker setup in `docker-compose.dev.ym
 
 ```yaml
 specsrv-pgadmin:
-  image: dpage/pgadmin4:latest
+  image: dpage/pgadmin4:8.13
   container_name: specsrv-pgadmin-dev
+  env_file: .env.dev
   environment:
-    - PGADMIN_DEFAULT_EMAIL=admin@specsrv.dev
-    - PGADMIN_DEFAULT_PASSWORD=admin1234
+    - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+    - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
   ports:
     - "5050:80"
 ```
+
+**Security Note**: Create a `.env.dev` file with secure credentials:
+
+```bash
+# .env.dev
+PGADMIN_DEFAULT_EMAIL=admin@specsrv.local
+PGADMIN_DEFAULT_PASSWORD=your_secure_password_here
+```
+
+**Important**: Add `.env.dev` to your `.gitignore` to prevent committing credentials to the repository.
 
 ## 🚀 Starting pgAdmin
 
@@ -34,8 +45,8 @@ docker-compose -f docker-compose.dev.yml up specsrv-pgadmin specsrv-postgres-dev
 1. **Open your browser** and navigate to: http://localhost:5050
 
 2. **Login Credentials:**
-   - **Email:** `admin@specsrv.dev`
-   - **Password:** `admin1234`
+   - **Email:** Use the value from your `.env.dev` file (`PGADMIN_DEFAULT_EMAIL`)
+   - **Password:** Use the value from your `.env.dev` file (`PGADMIN_DEFAULT_PASSWORD`)
 
 ## 🔌 Adding PostgreSQL Server Connection
 

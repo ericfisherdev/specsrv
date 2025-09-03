@@ -1,5 +1,9 @@
 name: Deploy
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   workflow_run:
     workflows: ["CI"]
@@ -25,7 +29,7 @@ env:
 
 jobs:
   deploy-staging:
-    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop') || (github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     runs-on: ubuntu-latest
     environment: staging
     
@@ -74,7 +78,7 @@ jobs:
         echo "Frontend image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.FRONTEND_IMAGE_NAME }}:staging-${{ github.sha }}"
 
   deploy-production:
-    if: github.ref == 'refs/heads/release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'release') || (github.ref == 'refs/heads/release') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     runs-on: ubuntu-latest
     environment: production
     

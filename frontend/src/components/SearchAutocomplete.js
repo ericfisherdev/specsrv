@@ -37,7 +37,7 @@ export function createSearchAutocomplete(options = {}) {
 
             <!-- Suggestions Dropdown -->
             <div
-                x-show="showSuggestions && (suggestions.length > 0 || query.length > 0)"
+                x-show="showSuggestions && (totalItems() > 0 || query.length > 0)"
                 x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
@@ -60,7 +60,7 @@ export function createSearchAutocomplete(options = {}) {
                 </div>
 
                 <!-- Search Results -->
-                <div x-show="suggestions.length > 0">
+                <div x-show="totalItems() > 0">
                     <!-- Tasks Section -->
                     <div x-show="suggestions.tasks && suggestions.tasks.length > 0">
                         <div class="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-gray-700">
@@ -96,7 +96,7 @@ export function createSearchAutocomplete(options = {}) {
                         <template x-for="(project, index) in suggestions.projects" :key="project.id">
                             <a
                                 :href="project.url"
-                                @click="selectSuggestion(project, "project")"
+                                @click="selectSuggestion(project, 'project')"
                                 class="flex items-center px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                                 :class="{ 'bg-blue-50 dark:bg-blue-900': selectedIndex === (suggestions.tasks ? suggestions.tasks.length : 0) + index }"
                             >
@@ -113,7 +113,7 @@ export function createSearchAutocomplete(options = {}) {
                 </div>
 
                 <!-- No Results -->
-                <div x-show="query.length > 0 && suggestions.length === 0 && !loading" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
+                <div x-show="query.length > 0 && totalItems() === 0 && !loading" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
                     <svg class="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
@@ -142,6 +142,17 @@ window.searchAutocomplete = function() {
     showSuggestions: false,
     loading: false,
     selectedIndex: -1,
+
+    totalItems() {
+      if (!this.suggestions || typeof this.suggestions !== 'object') {
+        return 0;
+      }
+      
+      const tasksCount = Array.isArray(this.suggestions.tasks) ? this.suggestions.tasks.length : 0;
+      const projectsCount = Array.isArray(this.suggestions.projects) ? this.suggestions.projects.length : 0;
+      
+      return tasksCount + projectsCount;
+    },
 
     async search() {
       if (this.query.length < 2) {

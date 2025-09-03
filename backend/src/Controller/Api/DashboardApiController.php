@@ -28,14 +28,16 @@ class DashboardApiController extends BaseApiController
         // Get project count
         $projectCount = $this->projectRepository->countByUser($user);
 
-        // Get task statistics
+        // Get task statistics efficiently with single query
+        $statusCounts = $this->taskRepository->getStatusCountsByUser($user);
+        
         $taskStats = [
-            'total' => $this->taskRepository->countByUser($user),
-            'todo' => $this->taskRepository->countByUser($user, TaskStatusEnum::TODO->value) +
-                      $this->taskRepository->countByUser($user, TaskStatusEnum::BACKLOG->value),
-            'in_progress' => $this->taskRepository->countByUser($user, TaskStatusEnum::IN_PROGRESS->value) +
-                            $this->taskRepository->countByUser($user, TaskStatusEnum::REVIEW->value),
-            'completed' => $this->taskRepository->countByUser($user, TaskStatusEnum::COMPLETED->value),
+            'total' => array_sum($statusCounts),
+            'todo' => ($statusCounts[TaskStatusEnum::TODO->value] ?? 0) + 
+                     ($statusCounts[TaskStatusEnum::BACKLOG->value] ?? 0),
+            'in_progress' => ($statusCounts[TaskStatusEnum::IN_PROGRESS->value] ?? 0) + 
+                           ($statusCounts[TaskStatusEnum::REVIEW->value] ?? 0),
+            'completed' => $statusCounts[TaskStatusEnum::COMPLETED->value] ?? 0,
         ];
 
         // Get recent tasks (last 5)

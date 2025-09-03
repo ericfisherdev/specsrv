@@ -1,6 +1,6 @@
 export function createNavigation() {
   return `
-        <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        <nav x-data="{ showMobileMenu: false }" class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
                     <!-- Logo -->
@@ -114,7 +114,7 @@ export function createNavigation() {
                 </div>
 
                 <!-- Mobile Navigation -->
-                <div x-show="showMobileMenu" x-transition class="md:hidden">
+                <div x-show="showMobileMenu" x-transition x-cloak class="md:hidden">
                     <div class="px-2 pt-2 pb-3 space-y-1">
                         <a href="/dashboard" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white block px-3 py-2 text-base font-medium">Dashboard</a>
                         <a href="/kanban" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white block px-3 py-2 text-base font-medium">Kanban</a>

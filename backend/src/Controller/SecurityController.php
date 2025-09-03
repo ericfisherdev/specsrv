@@ -14,7 +14,7 @@ class SecurityController extends AbstractController
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_dashboard');
+            return $this->redirectToRoute('root_landing');
         }
 
         // get the login error if there is one
@@ -37,7 +37,7 @@ class SecurityController extends AbstractController
     public function register(): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_dashboard');
+            return $this->redirectToRoute('root_landing');
         }
 
         // DISABLED for frontend migration: HTML-returning method

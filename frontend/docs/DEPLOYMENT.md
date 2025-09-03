@@ -163,12 +163,12 @@ RUN chown -R nginx:nginx /usr/share/nginx/html && \
 # Switch to non-root user
 USER nginx
 
-# Expose port
-EXPOSE 80
+# Expose port (non-privileged port for non-root user)
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:80/health || exit 1
+  CMD curl -f http://localhost:8080/health || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
@@ -358,7 +358,6 @@ server {
         
         # Security headers for HTML
         add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' data:";
-        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     }
 
     # Prevent access to sensitive files
@@ -394,8 +393,88 @@ server {
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
     
-    # Include the main server configuration here
-    # ... (same as above)
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Security
+    server_tokens off;
+
+    # Logging
+    access_log /var/log/nginx/frontend-access.log main;
+    error_log /var/log/nginx/frontend-error.log;
+
+    # Static files caching
+    location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        add_header Vary Accept-Encoding;
+        
+        # CORS for fonts
+        location ~* \.(woff|woff2|ttf|eot)$ {
+            add_header Access-Control-Allow-Origin *;
+        }
+    }
+
+    # API proxy
+    location /api/ {
+        proxy_pass http://specsrv-backend:8080/api/;
+        proxy_Set_header Host $host;
+        proxy_Set_header X-Real-IP $remote_addr;
+        proxy_Set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_Set_header X-Forwarded-Proto $scheme;
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # Buffer settings
+        proxy_buffering on;
+        proxy_buffer_size 128k;
+        proxy_buffers 4 256k;
+    }
+
+    # WebSocket support (if needed)
+    location /ws/ {
+        proxy_pass http://specsrv-backend:8080/ws/;
+        proxy_http_version 1.1;
+        proxy_Set_header Upgrade $http_upgrade;
+        proxy_Set_header Connection "upgrade";
+        proxy_Set_header Host $host;
+        proxy_Set_header X-Real-IP $remote_addr;
+        proxy_Set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+
+    # Security.txt
+    location /.well-known/security.txt {
+        return 200 "Contact: security@your-domain.com\nExpires: 2024-12-31T23:59:59.000Z";
+        add_header Content-Type text/plain;
+    }
+
+    # SPA routing - serve index.html for client-side routes
+    location / {
+        try_files $uri $uri/ /index.html;
+        
+        # Security headers for HTML (HSTS only on HTTPS)
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' data:";
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    }
+
+    # Prevent access to sensitive files
+    location ~ /\.(ht|git|env) {
+        deny all;
+    }
+
+    location ~ \.(log|conf)$ {
+        deny all;
+    }
 }
 ```
 

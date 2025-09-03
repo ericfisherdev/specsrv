@@ -83,19 +83,19 @@ Get CSRF token for form submissions.
 
 ### Projects
 
-#### GET /api/projects
+#### GET /api/v1/projects
 List all projects for the authenticated user.
 
-#### POST /api/projects
+#### POST /api/v1/projects
 Create a new project.
 
-#### GET /api/projects/{id}
+#### GET /api/v1/projects/{id}
 Get details of a specific project.
 
-#### PUT /api/projects/{id}
+#### PUT /api/v1/projects/{id}
 Update a specific project.
 
-#### DELETE /api/projects/{id}
+#### DELETE /api/v1/projects/{id}
 Delete a specific project.
 
 ### Tasks

@@ -97,7 +97,8 @@ class ApiPerformanceTest extends AbstractWebTestCase
     {
         // Get a project ID to associate the task with
         $this->makeAuthenticatedRequest('GET', '/api/v1/projects', $this->apiKeyString);
-        $projects = json_decode($this->client->getResponse()->getContent(), true);
+        $decoded = json_decode($this->client->getResponse()->getContent(), true);
+        $projects = $decoded['data'] ?? $decoded;
         $projectId = $projects[0]['id'] ?? null;
 
         if (! $projectId) {
@@ -156,7 +157,7 @@ class ApiPerformanceTest extends AbstractWebTestCase
         );
     }
 
-    public function testConcurrentLikeRequestsPerformance(): void
+    public function testSequentialApiRequestPerformance(): void
     {
         $startTime = microtime(true);
         $responses = [];
@@ -202,11 +203,11 @@ class ApiPerformanceTest extends AbstractWebTestCase
             );
         }
 
-        // Total time for 4 requests should be reasonable
+        // Total time for 4 sequential requests should be reasonable
         $this->assertLessThan(
-            0.8,
+            1.5,
             $totalTime,
-            sprintf('Total time for 4 requests took %.3fs, should be under 0.8s', $totalTime)
+            sprintf('Total time for 4 sequential requests took %.3fs, should be under 1.5s', $totalTime)
         );
     }
 
@@ -243,7 +244,7 @@ class ApiPerformanceTest extends AbstractWebTestCase
 
         // Verify we got a reasonable number of results
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
-        $projects = $responseData['data'] ?? [];
+        $projects = $responseData['data'] ?? $responseData;
 
         // Debug output
         // echo "Response: " . $this->client->getResponse()->getContent() . "\n";

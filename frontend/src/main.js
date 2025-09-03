@@ -28,6 +28,19 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 // Import router and utilities
 import { Router } from './utils/Router';
 // import keyboardNav from './js/keyboard-navigation';
+
+// Local debounce helper function
+function debounce(fn, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      fn.apply(this, args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 // import offlineDetection from './js/offline-detection';
 
 // Import services
@@ -151,9 +164,9 @@ Alpine.data('search', () => ({
     });
   },
 
-  debounceSearch: Alpine.debounce(function(query) {
+  debounceSearch: debounce(function(query) {
     if (query.length >= 2) {
-      this.performSearch(query);
+      this.performSearch.call(this, query);
     } else {
       this.results = [];
     }
@@ -162,21 +175,83 @@ Alpine.data('search', () => ({
   async performSearch(query) {
     this.loading = true;
     try {
-      const response = await fetch(`/api/v1/search/suggestions?q=${encodeURIComponent(query)}`);
+      // Get JWT token from auth store or localStorage
+      const token = this.getAuthToken();
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`/api/v1/search/suggestions?q=${encodeURIComponent(query)}`, {
+        headers
+      });
+      
       if (response.ok) {
         const data = await response.json();
-        this.results = data.results || [];
+        if (data.success) {
+          this.results = data.data?.results || data.data?.projects || data.data?.tasks || [];
+        } else {
+          // eslint-disable-next-line no-console
+          console.error('Search failed:', data.message);
+          this.results = [];
+        }
+      } else {
+        // eslint-disable-next-line no-console
+        console.error('Search request failed:', response.status);
+        this.results = [];
       }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Search failed:', error);
+      this.results = [];
     } finally {
       this.loading = false;
     }
   },
 
+  getAuthToken() {
+    // Try to get token from auth store first, fallback to localStorage
+    return this.authToken || localStorage.getItem('jwt_token') || null;
+  },
+
   selectResult(result) {
-    window.location.href = result.url;
+    // Use SPA routing instead of direct navigation
+    if (result.type) {
+      let routePath;
+      switch (result.type) {
+        case 'project':
+          routePath = `/projects/${result.id}`;
+          break;
+        case 'task':
+          routePath = `/tasks/${result.id}`;
+          break;
+        case 'user':
+          routePath = `/users/${result.id}`;
+          break;
+        case 'document':
+          routePath = `/docs/${result.id}`;
+          break;
+        default:
+          routePath = `/search/${encodeURIComponent(result.title)}`;
+      }
+      
+      // Use router for SPA navigation
+      if (window.router && typeof window.router.push === 'function') {
+        window.router.push(routePath);
+      } else {
+        // Fallback to window.location for external URLs or if router not available
+        if (result.url && (result.url.startsWith('http') || result.url.startsWith('//'))) {
+          window.open(result.url, '_blank');
+        } else {
+          window.location.href = result.url || routePath;
+        }
+      }
+    } else {
+      // Handle legacy results without type
+      window.location.href = result.url;
+    }
   },
 
   clear() {
@@ -228,6 +303,19 @@ const animations = {
 };
 
 window.animations = animations;
+
+// Alpine.js stores
+Alpine.store('theme', {
+  get isDark() {
+    return window.themeManager && window.themeManager.getCurrentTheme() === 'dark';
+  },
+  
+  toggle() {
+    if (window.themeManager) {
+      window.themeManager.toggleTheme();
+    }
+  }
+});
 
 // Initialize Alpine.js
 Alpine.start();

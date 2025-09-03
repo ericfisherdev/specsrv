@@ -72,9 +72,16 @@ class ProjectController extends AbstractController
         $user = $this->getUser();
         assert($user instanceof User);
 
-        $name = (string) $request->request->get('name', '');
-        $description = (string) $request->request->get('description', '');
-        $githubRepo = (string) $request->request->get('github_repo', '');
+        // Handle JSON body parsing
+        $data = [];
+        if (str_starts_with($request->headers->get('Content-Type', ''), 'application/json')) {
+            $json = $request->getContent();
+            $data = json_decode($json, true) ?: [];
+        }
+
+        $name = (string) ($data['name'] ?? $request->request->get('name', ''));
+        $description = (string) ($data['description'] ?? $request->request->get('description', ''));
+        $githubRepo = (string) ($data['github_repo'] ?? $request->request->get('github_repo', ''));
 
         $project = new Project();
         $project->setUser($user);
@@ -101,7 +108,7 @@ class ProjectController extends AbstractController
                 'success' => false,
                 'error' => ['code' => 'VALIDATION_ERROR', 'message' => 'Validation failed'],
                 'errors' => $errors,
-            ], 400);
+            ], 422);
         }
 
         $this->entityManager->persist($project);
@@ -109,18 +116,22 @@ class ProjectController extends AbstractController
 
         $taskCount = 0; // New project has no tasks
 
-        // DISABLED: Return JSON for API instead of HTML template
-        return $this->json([
+        // Return JSON for API with HTTP 201, ISO-8601 timestamps, and Location header
+        $response = $this->json([
             'success' => true,
             'project' => [
                 'id' => $project->getId(),
                 'title' => $project->getTitle(),
                 'description' => $project->getDescription(),
                 'github_repo' => $project->getGithubRepo(),
-                'created_at' => $project->getCreatedAt()?->format('Y-m-d H:i:s') ?? 'unknown',
+                'created_at' => $project->getCreatedAt()?->format('c') ?? null,
                 'task_count' => $taskCount,
             ],
-        ]);
+        ], 201);
+
+        $response->headers->set('Location', '/api/v1/projects/' . $project->getId());
+
+        return $response;
     }
 
     #[Route('/projects/{id}', name: 'app_project_detail', methods: ['GET'])]
@@ -128,87 +139,11 @@ class ProjectController extends AbstractController
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        $project = $this->projectRepository->find($id);
-
-        if (! $project) {
-            throw $this->createNotFoundException('Project not found');
-        }
-
-        $user = $this->getUser();
-        if ($project->getUser() !== $user) {
-            throw $this->createAccessDeniedException('Access denied');
-        }
-
-        $tasks = $this->taskRepository->findByProject($project);
-        $taskStats = [
-            'total' => count($tasks),
-            'todo' => 0,
-            'in_progress' => 0,
-            'completed' => 0,
-        ];
-
-        foreach ($tasks as $task) {
-            $status = $task->getStatus();
-            if (TaskStatusEnum::TODO === $status || TaskStatusEnum::BACKLOG === $status) {
-                ++$taskStats['todo'];
-            } elseif (TaskStatusEnum::IN_PROGRESS === $status || TaskStatusEnum::REVIEW === $status) {
-                ++$taskStats['in_progress'];
-            } elseif (TaskStatusEnum::COMPLETED === $status) {
-                ++$taskStats['completed'];
-            }
-        }
-
         // DISABLED for frontend migration: HTML-returning method
         // Frontend will use API endpoints instead
         throw $this->createNotFoundException('HTML view disabled. Use API endpoints instead.');
     }
 
-    #[Route('/projects/{id}/edit', name: 'app_project_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request): Response
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-
-        $project = $this->projectRepository->find($id);
-
-        if (! $project) {
-            throw $this->createNotFoundException('Project not found');
-        }
-
-        $user = $this->getUser();
-        if ($project->getUser() !== $user) {
-            throw $this->createAccessDeniedException('Access denied');
-        }
-
-        if ($request->isMethod('POST')) {
-            $name = (string) $request->request->get('name', '');
-            $description = (string) $request->request->get('description', '');
-            $githubRepo = (string) $request->request->get('github_repo', '');
-
-            $project->setTitle($name);
-            if (! empty($description)) {
-                $project->setDescription($description);
-            }
-
-            if (! empty($githubRepo)) {
-                $project->setGithubRepo($githubRepo);
-            } else {
-                $project->setGithubRepo(null);
-            }
-
-            $violations = $this->validator->validate($project);
-            if (count($violations) > 0) {
-                return $this->json(['errors' => $violations], 400);
-            }
-
-            $this->entityManager->flush();
-
-            return $this->json(['success' => true, 'redirect' => $this->generateUrl('app_project_detail', ['id' => $project->getId()])]);
-        }
-
-        // DISABLED for frontend migration: HTML-returning method
-        // Frontend will use API endpoints instead
-        throw $this->createNotFoundException('HTML view disabled. Use API endpoints instead.');
-    }
 
     #[Route('/projects/{id}/delete', name: 'app_projects_delete', methods: ['DELETE'])]
     public function delete(int $id): Response
@@ -279,7 +214,7 @@ class ProjectController extends AbstractController
                         substr($project->getDescription(), 0, 50).'...' :
                         $project->getDescription()) : '',
                 'task_count' => count($project->getTasks()),
-                'url' => $this->generateUrl('app_project_detail', ['id' => $project->getId()]),
+                'url' => '/api/v1/projects/' . $project->getId(),
             ];
         }
 
@@ -291,7 +226,7 @@ class ProjectController extends AbstractController
                 'project_title' => $task->getProject()->getTitle(),
                 'priority' => $task->getPriority(),
                 'status' => $task->getStatus(),
-                'url' => $this->generateUrl('app_task_detail', ['id' => $task->getId()]),
+                'url' => '/api/v1/tasks/' . $task->getId(),
             ];
         }
 

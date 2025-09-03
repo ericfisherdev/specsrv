@@ -19,6 +19,7 @@ export class Modal {
     this.element = null;
     this.backdropElement = null;
     this.contentElement = null;
+    this._onKeydown = null;
 
     this.onOpen = options.onOpen || (() => {});
     this.onClose = options.onClose || (() => {});
@@ -123,11 +124,12 @@ export class Modal {
 
     // Keyboard events
     if (this.options.keyboard) {
-      document.addEventListener('keydown', (e) => {
+      this._onKeydown = (e) => {
         if (e.key === 'Escape' && this.isOpen) {
           this.close();
         }
-      });
+      };
+      document.addEventListener('keydown', this._onKeydown);
     }
 
     // Prevent modal content clicks from closing modal
@@ -190,14 +192,28 @@ export class Modal {
     return this;
   }
 
-  setContent(content) {
+  setContent(content, options = {}) {
     const bodyElement = this.element.querySelector('.modal-body');
     if (bodyElement) {
       if (typeof content === 'string') {
-        bodyElement.innerHTML = content;
-      } else if (content instanceof HTMLElement) {
+        if (options.allowHtml === true) {
+          // Sanitize HTML if DOMPurify is available, otherwise throw error
+          if (typeof DOMPurify !== 'undefined') {
+            bodyElement.innerHTML = DOMPurify.sanitize(content);
+          } else {
+            throw new Error('HTML content requires DOMPurify for sanitization. Set allowHtml: false or include DOMPurify.');
+          }
+        } else {
+          // Treat as text content to prevent XSS
+          const textNode = document.createTextNode(content);
+          bodyElement.innerHTML = '';
+          bodyElement.appendChild(textNode);
+        }
+      } else if (content instanceof HTMLElement || content instanceof Node) {
         bodyElement.innerHTML = '';
         bodyElement.appendChild(content);
+      } else {
+        throw new Error('Content must be a string, HTMLElement, or Node');
       }
     }
     return this;
@@ -280,9 +296,18 @@ export class Modal {
   }
 
   destroy() {
+    // Remove event listeners to prevent memory leaks
+    if (this._onKeydown) {
+      document.removeEventListener('keydown', this._onKeydown);
+      this._onKeydown = null;
+    }
+    
+    // Remove element from DOM
     if (this.element && this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);
     }
+    
+    // Clean up references
     this.element = null;
     this.backdropElement = null;
     this.contentElement = null;

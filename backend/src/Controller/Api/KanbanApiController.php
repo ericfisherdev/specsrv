@@ -30,20 +30,33 @@ class KanbanApiController extends BaseApiController
         assert($user instanceof User);
 
         $projectId = $request->query->get('project');
-        $projectIdString = is_string($projectId) ? $projectId : null;
+        $validatedProjectId = null;
+
+        // Validate and cast project ID to integer
+        if ($projectId !== null) {
+            if (!is_string($projectId) || !ctype_digit($projectId)) {
+                return $this->errorResponse(
+                    'Invalid project ID format',
+                    'INVALID_PROJECT_ID',
+                    null,
+                    400
+                );
+            }
+            $validatedProjectId = (int) $projectId;
+        }
 
         // Get all projects for the user
         $projects = $this->projectRepository->findByUser($user);
 
         // Get tasks grouped by status
-        $tasksByStatus = $this->getTasksByStatus($user, $projectIdString);
+        $tasksByStatus = $this->getTasksByStatus($user, $validatedProjectId);
 
         // Get status configuration
         $statuses = $this->getStatusConfig();
 
         return $this->successResponse([
             'projects' => array_map([$this, 'transformEntity'], $projects),
-            'selected_project' => $projectIdString,
+            'selected_project' => $validatedProjectId,
             'tasks_by_status' => $tasksByStatus,
             'statuses' => $statuses,
         ]);
@@ -99,13 +112,27 @@ class KanbanApiController extends BaseApiController
         assert($user instanceof User);
 
         $projectId = $request->query->get('project');
-        $projectIdString = is_string($projectId) ? $projectId : null;
-        $tasksByStatus = $this->getTasksByStatus($user, $projectIdString);
+        $validatedProjectId = null;
+
+        // Validate and cast project ID to integer
+        if ($projectId !== null) {
+            if (!is_string($projectId) || !ctype_digit($projectId)) {
+                return $this->errorResponse(
+                    'Invalid project ID format',
+                    'INVALID_PROJECT_ID',
+                    null,
+                    400
+                );
+            }
+            $validatedProjectId = (int) $projectId;
+        }
+
+        $tasksByStatus = $this->getTasksByStatus($user, $validatedProjectId);
 
         return $this->successResponse($tasksByStatus);
     }
 
-    private function getTasksByStatus(User $user, ?string $projectId): array
+    private function getTasksByStatus(User $user, ?int $projectId): array
     {
         $queryBuilder = $this->taskRepository->createQueryBuilder('t')
             ->leftJoin('t.project', 'p')

@@ -65,7 +65,7 @@ frontend/
 ├── .env                    # Default environment variables
 ├── .env.local              # Local overrides (git ignored)
 ├── .env.development        # Development-specific variables
-├── .env.testing           # Testing environment variables
+├── .env.test              # Testing environment variables
 ├── .env.staging           # Staging environment variables
 ├── .env.production        # Production environment variables
 └── config/
@@ -207,14 +207,37 @@ const path = require('path');
 const webpack = require('webpack');
 const dotenv = require('dotenv');
 
-// Load environment variables
-const env = dotenv.config({
+// Load base environment variables first
+const baseEnv = dotenv.config({
+  path: '.env'
+}).parsed || {};
+
+// Load environment-specific variables
+const envSpecific = dotenv.config({
   path: `.env.${process.env.NODE_ENV || 'development'}`
 }).parsed || {};
 
-// Create environment variables for DefinePlugin
-const envKeys = Object.keys(env).reduce((prev, next) => {
-  prev[`process.env.${next}`] = JSON.stringify(env[next]);
+// Merge environments (env-specific overrides base)
+const env = { ...baseEnv, ...envSpecific };
+
+// Filter to only allowed variables (whitelist approach)
+const allowedVars = [
+  'APP_NAME', 'APP_VERSION', 'APP_DESCRIPTION',
+  'API_BASE_URL', 'API_VERSION', 'API_TIMEOUT',
+  'AUTH_TOKEN_KEY', 'AUTH_REFRESH_THRESHOLD', 'AUTH_REDIRECT_URL',
+  'ENABLE_DEBUG_MODE', 'ENABLE_OFFLINE_MODE', 'ENABLE_DARK_MODE',
+  'ENABLE_ANALYTICS', 'ENABLE_FILE_UPLOAD', 'ENABLE_REAL_TIME',
+  'DEFAULT_THEME', 'DEFAULT_LANGUAGE', 'DEFAULT_TIMEZONE',
+  'PAGE_SIZE', 'MAX_FILE_SIZE', 'CACHE_ENABLED', 'CACHE_TTL',
+  'LAZY_LOADING', 'ENABLE_CSP', 'ENABLE_HSTS', 'ENABLE_XSS_PROTECTION',
+  'LOG_LEVEL', 'PUBLIC_URL', 'WS_URL'
+];
+
+// Create environment variables for DefinePlugin with filtering
+const envKeys = allowedVars.reduce((prev, key) => {
+  if (env[key] !== undefined) {
+    prev[`process.env.${key}`] = JSON.stringify(env[key]);
+  }
   return prev;
 }, {});
 
@@ -367,7 +390,8 @@ class ConfigService {
   }
   
   get(path, defaultValue = undefined) {
-    return this.getNestedValue(this.config, path) || defaultValue;
+    const value = this.getNestedValue(this.config, path);
+    return value !== undefined ? value : defaultValue;
   }
   
   getNestedValue(obj, path) {
@@ -470,7 +494,7 @@ PROXY_API=true
 ### Testing Environment
 
 ```bash
-# .env.testing
+# .env.test
 NODE_ENV=test
 
 # API Configuration
@@ -762,11 +786,19 @@ const checker = new ConfigurationChecker(config);
 // Add checks
 checker.addCheck('API Connectivity', async (config) => {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
     const response = await fetch(`${config.get('api.baseUrl')}/health`, {
-      timeout: 5000
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
     return response.ok;
-  } catch {
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      return 'API endpoint not reachable';
+    }
     return 'API endpoint not reachable';
   }
 });

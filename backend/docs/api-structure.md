@@ -24,29 +24,29 @@
 - `PATCH /api/user/password` - Change password
 
 ### Project Management
-- `GET /api/projects` - List all projects for current user
-- `POST /api/projects` - Create new project
-- `GET /api/projects/{id}` - Get specific project
-- `PUT /api/projects/{id}` - Update project
-- `DELETE /api/projects/{id}` - Delete project
+- `GET /api/v1/projects` - List all projects for current user
+- `POST /api/v1/projects` - Create new project
+- `GET /api/v1/projects/{id}` - Get specific project
+- `PUT /api/v1/projects/{id}` - Update project
+- `DELETE /api/v1/projects/{id}` - Delete project
 
 ### Task Management
-- `GET /api/projects/{project_id}/tasks` - List tasks for project
-- `POST /api/projects/{project_id}/tasks` - Create new task
-- `GET /api/tasks/{id}` - Get specific task
-- `PUT /api/tasks/{id}` - Update task
-- `PATCH /api/tasks/{id}/status` - Update task status only
-- `DELETE /api/tasks/{id}` - Delete task
+- `GET /api/v1/projects/{project_id}/tasks` - List tasks for project
+- `POST /api/v1/projects/{project_id}/tasks` - Create new task
+- `GET /api/v1/tasks/{id}` - Get specific task
+- `PUT /api/v1/tasks/{id}` - Update task
+- `PATCH /api/v1/tasks/{id}/status` - Update task status only
+- `DELETE /api/v1/tasks/{id}` - Delete task
 
 ### File Management
-- `GET /api/tasks/{task_id}/files` - List files for task
-- `POST /api/tasks/{task_id}/files` - Upload file to task
+- `GET /api/v1/tasks/{task_id}/files` - List files for task
+- `POST /api/v1/tasks/{task_id}/files` - Upload file to task
 - `GET /api/files/{id}` - Download file
 - `DELETE /api/files/{id}` - Delete file
 
 ### Git Integration
-- `GET /api/tasks/{task_id}/git-links` - List git links for task
-- `POST /api/tasks/{task_id}/git-links` - Add git link to task
+- `GET /api/v1/tasks/{task_id}/git-links` - List git links for task
+- `POST /api/v1/tasks/{task_id}/git-links` - Add git link to task
 - `DELETE /api/git-links/{id}` - Remove git link
 
 ## Standard Response Format
@@ -108,7 +108,7 @@
 
 ### Create Project
 ```http
-POST /api/projects
+POST /api/v1/projects
 Content-Type: application/json
 Authorization: Bearer <api_key>
 
@@ -137,7 +137,7 @@ Response:
 
 ### List Tasks
 ```http
-GET /api/projects/123/tasks?page=1&per_page=10&status=todo
+GET /api/v1/projects/123/tasks?page=1&per_page=10&status=todo
 Authorization: Bearer <api_key>
 ```
 

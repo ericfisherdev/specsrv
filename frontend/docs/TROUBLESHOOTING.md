@@ -1165,7 +1165,11 @@ export class DiagnosticTool {
     for (const test of tests) {
       try {
         const start = performance.now();
-        const response = await fetch(test.url, { timeout: 5000 });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(test.url, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const end = performance.now();
         
         results[test.name] = {
@@ -1174,9 +1178,11 @@ export class DiagnosticTool {
           responseTime: Math.round(end - start)
         };
       } catch (error) {
+        const end = performance.now();
         results[test.name] = {
-          error: error.message,
-          ok: false
+          error: error.name === 'AbortError' ? 'Request timeout' : error.message,
+          ok: false,
+          responseTime: error.name === 'AbortError' ? 5000 : Math.round(end - start)
         };
       }
     }

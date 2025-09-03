@@ -1,4 +1,5 @@
 services:
+  # Development backend service with bind mounts  
   specsrv-backend:
     build:
       context: ./backend
@@ -44,6 +45,47 @@ services:
     depends_on:
       specsrv-postgres:
         condition: service_healthy
+    profiles:
+      - dev
+
+  # Production backend service without bind mounts
+  specsrv-backend-prod:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: specsrv-backend-prod
+    ports:
+      - "8081:8080"
+    environment:
+      - APP_ENV=prod
+      - APP_DEBUG=0
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-specsrv-db-user}:${POSTGRES_PASSWORD:?set in .env}@specsrv-postgres:5432/${POSTGRES_DB:-specsrv}
+    volumes:
+      # Only named volumes for persistent data - no bind mounts
+      - type: volume
+        source: specsrv-cache
+        target: /app/var/cache
+      - type: volume
+        source: specsrv-logs
+        target: /app/var/log
+      - type: volume
+        source: specsrv-uploads
+        target: /app/var/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+    depends_on:
+      specsrv-postgres:
+        condition: service_healthy
+    profiles:
+      - production
 
   specsrv-postgres:
     image: postgres:15
@@ -74,15 +116,15 @@ services:
       dockerfile: Dockerfile
     container_name: specsrv-frontend
     ports:
-      - "3000:80"
+      - "3000:8080"
     environment:
-      - API_BASE_URL=http://specsrv-backend:8080
+      - API_BASE_URL=/api
       - NODE_ENV=production
     depends_on:
-      specsrv-backend:
+      specsrv-backend-prod:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -125,7 +167,7 @@ services:
       - ./scripts/nginx-proxy.conf:/etc/nginx/nginx.conf:ro
       - specsrv-assets:/var/www/html/build:ro
     depends_on:
-      specsrv-backend:
+      specsrv-backend-prod:
         condition: service_healthy
     networks:
       - specsrv-network

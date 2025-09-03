@@ -35,6 +35,7 @@ export class FileUpload {
   }
 
   init() {
+    this.fileInputId = this.generateId();
     this.render();
     this.bindEvents();
   }
@@ -60,12 +61,12 @@ export class FileUpload {
                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
                 <div class="mt-4">
-                    <label for="file-upload-${this.generateId()}" class="cursor-pointer">
+                    <label for="file-upload-${this.fileInputId}" class="cursor-pointer">
                         <span class="mt-2 block text-sm font-medium text-gray-900">
                             Drop files here or click to browse
                         </span>
                         <input
-                            id="file-upload-${this.generateId()}"
+                            id="file-upload-${this.fileInputId}"
                             name="files[]"
                             type="file"
                             class="sr-only file-input"
@@ -185,6 +186,42 @@ export class FileUpload {
         `;
   }
 
+  renderError(error) {
+    const container = document.createElement('div');
+    container.className = 'p-3 bg-red-50 border border-red-200 rounded-lg';
+    
+    const flexDiv = document.createElement('div');
+    flexDiv.className = 'flex';
+    
+    const iconDiv = document.createElement('div');
+    iconDiv.innerHTML = '<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>';
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'ml-3';
+    
+    const paragraph = document.createElement('p');
+    paragraph.className = 'text-sm text-red-800';
+    
+    const filenameSpan = document.createElement('span');
+    filenameSpan.className = 'font-medium';
+    filenameSpan.textContent = error.filename;
+    
+    const separator = document.createTextNode(': ');
+    
+    const errorSpan = document.createElement('span');
+    errorSpan.textContent = error.error;
+    
+    paragraph.appendChild(filenameSpan);
+    paragraph.appendChild(separator);
+    paragraph.appendChild(errorSpan);
+    contentDiv.appendChild(paragraph);
+    flexDiv.appendChild(iconDiv);
+    flexDiv.appendChild(contentDiv);
+    container.appendChild(flexDiv);
+    
+    return container.outerHTML;
+  }
+
   renderErrors() {
     if (this.state.errors.length === 0) {
       return '';
@@ -192,7 +229,7 @@ export class FileUpload {
 
     return `
             <div class="mt-4 space-y-2 upload-errors">
-${this.state.errors.map(error => '<div class="p-3 bg-red-50 border border-red-200 rounded-lg"><div class="flex"><svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><div class="ml-3"><p class="text-sm text-red-800"><span class="font-medium">' + error.filename + '</span>: <span>' + error.error + '</span></p></div></div></div>').join('')}
+${this.state.errors.map(error => this.renderError(error)).join('')}
             </div>
         `;
   }
@@ -368,15 +405,22 @@ ${this.state.errors.map(error => '<div class="p-3 bg-red-50 border border-red-20
             this.state.uploadETA = remaining / this.state.uploadSpeed; // seconds remaining
           }
 
-          // Update individual file progress (simplified)
-          const progressPerFile = percentComplete / this.state.currentFiles.length;
-          this.state.currentFiles.forEach((file, index) => {
-            if (percentComplete >= (index + 1) * progressPerFile) {
-              file.progress = 100;
-            } else if (percentComplete > index * progressPerFile) {
-              file.progress = Math.round(percentComplete - (index * progressPerFile));
-            }
-          });
+          // Update individual file progress based on file sizes
+          if (this.state.totalBytes > 0) {
+            this.state.currentFiles.forEach(file => {
+              const fileBytesToProcess = (file.size / this.state.totalBytes) * this.state.uploadedBytes;
+              if (fileBytesToProcess >= file.size) {
+                file.progress = 100;
+              } else {
+                file.progress = Math.round((fileBytesToProcess / file.size) * 100);
+              }
+            });
+          } else {
+            // Fallback: show overall progress for all files
+            this.state.currentFiles.forEach(file => {
+              file.progress = Math.round(percentComplete);
+            });
+          }
 
           // Update status message
           if (percentComplete < 50) {
@@ -406,6 +450,16 @@ ${this.state.errors.map(error => '<div class="p-3 bg-red-50 border border-red-20
 
       xhr.open('POST', this.options.uploadUrl);
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      
+      // Add Authorization header if available
+      const authToken = this.options.authToken || 
+        localStorage.getItem('specsrv-token') || 
+        this.getCookieValue('auth-token');
+      
+      if (authToken) {
+        xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+      }
+      
       xhr.send(formData);
     });
   }
@@ -449,12 +503,31 @@ ${this.state.errors.map(error => '<div class="p-3 bg-red-50 border border-red-20
     }
 
     try {
+      // Get CSRF token
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+        this.options.csrfToken;
+      
+      // Get auth token
+      const authToken = this.options.authToken || 
+        localStorage.getItem('specsrv-token') || 
+        this.getCookieValue('auth-token');
+      
+      const headers = {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json'
+      };
+      
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
+      
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+      
       const response = await fetch(`${this.options.deleteUrl}/${filename}`, {
         method: 'DELETE',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          'Content-Type': 'application/json'
-        }
+        headers
       });
 
       const result = await response.json();
@@ -481,6 +554,13 @@ ${this.state.errors.map(error => '<div class="p-3 bg-red-50 border border-red-20
   // Utility methods
   generateId() {
     return Math.random().toString(36).substr(2, 9);
+  }
+
+  getCookieValue(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
   }
 
   formatFileSize(bytes) {

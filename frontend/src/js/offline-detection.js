@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function() {
     isOnline: navigator.onLine,
     pendingRequests: [],
     offlineNotification: null,
+    offlineTemplate: null,
+    onlineTemplate: null,
 
     init() {
       this.createOfflineIndicator();
@@ -25,8 +27,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
                     </svg>
-                    <span>You"re offline. Some features may not work properly.</span>
-                    <button onclick="this.parentElement.parentElement.style.transform = "translateY(-100%)"" class="ml-4 text-red-200 hover:text-white">
+                    <span>You're offline. Some features may not work properly.</span>
+                    <button class="ml-4 text-red-200 hover:text-white offline-close-btn">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                         </svg>
@@ -35,6 +37,21 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
       document.body.appendChild(indicator);
       this.offlineNotification = indicator;
+      
+      // Attach event listeners for close buttons
+      this.attachCloseHandlers(indicator);
+      
+      // Save the original offline template
+      this.offlineTemplate = indicator.innerHTML;
+      // Build the online template once
+      this.onlineTemplate = `
+                    <div class="flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>You're back online! PENDING_COUNT_PLACEHOLDER</span>
+                    </div>
+                `;
     },
 
     setupEventListeners() {
@@ -75,9 +92,12 @@ document.addEventListener('DOMContentLoaded', function() {
     },
 
     showOfflineMessage() {
-      if (this.offlineNotification) {
+      if (this.offlineNotification && this.offlineTemplate) {
+        // Restore original offline template
+        this.offlineNotification.innerHTML = this.offlineTemplate;
         this.offlineNotification.style.transform = 'translateY(0)';
-        this.offlineNotification.className = this.offlineNotification.className.replace('bg-red-600', 'bg-red-600');
+        this.offlineNotification.classList.add('bg-red-600');
+        this.offlineNotification.classList.remove('bg-green-600');
       }
     },
 
@@ -88,16 +108,11 @@ document.addEventListener('DOMContentLoaded', function() {
     },
 
     showOnlineMessage() {
-      if (this.offlineNotification) {
+      if (this.offlineNotification && this.onlineTemplate) {
         this.offlineNotification.className = this.offlineNotification.className.replace('bg-red-600', 'bg-green-600');
-        this.offlineNotification.innerHTML = `
-                    <div class="flex items-center justify-center space-x-2">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <span>You"re back online! ${this.pendingRequests.length > 0 ? 'Processing queued actions...' : ''}</span>
-                    </div>
-                `;
+        // Use the pre-built online template with dynamic content
+        const pendingText = this.pendingRequests.length > 0 ? 'Processing queued actions...' : '';
+        this.offlineNotification.innerHTML = this.onlineTemplate.replace('PENDING_COUNT_PLACEHOLDER', pendingText);
         this.offlineNotification.style.transform = 'translateY(0)';
 
         // Auto-hide after 3 seconds
@@ -107,8 +122,17 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     },
 
+    attachCloseHandlers(container) {
+      const closeBtn = container.querySelector('.offline-close-btn');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          this.offlineNotification.style.transform = 'translateY(-100%)';
+        });
+      }
+    },
+
     showOfflineActionMessage() {
-      this.showToast('Action queued - will execute when you"re back online', 'warning');
+      this.showToast('Action queued - will execute when you\'re back online', 'warning');
     },
 
     queueRequest(requestDetail) {
@@ -169,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p class="text-sm font-medium">${message}</p>
                     </div>
                     <div class="ml-4 flex-shrink-0 flex">
-                        <button onclick="this.closest(".fixed").remove()" class="inline-flex text-current hover:opacity-75">
+                        <button class="inline-flex text-current hover:opacity-75 toast-close-btn">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
@@ -179,6 +203,14 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
 
       document.body.appendChild(toast);
+      
+      // Attach close handler to the toast
+      const closeBtn = toast.querySelector('.toast-close-btn');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          toast.remove();
+        });
+      }
 
       // Animate in
       setTimeout(() => {

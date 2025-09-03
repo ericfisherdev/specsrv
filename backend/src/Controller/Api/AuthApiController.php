@@ -47,9 +47,22 @@ class AuthApiController extends BaseApiController
             );
         }
 
-        $user = $this->userRepository->findOneBy(['email' => $data['email']]);
+        // Normalize and validate input
+        $email = strtolower(trim($data['email'] ?? ''));
+        $password = trim($data['password'] ?? '');
 
-        if (! $user || ! $this->passwordHasher->isPasswordValid($user, $data['password'])) {
+        if (empty($email) || empty($password)) {
+            return $this->errorResponse(
+                'Email and password cannot be empty',
+                'MISSING_CREDENTIALS',
+                null,
+                400
+            );
+        }
+
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if (! $user || ! $this->passwordHasher->isPasswordValid($user, $password)) {
             return $this->errorResponse(
                 'Invalid credentials',
                 'INVALID_CREDENTIALS',
@@ -119,8 +132,22 @@ class AuthApiController extends BaseApiController
             );
         }
 
+        // Normalize and validate input
+        $email = strtolower(trim($data['email'] ?? ''));
+        $password = trim($data['password'] ?? '');
+        $name = isset($data['name']) ? trim($data['name'] ?? '') : null;
+
+        if (empty($email) || empty($password)) {
+            return $this->errorResponse(
+                'Email and password cannot be empty',
+                'MISSING_CREDENTIALS',
+                null,
+                400
+            );
+        }
+
         // Validate email format
-        if (! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->errorResponse(
                 'Invalid email format',
                 'VALIDATION_ERROR',
@@ -130,7 +157,7 @@ class AuthApiController extends BaseApiController
         }
 
         // Validate password length
-        if (strlen($data['password']) < 6) {
+        if (strlen($password) < 6) {
             return $this->errorResponse(
                 'Password is too short',
                 'VALIDATION_ERROR',
@@ -140,7 +167,7 @@ class AuthApiController extends BaseApiController
         }
 
         // Check if user already exists
-        if ($this->userRepository->findOneBy(['email' => $data['email']])) {
+        if ($this->userRepository->findOneBy(['email' => $email])) {
             return $this->errorResponse(
                 'User with this email already exists',
                 'USER_ALREADY_EXISTS',
@@ -150,11 +177,11 @@ class AuthApiController extends BaseApiController
         }
 
         $user = new User();
-        $user->setEmail($data['email']);
-        $user->setPassword($this->passwordHasher->hashPassword($user, $data['password']));
+        $user->setEmail($email);
+        $user->setPassword($this->passwordHasher->hashPassword($user, $password));
 
-        if (isset($data['name'])) {
-            $user->setName($data['name']);
+        if (!empty($name)) {
+            $user->setName($name);
         }
 
         // Validate the user entity

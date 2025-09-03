@@ -33,13 +33,22 @@ async function lintFiles() {
       totalWarnings += result.warnings.length;
     } catch (error) {
       console.error(`Error linting ${file}:`, error.message);
+      process.exitCode = 1;
     }
   }
   
   console.log(`\n=== SUMMARY ===`);
   console.log(`Total files checked: ${jsFiles.length}`);
   console.log(`Total warnings: ${totalWarnings}`);
-  console.log(`Average warnings per file: ${(totalWarnings / jsFiles.length).toFixed(1)}`);
+  console.log(`Average warnings per file: ${jsFiles.length > 0 ? (totalWarnings / jsFiles.length).toFixed(1) : '0.0'}`);
+  
+  // Set exit code if there are warnings (for CI)
+  if (totalWarnings > 0) {
+    process.exitCode = 1;
+  }
 }
 
-lintFiles().catch(console.error);
+lintFiles().catch((error) => {
+  console.error('Unexpected error during linting:', error);
+  process.exitCode = 1;
+});

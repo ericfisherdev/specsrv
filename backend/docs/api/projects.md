@@ -10,7 +10,7 @@ Get a list of all projects for the authenticated user.
 
 **Request:**
 ```http
-GET /api/projects
+GET /api/v1/projects
 X-API-KEY: your-api-key
 ```
 
@@ -40,7 +40,7 @@ Create a new project.
 
 **Request:**
 ```http
-POST /api/projects
+POST /api/v1/projects
 Content-Type: application/json
 X-API-KEY: your-api-key
 
@@ -79,7 +79,7 @@ Get details of a specific project.
 
 **Request:**
 ```http
-GET /api/projects/1
+GET /api/v1/projects/1
 X-API-KEY: your-api-key
 ```
 
@@ -108,7 +108,7 @@ Update an existing project.
 
 **Request:**
 ```http
-PUT /api/projects/1
+PUT /api/v1/projects/1
 Content-Type: application/json
 X-API-KEY: your-api-key
 
@@ -146,7 +146,7 @@ Delete a project and all associated tasks and files.
 
 **Request:**
 ```http
-DELETE /api/projects/1
+DELETE /api/v1/projects/1
 X-API-KEY: your-api-key
 ```
 

@@ -43,6 +43,7 @@ monolog:
             level: info
             formatter: monolog.formatter.json
             max_files: 7
+            channels: ["performance"]
 
         # Audit log - for compliance and tracking
         audit:
@@ -51,6 +52,7 @@ monolog:
             level: info
             formatter: monolog.formatter.json
             max_files: 90  # Keep 3 months for compliance
+            channels: ["audit"]
 
         # Console output for containers
         console:

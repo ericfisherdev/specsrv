@@ -199,11 +199,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function toArray(): array
     {
+        $roles = $this->getRoles();
+        
         return [
             'id' => $this->id,
             'email' => $this->email,
             'name' => $this->name,
-            'roles' => $this->getRoles(),
+            'is_admin' => in_array('ROLE_ADMIN', $roles, true),
+            'can_impersonate' => in_array('ROLE_ALLOWED_TO_SWITCH', $roles, true),
             'created_at' => $this->createdAt?->format('c'),
             'updated_at' => $this->updatedAt?->format('c'),
         ];
