@@ -242,11 +242,11 @@ class KanbanApiTest extends AbstractWebTestCase
         $this->assertNotNull($responseData, 'Response data should not be null');
         $this->assertArrayHasKey('data', $responseData, 'Response should contain data key');
         $this->assertNotNull($responseData['data'], 'Data should not be null');
-        
+
         $todoTasks = $responseData['data'][TaskStatusEnum::TODO->value];
         $this->assertNotNull($todoTasks, 'Todo tasks should not be null');
         $this->assertNotEmpty($todoTasks, 'Todo tasks should not be empty');
-        
+
         $task = $todoTasks[0];
 
         // Verify task data structure
@@ -289,7 +289,7 @@ class KanbanApiTest extends AbstractWebTestCase
         $this->assertNotNull($responseData, 'Response data should not be null');
         $this->assertArrayHasKey('data', $responseData, 'Response should contain data key');
         $this->assertNotNull($responseData['data'], 'Data should not be null');
-        
+
         $todoTasks = $responseData['data'][TaskStatusEnum::TODO->value];
         $this->assertNotNull($todoTasks, 'Todo tasks should not be null');
 

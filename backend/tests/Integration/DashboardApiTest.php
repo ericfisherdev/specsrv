@@ -128,7 +128,7 @@ class DashboardApiTest extends AbstractWebTestCase
 
         $this->assertNotNull($responseData, 'Response data should not be null');
         $this->assertArrayHasKey('data', $responseData, 'Response should contain data key');
-        
+
         $data = $responseData['data'];
         $this->assertNotNull($data, 'Data should not be null');
 

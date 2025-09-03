@@ -126,7 +126,7 @@ class SearchApiTest extends AbstractWebTestCase
 
         $this->assertNotNull($responseData, 'Response data should not be null');
         $this->assertArrayHasKey('data', $responseData, 'Response should contain data key');
-        
+
         $data = $responseData['data'];
         $this->assertNotNull($data, 'Data should not be null');
 
@@ -318,7 +318,7 @@ class SearchApiTest extends AbstractWebTestCase
         $this->assertNotNull($responseData['data'], 'Data should not be null');
         $this->assertArrayHasKey('tasks', $responseData['data'], 'Data should contain tasks key');
         $this->assertNotEmpty($responseData['data']['tasks'], 'Tasks should not be empty');
-        
+
         $taskData = $responseData['data']['tasks'][0];
 
         // Verify complete task data structure
