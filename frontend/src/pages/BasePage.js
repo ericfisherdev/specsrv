@@ -189,7 +189,7 @@ export class BasePage {
    * Destroy the page and cleanup
    */
   async destroy() {
-    if (this.isDestroyed) return;
+    if (this.isDestroyed) {return;}
     
     await this.executeHooks('beforeDestroy');
     

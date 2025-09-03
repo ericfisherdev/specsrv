@@ -410,9 +410,9 @@ export class DashboardPage extends BasePage {
     const diff = due.getTime() - now.getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
     
-    if (days < 0) return 'text-red-600';
-    if (days <= 3) return 'text-orange-600';
-    if (days <= 7) return 'text-yellow-600';
+    if (days < 0) {return 'text-red-600';}
+    if (days <= 3) {return 'text-orange-600';}
+    if (days <= 7) {return 'text-yellow-600';}
     return 'text-gray-600';
   }
   
@@ -427,9 +427,9 @@ export class DashboardPage extends BasePage {
     const diff = due.getTime() - now.getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
     
-    if (days < 0) return `${Math.abs(days)} days overdue`;
-    if (days === 0) return 'Due today';
-    if (days === 1) return 'Due tomorrow';
+    if (days < 0) {return `${Math.abs(days)} days overdue`;}
+    if (days === 0) {return 'Due today';}
+    if (days === 1) {return 'Due tomorrow';}
     return `Due in ${days} days`;
   }
   
@@ -446,9 +446,9 @@ export class DashboardPage extends BasePage {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
     
-    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (days > 0) {return `${days} day${days > 1 ? 's' : ''} ago`;}
+    if (hours > 0) {return `${hours} hour${hours > 1 ? 's' : ''} ago`;}
+    if (minutes > 0) {return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;}
     return 'Just now';
   }
   
@@ -459,14 +459,14 @@ export class DashboardPage extends BasePage {
   handleKeyboard(event) {
     if (event.ctrlKey || event.metaKey) {
       switch (event.key) {
-        case 'n':
-          event.preventDefault();
-          this.navigate('/tasks/new');
-          break;
-        case 'p':
-          event.preventDefault();
-          this.navigate('/projects/new');
-          break;
+      case 'n':
+        event.preventDefault();
+        this.navigate('/tasks/new');
+        break;
+      case 'p':
+        event.preventDefault();
+        this.navigate('/projects/new');
+        break;
       }
     }
   }

@@ -234,8 +234,8 @@ test.describe('File Upload and Management', () => {
       expect(fileCount).toBeGreaterThanOrEqual(3);
     } finally {
       // Clean up additional test files
-      if (fs.existsSync(testFile2)) fs.unlinkSync(testFile2);
-      if (fs.existsSync(testFile3)) fs.unlinkSync(testFile3);
+      if (fs.existsSync(testFile2)) {fs.unlinkSync(testFile2);}
+      if (fs.existsSync(testFile3)) {fs.unlinkSync(testFile3);}
     }
   });
 
@@ -270,7 +270,7 @@ test.describe('File Upload and Management', () => {
       await expect(page.locator('.file-item:has-text("large-test-file.txt")')).toBeVisible({ timeout: 15000 });
     } finally {
       // Clean up large file
-      if (fs.existsSync(largeFile)) fs.unlinkSync(largeFile);
+      if (fs.existsSync(largeFile)) {fs.unlinkSync(largeFile);}
     }
   });
 
@@ -306,7 +306,7 @@ test.describe('File Upload and Management', () => {
       }
     } finally {
       // Clean up invalid file
-      if (fs.existsSync(invalidFile)) fs.unlinkSync(invalidFile);
+      if (fs.existsSync(invalidFile)) {fs.unlinkSync(invalidFile);}
     }
   });
 
@@ -384,8 +384,8 @@ test.describe('File Upload and Management', () => {
       }
     } finally {
       // Clean up files
-      if (fs.existsSync(searchFile1)) fs.unlinkSync(searchFile1);
-      if (fs.existsSync(searchFile2)) fs.unlinkSync(searchFile2);
+      if (fs.existsSync(searchFile1)) {fs.unlinkSync(searchFile1);}
+      if (fs.existsSync(searchFile2)) {fs.unlinkSync(searchFile2);}
     }
   });
 });

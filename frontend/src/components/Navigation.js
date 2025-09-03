@@ -1,5 +1,5 @@
 export function createNavigation() {
-    return `
+  return `
         <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
@@ -129,21 +129,21 @@ export function createNavigation() {
 }
 
 export function initializeNavigation() {
-    // Set current year in footer
-    const yearElement = document.querySelector('[data-current-year]');
-    if (yearElement) {
-        yearElement.textContent = new Date().getFullYear();
+  // Set current year in footer
+  const yearElement = document.querySelector('[data-current-year]');
+  if (yearElement) {
+    yearElement.textContent = new Date().getFullYear();
+  }
+    
+  // Highlight active navigation item
+  const currentPath = window.location.pathname;
+  const navItems = document.querySelectorAll('[data-nav-item]');
+    
+  navItems.forEach(item => {
+    const navType = item.getAttribute('data-nav-item');
+    if (currentPath.includes(navType)) {
+      item.classList.add('text-primary-600', 'dark:text-primary-400');
+      item.classList.remove('text-gray-700', 'dark:text-gray-300');
     }
-    
-    // Highlight active navigation item
-    const currentPath = window.location.pathname;
-    const navItems = document.querySelectorAll('[data-nav-item]');
-    
-    navItems.forEach(item => {
-        const navType = item.getAttribute('data-nav-item');
-        if (currentPath.includes(navType)) {
-            item.classList.add('text-primary-600', 'dark:text-primary-400');
-            item.classList.remove('text-gray-700', 'dark:text-gray-300');
-        }
-    });
+  });
 }

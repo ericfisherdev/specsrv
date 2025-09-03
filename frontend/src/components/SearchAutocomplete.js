@@ -1,7 +1,7 @@
 export function createSearchAutocomplete(options = {}) {
-    const searchPlaceholder = options.placeholder || 'Search tasks and projects...';
+  const searchPlaceholder = options.placeholder || 'Search tasks and projects...';
     
-    return `
+  return `
         <div x-data="searchAutocomplete()" class="relative" @click.outside="hideSuggestions()">
             <div class="relative">
                 <input 
@@ -135,121 +135,121 @@ export function createSearchAutocomplete(options = {}) {
 }
 
 window.searchAutocomplete = function() {
-    return {
-        query: '',
-        suggestions: [],
-        recentSearches: JSON.parse(localStorage.getItem('recent_searches') || '[]'),
-        showSuggestions: false,
-        loading: false,
-        selectedIndex: -1,
+  return {
+    query: '',
+    suggestions: [],
+    recentSearches: JSON.parse(localStorage.getItem('recent_searches') || '[]'),
+    showSuggestions: false,
+    loading: false,
+    selectedIndex: -1,
         
-        async search() {
-            if (this.query.length < 2) {
-                this.suggestions = [];
-                this.showSuggestions = true;
-                return;
-            }
+    async search() {
+      if (this.query.length < 2) {
+        this.suggestions = [];
+        this.showSuggestions = true;
+        return;
+      }
             
-            this.loading = true;
+      this.loading = true;
             
-            try {
-                const apiService = window.apiService;
-                const response = await apiService.get(`/search/suggestions?q=${encodeURIComponent(this.query)}`);
+      try {
+        const apiService = window.apiService;
+        const response = await apiService.get(`/search/suggestions?q=${encodeURIComponent(this.query)}`);
                 
-                if (response) {
-                    this.suggestions = response;
-                    this.showSuggestions = true;
-                    this.selectedIndex = -1;
-                }
-                
-            } catch (error) {
-                console.error('Search error:', error);
-                this.suggestions = [];
-            } finally {
-                this.loading = false;
-            }
-        },
-        
-        selectNext() {
-            const totalItems = (this.suggestions.tasks?.length || 0) + (this.suggestions.projects?.length || 0);
-            if (totalItems > 0) {
-                this.selectedIndex = Math.min(this.selectedIndex + 1, totalItems - 1);
-            }
-        },
-        
-        selectPrevious() {
-            this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
-        },
-        
-        selectCurrent() {
-            if (this.selectedIndex === -1) {
-                this.performGlobalSearch();
-                return;
-            }
-            
-            const taskCount = this.suggestions.tasks?.length || 0;
-            let selectedItem;
-            
-            if (this.selectedIndex < taskCount) {
-                selectedItem = this.suggestions.tasks[this.selectedIndex];
-            } else {
-                selectedItem = this.suggestions.projects[this.selectedIndex - taskCount];
-            }
-            
-            if (selectedItem && selectedItem.url) {
-                window.location.href = selectedItem.url;
-            }
-        },
-        
-        selectSuggestion(item, type) {
-            this.addToRecentSearches(this.query);
-            window.location.href = item.url;
-        },
-        
-        selectRecent(query) {
-            this.query = query;
-            this.search();
-        },
-        
-        performGlobalSearch() {
-            if (this.query.trim()) {
-                this.addToRecentSearches(this.query);
-                window.location.href = `/search?q=${encodeURIComponent(this.query)}`;
-            }
-        },
-        
-        addToRecentSearches(query) {
-            if (!query.trim()) return;
-            
-            this.recentSearches = this.recentSearches.filter(item => item !== query);
-            this.recentSearches.unshift(query);
-            this.recentSearches = this.recentSearches.slice(0, 5);
-            
-            localStorage.setItem('recent_searches', JSON.stringify(this.recentSearches));
-        },
-        
-        hideSuggestions() {
-            setTimeout(() => {
-                this.showSuggestions = false;
-                this.selectedIndex = -1;
-            }, 150);
-        },
-        
-        getPriorityClass(priority) {
-            const classes = {
-                'low': 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900',
-                'medium': 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900',
-                'high': 'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900',
-                'critical': 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900'
-            };
-            return classes[priority] || 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700';
+        if (response) {
+          this.suggestions = response;
+          this.showSuggestions = true;
+          this.selectedIndex = -1;
         }
+                
+      } catch (error) {
+        console.error('Search error:', error);
+        this.suggestions = [];
+      } finally {
+        this.loading = false;
+      }
+    },
+        
+    selectNext() {
+      const totalItems = (this.suggestions.tasks?.length || 0) + (this.suggestions.projects?.length || 0);
+      if (totalItems > 0) {
+        this.selectedIndex = Math.min(this.selectedIndex + 1, totalItems - 1);
+      }
+    },
+        
+    selectPrevious() {
+      this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+    },
+        
+    selectCurrent() {
+      if (this.selectedIndex === -1) {
+        this.performGlobalSearch();
+        return;
+      }
+            
+      const taskCount = this.suggestions.tasks?.length || 0;
+      let selectedItem;
+            
+      if (this.selectedIndex < taskCount) {
+        selectedItem = this.suggestions.tasks[this.selectedIndex];
+      } else {
+        selectedItem = this.suggestions.projects[this.selectedIndex - taskCount];
+      }
+            
+      if (selectedItem && selectedItem.url) {
+        window.location.href = selectedItem.url;
+      }
+    },
+        
+    selectSuggestion(item, type) {
+      this.addToRecentSearches(this.query);
+      window.location.href = item.url;
+    },
+        
+    selectRecent(query) {
+      this.query = query;
+      this.search();
+    },
+        
+    performGlobalSearch() {
+      if (this.query.trim()) {
+        this.addToRecentSearches(this.query);
+        window.location.href = `/search?q=${encodeURIComponent(this.query)}`;
+      }
+    },
+        
+    addToRecentSearches(query) {
+      if (!query.trim()) {return;}
+            
+      this.recentSearches = this.recentSearches.filter(item => item !== query);
+      this.recentSearches.unshift(query);
+      this.recentSearches = this.recentSearches.slice(0, 5);
+            
+      localStorage.setItem('recent_searches', JSON.stringify(this.recentSearches));
+    },
+        
+    hideSuggestions() {
+      setTimeout(() => {
+        this.showSuggestions = false;
+        this.selectedIndex = -1;
+      }, 150);
+    },
+        
+    getPriorityClass(priority) {
+      const classes = {
+        'low': 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900',
+        'medium': 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900',
+        'high': 'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900',
+        'critical': 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900'
+      };
+      return classes[priority] || 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-700';
     }
-}
+  };
+};
 
 export function initializeSearchAutocomplete() {
-    const searchContainer = document.getElementById('search-autocomplete');
-    if (searchContainer) {
-        searchContainer.innerHTML = createSearchAutocomplete();
-    }
+  const searchContainer = document.getElementById('search-autocomplete');
+  if (searchContainer) {
+    searchContainer.innerHTML = createSearchAutocomplete();
+  }
 }

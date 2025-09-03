@@ -263,9 +263,9 @@ export class AuthService {
     // Handle both object and individual params
     const data = typeof passwordData === 'object' && passwordData.currentPassword
       ? {
-          current_password: passwordData.currentPassword,
-          new_password: passwordData.newPassword,
-        }
+        current_password: passwordData.currentPassword,
+        new_password: passwordData.newPassword,
+      }
       : passwordData;
     
     return this.apiService.post('/auth/change-password', data);
@@ -371,7 +371,7 @@ export class AuthService {
    */
   getStoredUser() {
     const userData = localStorage.getItem(this.userKey);
-    if (!userData) return null;
+    if (!userData) {return null;}
     
     try {
       return JSON.parse(userData);

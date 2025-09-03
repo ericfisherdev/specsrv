@@ -262,7 +262,7 @@ export class Router {
    */
   async loadComponent(componentName, params, state) {
     const mainContent = document.getElementById('main-content');
-    if (!mainContent) return;
+    if (!mainContent) {return;}
     
     try {
       // Show loading state

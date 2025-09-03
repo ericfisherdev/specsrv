@@ -266,7 +266,7 @@ export class NotificationManager {
    * @returns {string}
    */
   renderActions(notification) {
-    if (!notification.actions.length) return '';
+    if (!notification.actions.length) {return '';}
     
     const actionsHtml = notification.actions.map(action => `
       <button class="notification-action text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 mr-3" 
@@ -336,7 +336,7 @@ export class NotificationManager {
    */
   remove(id) {
     const notification = this.notifications.find(n => n.id === id);
-    if (!notification) return;
+    if (!notification) {return;}
     
     const element = document.getElementById(id);
     if (element) {

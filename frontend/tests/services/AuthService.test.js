@@ -247,7 +247,7 @@ describe('AuthService', () => {
       // Set up refresh token in localStorage and ensure getItem returns correct value
       localStorage.setItem('specsrv-refresh-token', 'refresh-token');
       localStorage.getItem.mockImplementation((key) => {
-        if (key === 'specsrv-refresh-token') return 'refresh-token';
+        if (key === 'specsrv-refresh-token') {return 'refresh-token';}
         return null;
       });
       
@@ -396,7 +396,7 @@ describe('AuthService', () => {
       authService.isAuthenticated = true;
       localStorage.setItem('specsrv-token', 'mock-token');
       localStorage.getItem.mockImplementation((key) => {
-        if (key === 'specsrv-token') return 'mock-token';
+        if (key === 'specsrv-token') {return 'mock-token';}
         return null;
       });
       

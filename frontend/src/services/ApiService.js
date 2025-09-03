@@ -123,26 +123,26 @@ export class ApiService {
     if (!response.ok) {
       // Handle specific error cases
       switch (response.status) {
-        case 401:
-          // Unauthorized - clear token and redirect to login
-          localStorage.removeItem('specsrv-token');
-          window.dispatchEvent(new CustomEvent('auth:logout'));
-          break;
-        case 403:
-          // Forbidden
-          window.dispatchEvent(new CustomEvent('auth:forbidden'));
-          break;
-        case 429:
-          // Rate limited
-          window.dispatchEvent(new CustomEvent('api:rateLimit'));
-          break;
-        case 500:
-        case 502:
-        case 503:
-        case 504:
-          // Server errors
-          window.dispatchEvent(new CustomEvent('api:serverError'));
-          break;
+      case 401:
+        // Unauthorized - clear token and redirect to login
+        localStorage.removeItem('specsrv-token');
+        window.dispatchEvent(new CustomEvent('auth:logout'));
+        break;
+      case 403:
+        // Forbidden
+        window.dispatchEvent(new CustomEvent('auth:forbidden'));
+        break;
+      case 429:
+        // Rate limited
+        window.dispatchEvent(new CustomEvent('api:rateLimit'));
+        break;
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        // Server errors
+        window.dispatchEvent(new CustomEvent('api:serverError'));
+        break;
       }
       
       // Try to parse error response
