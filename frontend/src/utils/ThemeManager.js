@@ -111,7 +111,7 @@ export class ThemeManager {
    */
   setTheme(theme) {
     if (!this.themes.includes(theme)) {
-      console.warn(`Invalid theme: ${theme}. Using "system" instead.`);
+      // Invalid theme - fallback to system
       theme = 'system';
     }
 

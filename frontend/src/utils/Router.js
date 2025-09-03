@@ -202,7 +202,7 @@ export class Router {
       this.currentRoute = { ...route, path };
 
     } catch (error) {
-      console.error('Navigation error:', error);
+      // Navigation error - handle gracefully
       if (path !== this.notFoundRoute) {
         this.navigate(this.notFoundRoute, { replace: true });
       }
@@ -215,7 +215,7 @@ export class Router {
    * @returns {Object|null}
    */
   matchRoute(path) {
-    for (const [routePath, route] of this.routes) {
+    for (const [_routePath, route] of this.routes) {
       const match = path.match(route.regex);
       if (match) {
         const params = {};
@@ -279,7 +279,7 @@ export class Router {
         throw new Error(`Component ${componentName} not found`);
       }
     } catch (error) {
-      console.error(`Failed to load component ${componentName}:`, error);
+      // Failed to load component - show error UI
       mainContent.innerHTML = `
         <div class="text-center py-12">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Failed to load page</h2>

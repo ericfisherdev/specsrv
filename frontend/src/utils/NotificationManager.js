@@ -283,7 +283,7 @@ export class NotificationManager {
    * @param {Object} notification - Notification object
    * @returns {string}
    */
-  renderCloseButton(notification) {
+  renderCloseButton(_notification) {
     return `
       <div class="ml-4 flex-shrink-0 flex">
         <button class="notification-close bg-white dark:bg-gray-800 rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">

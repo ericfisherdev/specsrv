@@ -7,13 +7,13 @@ export class FlashMessageManager {
   init() {
     this.container = document.getElementById('flash-messages');
     if (!this.container) {
-      console.warn('Flash messages container not found');
+      // Flash messages container not found - will fail silently
     }
   }
 
   show(message, type = 'info', duration = 5000) {
     if (!this.container) {
-      console.warn('Cannot show flash message: container not initialized');
+      // Cannot show flash message: container not initialized
       return;
     }
 
