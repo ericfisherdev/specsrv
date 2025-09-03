@@ -126,7 +126,11 @@ class DashboardApiTest extends AbstractWebTestCase
         $response = $this->client->getResponse();
         $responseData = json_decode($response->getContent(), true);
 
+        $this->assertNotNull($responseData, 'Response data should not be null');
+        $this->assertArrayHasKey('data', $responseData, 'Response should contain data key');
+        
         $data = $responseData['data'];
+        $this->assertNotNull($data, 'Data should not be null');
 
         // Verify complete data structure
         $this->assertArrayHasKey('user', $data);

@@ -43,9 +43,6 @@ monolog:
             level: info
             formatter: monolog.formatter.json
             max_files: 7
-            processor: 
-                - monolog.processor.memory_usage
-                - monolog.processor.memory_peak_usage
 
         # Audit log - for compliance and tracking
         audit:

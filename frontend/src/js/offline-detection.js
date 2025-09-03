@@ -146,6 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
           // Small delay between requests to avoid overwhelming the server
           await new Promise(resolve => setTimeout(resolve, 200));
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.warn('Failed to process pending request:', error);
         }
       }

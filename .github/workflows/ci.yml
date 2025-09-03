@@ -72,8 +72,11 @@ jobs:
     - name: Setup test environment and database
       working-directory: backend
       run: |
-        mkdir -p var/data var/log var/cache var/coverage
+        mkdir -p var/data var/log var/cache var/coverage config/jwt
         chmod -R 755 var/
+        # Generate JWT keys for testing
+        openssl genrsa -out config/jwt/private.pem -aes256 -passout pass:5d947e28cc0fdda0d08d7fd1028d3600d72a23808102bdf34bb38c5af3171e65 4096
+        openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:5d947e28cc0fdda0d08d7fd1028d3600d72a23808102bdf34bb38c5af3171e65
         APP_ENV=test php bin/console cache:clear
         # Initialize migration metadata storage
         APP_ENV=test php bin/console doctrine:migrations:sync-metadata-storage
@@ -125,6 +128,7 @@ jobs:
         echo "APP_ENV=prod" > .env
         echo "APP_SECRET=dev_secret_for_build_only" >> .env
         echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/database.sqlite" >> .env
+        echo "CORS_ALLOW_ORIGIN=http://localhost:3000" >> .env
 
     - name: Install dependencies
       working-directory: backend
@@ -150,6 +154,7 @@ jobs:
         echo "APP_ENV=prod" > .env
         echo "APP_SECRET=docker_build_secret" >> .env
         echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/database.sqlite" >> .env
+        echo "CORS_ALLOW_ORIGIN=http://localhost:3000" >> .env
 
     - name: Build Docker image
       working-directory: backend

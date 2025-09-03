@@ -163,6 +163,7 @@ window.searchAutocomplete = function() {
         }
 
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Search error:', error);
         this.suggestions = [];
       } finally {
@@ -201,7 +202,7 @@ window.searchAutocomplete = function() {
       }
     },
 
-    selectSuggestion(item, type) {
+    selectSuggestion(item) {
       this.addToRecentSearches(this.query);
       window.location.href = item.url;
     },

@@ -239,7 +239,14 @@ class KanbanApiTest extends AbstractWebTestCase
         $response = $this->client->getResponse();
         $responseData = json_decode($response->getContent(), true);
 
+        $this->assertNotNull($responseData, 'Response data should not be null');
+        $this->assertArrayHasKey('data', $responseData, 'Response should contain data key');
+        $this->assertNotNull($responseData['data'], 'Data should not be null');
+        
         $todoTasks = $responseData['data'][TaskStatusEnum::TODO->value];
+        $this->assertNotNull($todoTasks, 'Todo tasks should not be null');
+        $this->assertNotEmpty($todoTasks, 'Todo tasks should not be empty');
+        
         $task = $todoTasks[0];
 
         // Verify task data structure
@@ -279,7 +286,12 @@ class KanbanApiTest extends AbstractWebTestCase
         $response = $this->client->getResponse();
         $responseData = json_decode($response->getContent(), true);
 
+        $this->assertNotNull($responseData, 'Response data should not be null');
+        $this->assertArrayHasKey('data', $responseData, 'Response should contain data key');
+        $this->assertNotNull($responseData['data'], 'Data should not be null');
+        
         $todoTasks = $responseData['data'][TaskStatusEnum::TODO->value];
+        $this->assertNotNull($todoTasks, 'Todo tasks should not be null');
 
         // Should be limited to 6 tasks per project when no project filter is applied
         $this->assertCount(6, $todoTasks);

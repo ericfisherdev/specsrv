@@ -124,7 +124,11 @@ class SearchApiTest extends AbstractWebTestCase
         $response = $this->client->getResponse();
         $responseData = json_decode($response->getContent(), true);
 
+        $this->assertNotNull($responseData, 'Response data should not be null');
+        $this->assertArrayHasKey('data', $responseData, 'Response should contain data key');
+        
         $data = $responseData['data'];
+        $this->assertNotNull($data, 'Data should not be null');
 
         // Should be limited to 5 results each
         $this->assertCount(1, $data['projects']); // 1 project
@@ -309,6 +313,12 @@ class SearchApiTest extends AbstractWebTestCase
         $response = $this->client->getResponse();
         $responseData = json_decode($response->getContent(), true);
 
+        $this->assertNotNull($responseData, 'Response data should not be null');
+        $this->assertArrayHasKey('data', $responseData, 'Response should contain data key');
+        $this->assertNotNull($responseData['data'], 'Data should not be null');
+        $this->assertArrayHasKey('tasks', $responseData['data'], 'Data should contain tasks key');
+        $this->assertNotEmpty($responseData['data']['tasks'], 'Tasks should not be empty');
+        
         $taskData = $responseData['data']['tasks'][0];
 
         // Verify complete task data structure

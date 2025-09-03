@@ -7,7 +7,7 @@
  */
 
 // Import CSS styles
-import css from './styles/app.css';
+import './styles/app.css';
 
 // Import HTMX for dynamic HTML interactions
 import htmx from 'htmx.org';
@@ -23,12 +23,12 @@ import { Draggable } from 'gsap/Draggable';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 // Import theme management
-import ThemeManager from './js/theme-manager';
+// import ThemeManager from './js/theme-manager';
 
 // Import router and utilities
 import { Router } from './utils/Router';
-import keyboardNav from './js/keyboard-navigation';
-import offlineDetection from './js/offline-detection';
+// import keyboardNav from './js/keyboard-navigation';
+// import offlineDetection from './js/offline-detection';
 
 // Import services
 import { ApiService } from './services/ApiService';
@@ -168,6 +168,7 @@ Alpine.data('search', () => ({
         this.results = data.results || [];
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Search failed:', error);
     } finally {
       this.loading = false;
@@ -236,7 +237,7 @@ const router = new Router();
 window.router = router;
 
 // Add authentication middleware
-router.beforeEach((to, from) => {
+router.beforeEach((to) => {
   const isAuthenticated = !!localStorage.getItem('specsrv-token');
   const publicRoutes = ['/login', '/register', '/404'];
 
@@ -250,7 +251,7 @@ router.beforeEach((to, from) => {
 });
 
 // Add page title updates
-router.afterEach((to, from) => {
+router.afterEach((to) => {
   // Update page title based on route
   const routeTitles = {
     '/dashboard': 'Dashboard',
@@ -269,6 +270,7 @@ router.afterEach((to, from) => {
 
 // Enhanced initialization
 document.addEventListener('DOMContentLoaded', function() {
+  // eslint-disable-next-line no-console
   console.log('Enhanced SPA initialized with HTMX, Alpine.js, GSAP, Theme Management, and Router');
   
   // Initialize services
@@ -345,6 +347,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Add router event handlers
   document.addEventListener('route:change', (event) => {
     const { route, path, state } = event.detail;
+    // eslint-disable-next-line no-console
     console.log('Route changed:', { route: route.component, path, state });
 
     // Update navigation active states

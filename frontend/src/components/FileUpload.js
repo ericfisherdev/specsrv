@@ -472,6 +472,7 @@ ${this.state.errors.map(error => '<div class="p-3 bg-red-50 border border-red-20
       }
 
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to delete file:', error);
       alert('Error deleting file');
     }
