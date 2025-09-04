@@ -1,0 +1,65 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'production'
+    service: 'specsrv'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - /etc/prometheus/alert_rules.yml
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Node Exporter for system metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node-exporter'
+
+  # PostgreSQL metrics
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          service: 'postgres'
+          database: 'specsrv'
+
+  # Backend application metrics (if exposed)
+  - job_name: 'specsrv-backend'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['specsrv-backend:8080']
+        labels:
+          service: 'specsrv-backend'
+          app: 'specsrv'
+
+  # Frontend metrics (Nginx)
+  - job_name: 'specsrv-frontend'
+    static_configs:
+      - targets: ['specsrv-frontend:80']
+        labels:
+          service: 'specsrv-frontend'
+          app: 'specsrv'
+
+  # Loki metrics
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+        labels:
+          service: 'loki'

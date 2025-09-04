@@ -15,7 +15,7 @@ X-API-KEY: your-api-key-here
 ### Create a Project
 
 ```bash
-curl -X POST http://localhost:8080/api/projects \
+curl -X POST http://localhost:8080/api/v1/projects \
   -H "Content-Type: application/json" \
   -H "X-API-KEY: your-api-key" \
   -d '{
@@ -28,7 +28,7 @@ curl -X POST http://localhost:8080/api/projects \
 ### List Projects
 
 ```bash
-curl -X GET http://localhost:8080/api/projects \
+curl -X GET http://localhost:8080/api/v1/projects \
   -H "X-API-KEY: your-api-key"
 ```
 
@@ -61,7 +61,7 @@ const API_KEY = 'your-api-key';
 
 // Create a project
 async function createProject(title, description, githubRepo) {
-    const response = await fetch(`${API_BASE}/projects`, {
+    const response = await fetch(`${API_BASE}/v1/projects`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ async function createProject(title, description, githubRepo) {
 
 // List projects
 async function listProjects() {
-    const response = await fetch(`${API_BASE}/projects`, {
+    const response = await fetch(`${API_BASE}/v1/projects`, {
         headers: {
             'X-API-KEY': API_KEY
         }
@@ -185,7 +185,7 @@ class SpecSrvAPI:
             data['github_repo'] = github_repo
         
         response = requests.post(
-            f'{self.base_url}/projects',
+            f'{self.base_url}/v1/projects',
             headers={**self.headers, 'Content-Type': 'application/json'},
             json=data
         )
@@ -199,7 +199,7 @@ class SpecSrvAPI:
     def list_projects(self):
         """List all projects"""
         response = requests.get(
-            f'{self.base_url}/projects',
+            f'{self.base_url}/v1/projects',
             headers=self.headers
         )
         
@@ -360,11 +360,11 @@ class SpecSrvAPI {
         if ($description) $data['description'] = $description;
         if ($githubRepo) $data['github_repo'] = $githubRepo;
         
-        return $this->makeRequest('POST', '/projects', $data);
+        return $this->makeRequest('POST', '/v1/projects', $data);
     }
     
     public function listProjects() {
-        return $this->makeRequest('GET', '/projects')['projects'];
+        return $this->makeRequest('GET', '/v1/projects')['projects'];
     }
     
     public function uploadFile($filePath, $entityType, $entityId, $customName = null) {

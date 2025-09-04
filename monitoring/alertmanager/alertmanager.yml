@@ -1,0 +1,94 @@
+global:
+  resolve_timeout: 5m
+  smtp_from: 'alerts@specsrv.local'
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_auth_username: '${SMTP_USERNAME}'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+
+# Templates for alert messages
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Route tree for alert routing
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default'
+  
+  routes:
+    # Critical alerts
+    - match:
+        severity: critical
+      receiver: 'critical'
+      continue: true
+      
+    # Database alerts
+    - match:
+        service: database
+      receiver: 'database-team'
+      continue: true
+      
+    # Backend alerts
+    - match:
+        service: backend
+      receiver: 'backend-team'
+      continue: true
+      
+    # Frontend alerts
+    - match:
+        service: frontend
+      receiver: 'frontend-team'
+      continue: true
+
+# Receivers define notification integrations
+receivers:
+  - name: 'default'
+    email_configs:
+      - to: 'admin@specsrv.local'
+        headers:
+          Subject: '[SpecSrv Alert] {{ .GroupLabels.alertname }}'
+        html: |
+          <h2>{{ .GroupLabels.alertname }}</h2>
+          <p><b>Severity:</b> {{ .CommonLabels.severity }}</p>
+          <p><b>Service:</b> {{ .CommonLabels.service }}</p>
+          <h3>Alerts:</h3>
+          {{ range .Alerts }}
+          <p>
+            <b>Summary:</b> {{ .Annotations.summary }}<br>
+            <b>Description:</b> {{ .Annotations.description }}<br>
+            <b>Started:</b> {{ .StartsAt }}<br>
+            {{ if .EndsAt }}<b>Ended:</b> {{ .EndsAt }}{{ end }}
+          </p>
+          {{ end }}
+
+  - name: 'critical'
+    email_configs:
+      - to: 'oncall@specsrv.local'
+        send_resolved: true
+    webhook_configs:
+      - url: '${SLACK_WEBHOOK_URL}'
+        send_resolved: true
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        
+  - name: 'database-team'
+    email_configs:
+      - to: 'database-team@specsrv.local'
+        
+  - name: 'backend-team'
+    email_configs:
+      - to: 'backend-team@specsrv.local'
+        
+  - name: 'frontend-team'
+    email_configs:
+      - to: 'frontend-team@specsrv.local'
+
+# Inhibition rules to suppress certain alerts
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'cluster', 'service']

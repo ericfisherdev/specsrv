@@ -26,40 +26,44 @@ class ProjectController extends AbstractController
     ) {
     }
 
-    #[Route('/projects', name: 'app_projects')]
-    public function index(): Response
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    // DISABLED for frontend migration: HTML-returning method
+    // Frontend will use API endpoints instead
+    // #[Route('/projects', name: 'app_projects')]
+    // public function index(): Response
+    // {
+    //     $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    //
+    //     return $this->render('projects/index.html.twig');
+    // }
 
-        return $this->render('projects/index.html.twig');
-    }
-
-    #[Route('/projects/list', name: 'app_projects_list_fragment', methods: ['GET'])]
-    public function listFragment(Request $request): Response
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-        $user = $this->getUser();
-        assert($user instanceof User);
-
-        $search = (string) $request->query->get('search', '');
-        $status = (string) $request->query->get('status', '');
-
-        $projects = $this->projectRepository->findByUserWithFilters($user, $search, $status);
-
-        // Add task count for each project
-        $projectsWithStats = array_map(function (Project $project) {
-            $taskCount = $this->taskRepository->countByProject($project);
-
-            return [
-                'project' => $project,
-                'task_count' => $taskCount,
-            ];
-        }, $projects);
-
-        return $this->render('projects/partials/project_list.html.twig', [
-            'projects' => $projectsWithStats,
-        ]);
-    }
+    // DISABLED for frontend migration: HTML-returning method
+    // Frontend will use API endpoints instead
+    // #[Route('/projects/list', name: 'app_projects_list_fragment', methods: ['GET'])]
+    // public function listFragment(Request $request): Response
+    // {
+    //     $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    //     $user = $this->getUser();
+    //     assert($user instanceof User);
+    //
+    //     $search = (string) $request->query->get('search', '');
+    //     $status = (string) $request->query->get('status', '');
+    //
+    //     $projects = $this->projectRepository->findByUserWithFilters($user, $search, $status);
+    //
+    //     // Add task count for each project
+    //     $projectsWithStats = array_map(function (Project $project) {
+    //         $taskCount = $this->taskRepository->countByProject($project);
+    //
+    //         return [
+    //             'project' => $project,
+    //             'task_count' => $taskCount,
+    //         ];
+    //     }, $projects);
+    //
+    //     return $this->render('projects/partials/project_list.html.twig', [
+    //         'projects' => $projectsWithStats,
+    //     ]);
+    // }
 
     #[Route('/projects/create', name: 'app_projects_create', methods: ['POST'])]
     public function create(Request $request): Response
@@ -68,9 +72,16 @@ class ProjectController extends AbstractController
         $user = $this->getUser();
         assert($user instanceof User);
 
-        $name = (string) $request->request->get('name', '');
-        $description = (string) $request->request->get('description', '');
-        $githubRepo = (string) $request->request->get('github_repo', '');
+        // Handle JSON body parsing
+        $data = [];
+        if (str_starts_with($request->headers->get('Content-Type', ''), 'application/json')) {
+            $json = $request->getContent();
+            $data = json_decode($json, true) ?: [];
+        }
+
+        $name = (string) ($data['name'] ?? $request->request->get('name', ''));
+        $description = (string) ($data['description'] ?? $request->request->get('description', ''));
+        $githubRepo = (string) ($data['github_repo'] ?? $request->request->get('github_repo', ''));
 
         $project = new Project();
         $project->setUser($user);
@@ -85,9 +96,19 @@ class ProjectController extends AbstractController
 
         $violations = $this->validator->validate($project);
         if (count($violations) > 0) {
-            return $this->render('projects/partials/error.html.twig', [
-                'errors' => $violations,
-            ], new Response('', 400));
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = [
+                    'field' => $violation->getPropertyPath(),
+                    'message' => $violation->getMessage(),
+                ];
+            }
+
+            return $this->json([
+                'success' => false,
+                'error' => ['code' => 'VALIDATION_ERROR', 'message' => 'Validation failed'],
+                'errors' => $errors,
+            ], 422);
         }
 
         $this->entityManager->persist($project);
@@ -95,10 +116,22 @@ class ProjectController extends AbstractController
 
         $taskCount = 0; // New project has no tasks
 
-        return $this->render('projects/partials/project_card.html.twig', [
-            'project' => $project,
-            'task_count' => $taskCount,
-        ]);
+        // Return JSON for API with HTTP 201, ISO-8601 timestamps, and Location header
+        $response = $this->json([
+            'success' => true,
+            'project' => [
+                'id' => $project->getId(),
+                'title' => $project->getTitle(),
+                'description' => $project->getDescription(),
+                'github_repo' => $project->getGithubRepo(),
+                'created_at' => $project->getCreatedAt()?->format('c') ?? null,
+                'task_count' => $taskCount,
+            ],
+        ], 201);
+
+        $response->headers->set('Location', '/api/v1/projects/' . $project->getId());
+
+        return $response;
     }
 
     #[Route('/projects/{id}', name: 'app_project_detail', methods: ['GET'])]
@@ -106,89 +139,11 @@ class ProjectController extends AbstractController
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        $project = $this->projectRepository->find($id);
-
-        if (! $project) {
-            throw $this->createNotFoundException('Project not found');
-        }
-
-        $user = $this->getUser();
-        if ($project->getUser() !== $user) {
-            throw $this->createAccessDeniedException('Access denied');
-        }
-
-        $tasks = $this->taskRepository->findByProject($project);
-        $taskStats = [
-            'total' => count($tasks),
-            'todo' => 0,
-            'in_progress' => 0,
-            'completed' => 0,
-        ];
-
-        foreach ($tasks as $task) {
-            $status = $task->getStatus();
-            if (TaskStatusEnum::TODO === $status || TaskStatusEnum::BACKLOG === $status) {
-                ++$taskStats['todo'];
-            } elseif (TaskStatusEnum::IN_PROGRESS === $status || TaskStatusEnum::REVIEW === $status) {
-                ++$taskStats['in_progress'];
-            } elseif (TaskStatusEnum::COMPLETED === $status) {
-                ++$taskStats['completed'];
-            }
-        }
-
-        return $this->render('projects/detail.html.twig', [
-            'project' => $project,
-            'tasks' => $tasks,
-            'taskStats' => $taskStats,
-        ]);
+        // DISABLED for frontend migration: HTML-returning method
+        // Frontend will use API endpoints instead
+        throw $this->createNotFoundException('HTML view disabled. Use API endpoints instead.');
     }
 
-    #[Route('/projects/{id}/edit', name: 'app_project_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, Request $request): Response
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-
-        $project = $this->projectRepository->find($id);
-
-        if (! $project) {
-            throw $this->createNotFoundException('Project not found');
-        }
-
-        $user = $this->getUser();
-        if ($project->getUser() !== $user) {
-            throw $this->createAccessDeniedException('Access denied');
-        }
-
-        if ($request->isMethod('POST')) {
-            $name = (string) $request->request->get('name', '');
-            $description = (string) $request->request->get('description', '');
-            $githubRepo = (string) $request->request->get('github_repo', '');
-
-            $project->setTitle($name);
-            if (! empty($description)) {
-                $project->setDescription($description);
-            }
-
-            if (! empty($githubRepo)) {
-                $project->setGithubRepo($githubRepo);
-            } else {
-                $project->setGithubRepo(null);
-            }
-
-            $violations = $this->validator->validate($project);
-            if (count($violations) > 0) {
-                return $this->json(['errors' => $violations], 400);
-            }
-
-            $this->entityManager->flush();
-
-            return $this->json(['success' => true, 'redirect' => $this->generateUrl('app_project_detail', ['id' => $project->getId()])]);
-        }
-
-        return $this->render('projects/edit.html.twig', [
-            'project' => $project,
-        ]);
-    }
 
     #[Route('/projects/{id}/delete', name: 'app_projects_delete', methods: ['DELETE'])]
     public function delete(int $id): Response
@@ -259,7 +214,7 @@ class ProjectController extends AbstractController
                         substr($project->getDescription(), 0, 50).'...' :
                         $project->getDescription()) : '',
                 'task_count' => count($project->getTasks()),
-                'url' => $this->generateUrl('app_project_detail', ['id' => $project->getId()]),
+                'url' => '/api/v1/projects/' . $project->getId(),
             ];
         }
 
@@ -271,7 +226,7 @@ class ProjectController extends AbstractController
                 'project_title' => $task->getProject()->getTitle(),
                 'priority' => $task->getPriority(),
                 'status' => $task->getStatus(),
-                'url' => $this->generateUrl('app_task_detail', ['id' => $task->getId()]),
+                'url' => '/api/v1/tasks/' . $task->getId(),
             ];
         }
 

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search - SpecSrv</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-50">
+    <div id="app" x-data="searchPage()">
+        <!-- Navigation will be loaded here -->
+        <div id="navigation"></div>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">Search Results</h1>
+                <p x-show="filters.query" class="mt-2 text-gray-600">
+                    Results for "<span class="font-medium" x-text="filters.query"></span>"
+                </p>
+            </div>
+
+            <!-- Advanced Search Filters -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-medium text-gray-900">Advanced Filters</h2>
+                    <button 
+                        @click="toggleFilters()"
+                        class="text-sm text-blue-600 hover:text-blue-500 font-medium"
+                        x-text="showFilters ? 'Hide Filters' : 'Show Filters'"
+                    ></button>
+                </div>
+
+                <div x-show="showFilters" x-transition class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    <!-- Search Query -->
+                    <div>
+                        <label for="search-query" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                        <input 
+                            type="text" 
+                            id="search-query"
+                            x-model="filters.query"
+                            placeholder="Search tasks..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                    </div>
+
+                    <!-- Project Filter -->
+                    <div>
+                        <label for="project-filter" class="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                        <select 
+                            id="project-filter"
+                            x-model="filters.project_id"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">All Projects</option>
+                            <template x-for="project in userProjects" :key="project.id">
+                                <option :value="project.id" x-text="project.title"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div>
+                        <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select 
+                            id="status-filter"
+                            x-model="filters.status"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">All Statuses</option>
+                            <option value="todo">To Do</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="review">Review</option>
+                            <option value="blocked">Blocked</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <!-- Priority Filter -->
+                    <div>
+                        <label for="priority-filter" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                        <select 
+                            id="priority-filter"
+                            x-model="filters.priority"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">All Priorities</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range Filter -->
+                    <div>
+                        <label for="date-filter" class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                        <select 
+                            id="date-filter"
+                            x-model="filters.date_range"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="quarter">This Quarter</option>
+                            <option value="year">This Year</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex items-center space-x-3" x-show="showFilters" x-transition>
+                    <button 
+                        @click="applyFilters()"
+                        x-bind:disabled="loading"
+                        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <span x-show="!loading">Apply Filters</span>
+                        <span x-show="loading" class="flex items-center">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Searching...
+                        </span>
+                    </button>
+                    <button 
+                        @click="clearFilters()"
+                        class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200"
+                    >
+                        Clear All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="space-y-8">
+                <!-- Tasks Results -->
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                        Tasks 
+                        <span class="text-sm font-normal text-gray-500">
+                            (<span x-text="tasks.length"></span> result<span x-show="tasks.length !== 1">s</span>)
+                        </span>
+                    </h2>
+                    
+                    <div x-show="tasks.length > 0" class="grid gap-4">
+                        <template x-for="task in tasks" :key="task.id">
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-2">
+                                            <a :href="`/tasks/detail.html?id=${task.id}`" class="hover:text-blue-600" x-text="task.title"></a>
+                                        </h3>
+                                        <p x-show="task.description" class="text-sm text-gray-600 mb-3" x-text="truncateText(task.description, 150)"></p>
+                                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                            <span class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                <span x-text="task.project?.title"></span>
+                                            </span>
+                                            <span x-text="formatDate(task.created_at)"></span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2 ml-4">
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full"
+                                              x-bind:class="getStatusColor(task.status)">
+                                            <span x-text="formatStatus(task.status)"></span>
+                                        </span>
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full"
+                                              x-bind:class="getPriorityColor(task.priority)">
+                                            <span x-text="formatPriority(task.priority)"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    
+                    <div x-show="tasks.length === 0 && !loading" class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No tasks found</h3>
+                        <p class="mt-1 text-sm text-gray-500">Try adjusting your search criteria or creating a new task.</p>
+                    </div>
+                </div>
+
+                <!-- Projects Results -->
+                <div x-show="projects.length > 0">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                        Projects 
+                        <span class="text-sm font-normal text-gray-500">
+                            (<span x-text="projects.length"></span> result<span x-show="projects.length !== 1">s</span>)
+                        </span>
+                    </h2>
+                    
+                    <div class="grid gap-4">
+                        <template x-for="project in projects" :key="project.id">
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-2">
+                                            <a :href="`/projects/detail.html?id=${project.id}`" class="hover:text-blue-600" x-text="project.title"></a>
+                                        </h3>
+                                        <p x-show="project.description" class="text-sm text-gray-600 mb-3" x-text="truncateText(project.description, 150)"></p>
+                                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                            <span x-text="formatDate(project.created_at)"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { ApiService } from '../services/ApiService.js';
+        import { loadNavigation } from '../components/Navigation.js';
+        import { showNotification } from '../utils/flashMessages.js';
+        
+        const api = new ApiService();
+        
+        // Load navigation
+        loadNavigation();
+        
+        // Search page functionality
+        window.searchPage = function() {
+            return {
+                showFilters: false,
+                loading: false,
+                filters: {
+                    query: '',
+                    project_id: '',
+                    status: '',
+                    priority: '',
+                    date_range: ''
+                },
+                tasks: [],
+                projects: [],
+                userProjects: [],
+                
+                async init() {
+                    // Get initial search parameters from URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    this.filters.query = urlParams.get('q') || '';
+                    this.filters.project_id = urlParams.get('project_id') || '';
+                    this.filters.status = urlParams.get('status') || '';
+                    this.filters.priority = urlParams.get('priority') || '';
+                    this.filters.date_range = urlParams.get('date_range') || '';
+                    
+                    // Show filters if any are currently applied
+                    const hasActiveFilters = this.filters.project_id || this.filters.status || 
+                                           this.filters.priority || this.filters.date_range;
+                    this.showFilters = hasActiveFilters;
+                    
+                    // Load user's projects for filter dropdown
+                    await this.loadUserProjects();
+                    
+                    // Perform initial search if query present
+                    if (this.filters.query || hasActiveFilters) {
+                        await this.performSearch();
+                    }
+                },
+                
+                async loadUserProjects() {
+                    try {
+                        const response = await api.get('/projects');
+                        if (response.success) {
+                            this.userProjects = response.data.projects || [];
+                        }
+                    } catch (error) {
+                        console.error('Error loading projects:', error);
+                    }
+                },
+                
+                toggleFilters() {
+                    this.showFilters = !this.showFilters;
+                },
+                
+                async applyFilters() {
+                    await this.performSearch();
+                    this.updateUrlParams();
+                },
+                
+                async performSearch() {
+                    this.loading = true;
+                    
+                    try {
+                        const params = new URLSearchParams();
+                        
+                        Object.entries(this.filters).forEach(([key, value]) => {
+                            if (value) {
+                                params.append(key === 'query' ? 'q' : key, value);
+                            }
+                        });
+                        
+                        const response = await api.get(`/search?${params.toString()}`);
+                        
+                        if (response.success) {
+                            this.tasks = response.data.tasks || [];
+                            this.projects = response.data.projects || [];
+                        } else {
+                            showNotification('Search failed', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error performing search:', error);
+                        showNotification('Error performing search', 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                clearFilters() {
+                    this.filters = {
+                        query: '',
+                        project_id: '',
+                        status: '',
+                        priority: '',
+                        date_range: ''
+                    };
+                    
+                    // Clear URL and reload
+                    window.location.href = '/search.html';
+                },
+                
+                updateUrlParams() {
+                    const params = new URLSearchParams();
+                    
+                    Object.entries(this.filters).forEach(([key, value]) => {
+                        if (value) {
+                            params.append(key === 'query' ? 'q' : key, value);
+                        }
+                    });
+                    
+                    const newUrl = params.toString() ? `/search.html?${params.toString()}` : '/search.html';
+                    window.history.pushState({}, '', newUrl);
+                },
+                
+                truncateText(text, maxLength) {
+                    if (!text) return '';
+                    if (text.length <= maxLength) return text;
+                    return text.slice(0, maxLength) + '...';
+                },
+                
+                formatDate(dateString) {
+                    if (!dateString) return 'Unknown';
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric'
+                    });
+                },
+                
+                formatStatus(status) {
+                    if (!status) return '';
+                    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                },
+                
+                formatPriority(priority) {
+                    if (!priority) return '';
+                    return priority.charAt(0).toUpperCase() + priority.slice(1);
+                },
+                
+                getStatusColor(status) {
+                    const colors = {
+                        'completed': 'bg-green-100 text-green-700',
+                        'in_progress': 'bg-blue-100 text-blue-700',
+                        'review': 'bg-yellow-100 text-yellow-700',
+                        'todo': 'bg-gray-100 text-gray-700',
+                        'blocked': 'bg-red-100 text-red-700'
+                    };
+                    return colors[status] || 'bg-gray-100 text-gray-700';
+                },
+                
+                getPriorityColor(priority) {
+                    const colors = {
+                        'critical': 'bg-red-100 text-red-700',
+                        'high': 'bg-orange-100 text-orange-700',
+                        'medium': 'bg-yellow-100 text-yellow-700',
+                        'low': 'bg-green-100 text-green-700'
+                    };
+                    return colors[priority] || 'bg-gray-100 text-gray-700';
+                }
+            }
+        };
+    </script>
+</body>
+</html>

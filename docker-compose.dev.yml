@@ -1,41 +1,76 @@
 services:
-  # Main PHP application with hot reloading support
-  specsrv-app-dev:
+  # Backend API service
+  specsrv-backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.new
-      target: development
-    container_name: specsrv-app-dev
+      dockerfile: Dockerfile.dev
+    container_name: specsrv-backend-dev
     ports:
-      - "8001:8080"  # PHP application port
+      - "8080:8080"
     environment:
       - APP_ENV=dev
       - APP_DEBUG=1
       - DATABASE_URL=postgresql://${POSTGRES_USER:-specsrv-db-user}:${POSTGRES_PASSWORD:?set in .env}@specsrv-postgres-dev:5432/${POSTGRES_DB:-specsrv_dev}
+      - CORS_ALLOW_ORIGIN=http://localhost:3000
       - TRUSTED_PROXIES=127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
     volumes:
-      # Mount source code for hot reloading
-      - ./backend:/app
+      # Mount entire backend directory for hot reloading
+      - type: bind
+        source: ./backend
+        target: /app
+        consistency: cached
+      # Use named volumes to preserve installed dependencies (mount after bind to override subdirs)
+      - type: volume
+        source: backend-node-modules
+        target: /app/node_modules
+      - type: volume
+        source: backend-vendor
+        target: /app/vendor
       # Persistent data volumes
-      - specsrv-dev-data:/app/var/data
-      - specsrv-dev-logs:/app/var/log
-      - specsrv-dev-uploads:/app/var/uploads
-      # Exclude node_modules and vendor to avoid conflicts
-      - /app/node_modules
-      - /app/vendor
+      - type: volume
+        source: specsrv-dev-data
+        target: /app/var/data
+      - type: volume
+        source: specsrv-dev-logs
+        target: /app/var/log
+      - type: volume
+        source: specsrv-dev-uploads
+        target: /app/var/uploads
     networks:
       - specsrv-dev-network
     depends_on:
       specsrv-postgres-dev:
         condition: service_healthy
-      specsrv-webpack-dev:
-        condition: service_started
     healthcheck:
-      test: ["CMD", "php-fpm", "-t"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/liveness"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 40s
+    restart: unless-stopped
+
+  # Frontend development service
+  specsrv-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: specsrv-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - API_BASE_URL=http://localhost:8080
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - FAST_REFRESH=true
+    volumes:
+      - ./frontend:/app:cached
+      - frontend-node-modules:/app/node_modules
+    command: ["npm", "run", "dev"]
+    depends_on:
+      specsrv-backend:
+        condition: service_healthy
+    networks:
+      - specsrv-dev-network
     restart: unless-stopped
 
   specsrv-postgres-dev:
@@ -61,34 +96,25 @@ services:
     networks:
       - specsrv-dev-network
 
-  # Webpack dev server for hot module replacement
-  specsrv-webpack-dev:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.new
-      target: development
-    container_name: specsrv-webpack-dev
-    ports:
-      - "8000:8080"  # Webpack dev server - this will be the main development URL
+  # pgAdmin for database management
+  specsrv-pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: specsrv-pgadmin-dev
+    env_file: .env.dev
     environment:
-      - NODE_ENV=development
-      - WEBPACK_DEV_SERVER=true
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    ports:
+      - "5050:80"
     volumes:
-      # Mount source code for hot reloading
-      - ./backend:/app
-      # Exclude node_modules to avoid conflicts
-      - /app/node_modules
+      - specsrv-dev-pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      specsrv-postgres-dev:
+        condition: service_healthy
     networks:
       - specsrv-dev-network
-    command: |
-      sh -c "
-        echo 'Installing dependencies if needed...' &&
-        npm ci &&
-        echo 'Starting webpack dev server...' &&
-        npm run dev-server
-      "
-    stdin_open: true
-    tty: true
     restart: unless-stopped
 
 volumes:
@@ -99,6 +125,14 @@ volumes:
   specsrv-dev-uploads:
     driver: local
   specsrv-dev-postgres-data:
+    driver: local
+  specsrv-dev-pgadmin-data:
+    driver: local
+  backend-node-modules:
+    driver: local
+  backend-vendor:
+    driver: local
+  frontend-node-modules:
     driver: local
 
 networks:

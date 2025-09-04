@@ -10,7 +10,9 @@ use Symfony\Contracts\Cache\CacheInterface;
 class RateLimitService
 {
     public function __construct(
-        private readonly CacheInterface $cache
+        private readonly CacheInterface $cache,
+        private readonly string $apiRateLimitRequests = '1000',
+        private readonly string $apiRateLimitWindow = '3600'
     ) {
     }
 
@@ -105,18 +107,21 @@ class RateLimitService
 
     public function getDefaultLimits(): array
     {
+        $baseRequests = (int) $this->apiRateLimitRequests;
+        $baseWindow = (int) $this->apiRateLimitWindow;
+
         return [
             'api' => [
-                'requests' => 1000,
-                'window' => 3600, // 1 hour
+                'requests' => $baseRequests,
+                'window' => $baseWindow,
             ],
             'auth' => [
-                'requests' => 5,
-                'window' => 300, // 5 minutes
+                'requests' => max(50, (int) ($baseRequests * 0.1)), // At least 50 or 10% of base limit
+                'window' => min(300, (int) ($baseWindow * 0.1)), // At most 5 minutes or 10% of base window
             ],
             'upload' => [
-                'requests' => 50,
-                'window' => 3600, // 1 hour
+                'requests' => max(20, (int) ($baseRequests * 0.05)), // At least 20 or 5% of base limit
+                'window' => $baseWindow,
             ],
         ];
     }

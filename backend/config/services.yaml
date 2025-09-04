@@ -31,3 +31,8 @@ services:
             $uploadsDirectory: '%app.uploads_directory%'
             $maxUploadSize: '%app.max_upload_size%'
             $allowedFileTypes: '%app.allowed_file_types%'
+            
+    App\Service\RateLimitService:
+        arguments:
+            $apiRateLimitRequests: '%env(API_RATE_LIMIT_REQUESTS)%'
+            $apiRateLimitWindow: '%env(API_RATE_LIMIT_WINDOW)%'

@@ -7,16 +7,16 @@ FROM node:20-alpine AS frontend
 WORKDIR /app
 
 # Copy package files for dependency resolution
-COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 
 # Install Node.js dependencies (including dev dependencies for build tools)
 RUN npm ci
 
 # Copy source files needed for build
-COPY assets/ ./assets/
-COPY webpack.config.js ./
-COPY postcss.config.js ./
-COPY tailwind.config.js ./
+COPY frontend/src/ ./src/
+COPY frontend/webpack.config.js ./
+COPY frontend/postcss.config.js ./
+COPY frontend/tailwind.config.js ./
 
 # Build production assets
 RUN npm run build
@@ -27,7 +27,7 @@ FROM composer:2.7 AS composer
 WORKDIR /app
 
 # Copy composer files for dependency resolution
-COPY composer.json composer.lock ./
+COPY backend/composer.json backend/composer.lock ./
 
 # Install production dependencies only (no dev dependencies)
 RUN composer install \
@@ -38,7 +38,7 @@ RUN composer install \
     --optimize-autoloader
 
 # Copy application source (including all PHP files, templates, config, etc)
-COPY . .
+COPY backend/ .
 
 # Generate optimized autoloader
 RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
@@ -68,13 +68,13 @@ RUN sed -i 's/user = www-data/user = app/g' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's/group = www-data/group = app/g' /usr/local/etc/php-fpm.d/www.conf
 
 # Configure Nginx
-COPY --chown=app:app scripts/nginx.conf /etc/nginx/nginx.conf
+COPY --chown=app:app backend/scripts/nginx.conf /etc/nginx/nginx.conf
 
 # Configure Supervisor
-COPY --chown=app:app scripts/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY --chown=app:app backend/scripts/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Configure PHP for production
-COPY --chown=app:app scripts/php.ini /usr/local/etc/php/conf.d/99-app.ini
+COPY --chown=app:app backend/scripts/php.ini /usr/local/etc/php/conf.d/99-app.ini
 
 # Set working directory
 WORKDIR /app
@@ -86,11 +86,11 @@ COPY --from=composer --chown=app:app /app .
 COPY --from=frontend --chown=app:app /app/public/build ./public/build
 
 # Copy health check script
-COPY --chown=app:app scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
+COPY --chown=app:app backend/scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/healthcheck.sh
 
 # Copy entrypoint script
-COPY --chown=app:app scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --chown=app:app backend/scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Create required directories with proper permissions
@@ -144,13 +144,13 @@ RUN pecl install xdebug \
     && docker-php-ext-enable xdebug
 
 # Copy Xdebug configuration
-COPY --chown=app:app scripts/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
+COPY --chown=app:app backend/scripts/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
 # Copy composer binary from composer stage
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 # Copy application source files for development (will be overridden by volume mount)
-COPY --chown=app:app . .
+COPY --chown=app:app backend/ .
 
 # Install dev composer dependencies
 RUN composer install --prefer-dist --no-scripts --no-autoloader

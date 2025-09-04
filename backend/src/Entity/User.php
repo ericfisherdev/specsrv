@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users', indexes: [
@@ -23,7 +24,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
+    #[Assert\NotBlank]
+    #[Assert\Email]
     private ?string $email = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $name = null;
 
     #[ORM\Column(type: 'json', options: ['jsonb' => true])]
     private array $roles = [];
@@ -61,6 +67,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // Normalize email to lowercase for case-insensitive uniqueness
         $this->email = strtolower($email);
+        $this->setUpdatedAt(new \DateTime());
+
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): static
+    {
+        $this->name = $name;
         $this->setUpdatedAt(new \DateTime());
 
         return $this;
@@ -173,5 +192,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function onPreUpdate(): void
     {
         $this->updatedAt = new \DateTime();
+    }
+
+    /**
+     * Convert entity to array for API responses.
+     */
+    public function toArray(): array
+    {
+        $roles = $this->getRoles();
+        
+        return [
+            'id' => $this->id,
+            'email' => $this->email,
+            'name' => $this->name,
+            'is_admin' => in_array('ROLE_ADMIN', $roles, true),
+            'can_impersonate' => in_array('ROLE_ALLOWED_TO_SWITCH', $roles, true),
+            'created_at' => $this->createdAt?->format('c'),
+            'updated_at' => $this->updatedAt?->format('c'),
+        ];
     }
 }

@@ -1,0 +1,30 @@
+# Archived frontend assets should not be included in Docker builds
+backend/archived-frontend-assets/
+backend/archived-frontend-assets/backend-build/
+
+# Git files
+.git
+.gitignore
+
+# CI/CD files
+.github/
+
+# Documentation
+*.md
+docs/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp

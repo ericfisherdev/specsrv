@@ -1,0 +1,155 @@
+version: '3.8'
+
+# Monitoring Stack with pinned versions (updated 2025-01)
+# - Prometheus: v2.48.1
+# - Grafana: 10.2.3  
+# - Loki: 2.9.4
+# - Promtail: 2.9.4
+# - Node Exporter: v1.7.0
+# - Postgres Exporter: v0.15.0
+# - Alertmanager: v0.26.0
+#
+# Required: Create .env.monitoring file with secure credentials:
+# - GRAFANA_ADMIN_USER
+# - GRAFANA_ADMIN_PASSWORD 
+# - POSTGRES_USER
+# - POSTGRES_PASSWORD
+# - POSTGRES_DB
+
+services:
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    container_name: specsrv-prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: specsrv-grafana
+    env_file: .env.monitoring
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_DISABLE_SIGNOUT_MENU=true
+      - GF_USERS_ALLOW_ORG_CREATE=false
+      - GF_USERS_DEFAULT_THEME=dark
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+    depends_on:
+      - prometheus
+
+  # Loki for log aggregation
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: specsrv-loki
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+
+  # Promtail for log shipping
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: specsrv-promtail
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - specsrv-logs:/app/logs:ro
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+    depends_on:
+      - loki
+
+  # Node Exporter for system metrics
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: specsrv-node-exporter
+    ports:
+      - "127.0.0.1:9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+
+  # Postgres Exporter for database metrics
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: specsrv-postgres-exporter
+    env_file: .env.monitoring
+    ports:
+      - "127.0.0.1:9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@specsrv-postgres:5432/${POSTGRES_DB}?sslmode=disable
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+
+  # Alertmanager for alert handling
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: specsrv-alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    restart: unless-stopped
+    networks:
+      - specsrv-network
+
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  loki-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+  specsrv-logs:
+    external: true
+
+networks:
+  specsrv-network:
+    external: true

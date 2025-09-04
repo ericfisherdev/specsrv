@@ -1,0 +1,90 @@
+monolog:
+    handlers:
+        # Main application log - JSON formatted for structured logging
+        main:
+            type: rotating_file
+            path: "%kernel.logs_dir%/%kernel.environment%.log"
+            level: info
+            formatter: monolog.formatter.json
+            max_files: 14
+            channels: ["!event", "!doctrine"]
+
+        # Error log - separate file for errors
+        error:
+            type: rotating_file
+            path: "%kernel.logs_dir%/error.log"
+            level: error
+            formatter: monolog.formatter.json
+            max_files: 30
+            channels: ["!event"]
+
+        # Security log - for authentication and authorization events
+        security:
+            type: rotating_file
+            path: "%kernel.logs_dir%/security.log"
+            level: info
+            formatter: monolog.formatter.json
+            max_files: 30
+            channels: ["security"]
+
+        # Database/Doctrine log
+        doctrine:
+            type: rotating_file
+            path: "%kernel.logs_dir%/doctrine.log"
+            level: warning
+            formatter: monolog.formatter.json
+            max_files: 7
+            channels: ["doctrine"]
+
+        # Performance log - for slow queries and operations
+        performance:
+            type: rotating_file
+            path: "%kernel.logs_dir%/performance.log"
+            level: info
+            formatter: monolog.formatter.json
+            max_files: 7
+            channels: ["performance"]
+
+        # Audit log - for compliance and tracking
+        audit:
+            type: rotating_file
+            path: "%kernel.logs_dir%/audit.log"
+            level: info
+            formatter: monolog.formatter.json
+            max_files: 90  # Keep 3 months for compliance
+            channels: ["audit"]
+
+        # Console output for containers
+        console:
+            type: console
+            process_psr_3_messages: false
+            channels: ["!event", "!doctrine", "!console"]
+            formatter: monolog.formatter.json
+
+        # Buffer handler to group messages
+        buffer:
+            type: buffer
+            handler: main
+            buffer_size: 50
+
+        # Deduplicate identical messages
+        deduplicated:
+            type: deduplication
+            handler: main
+            deduplication_level: error
+            time: 60
+
+        # Filter out deprecations in production
+        filter_deprecations:
+            type: filter
+            handler: main
+            max_level: warning
+            channels: ["php"]
+
+    channels:
+        - security
+        - doctrine
+        - performance
+        - audit
+        - api
+        - cli

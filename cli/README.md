@@ -399,13 +399,13 @@ The CLI is designed to work seamlessly with the containerized SpecSrv backend:
 
 The CLI communicates with these backend endpoints:
 
-- `GET /api/projects` - List projects
-- `POST /api/projects` - Create project
-- `GET /api/projects/{id}` - Get project details
-- `PUT /api/projects/{id}` - Update project
-- `DELETE /api/projects/{id}` - Delete project
-- `GET /api/tasks` - List tasks
-- `POST /api/tasks` - Create task
+- `GET /api/v1/projects` - List projects
+- `POST /api/v1/projects` - Create project
+- `GET /api/v1/projects/{id}` - Get project details
+- `PUT /api/v1/projects/{id}` - Update project
+- `DELETE /api/v1/projects/{id}` - Delete project
+- `GET /api/v1/tasks` - List tasks
+- `POST /api/v1/tasks` - Create task
 - And more...
 
 ### Authentication
@@ -455,7 +455,7 @@ specsrv --verbose projects list
 specsrv config get auth.token
 
 # Test API access manually
-curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/projects
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/projects
 ```
 
 **Configuration Issues**:

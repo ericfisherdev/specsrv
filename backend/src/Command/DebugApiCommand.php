@@ -95,8 +95,8 @@ class DebugApiCommand extends Command
         $io->section('Available API Endpoints');
         $io->definitionList(
             ['Authentication' => 'POST /api/login'],
-            ['Projects' => 'GET/POST/PUT/DELETE /api/projects'],
-            ['Tasks' => 'GET/POST/PUT/DELETE /api/tasks'],
+            ['Projects' => 'GET/POST/PUT/DELETE /api/v1/projects'],
+            ['Tasks' => 'GET/POST/PUT/DELETE /api/v1/tasks'],
             ['Files' => 'GET/POST/DELETE /api/files'],
             ['User Profile' => 'GET/PUT /api/profile'],
             ['API Keys Management' => 'GET/POST/DELETE /api/keys']
@@ -104,9 +104,9 @@ class DebugApiCommand extends Command
 
         $io->section('Usage Examples');
         $io->text([
-            'curl -H "X-API-Key: sk_admin_test_key_12345678901234567890123456789012" http://localhost:8000/api/projects',
-            'curl -H "X-API-Key: sk_test_user_key_12345678901234567890123456789012" http://localhost:8000/api/tasks',
-            'curl -X POST -H "Content-Type: application/json" -H "X-API-Key: YOUR_KEY" -d \'{"title":"Test Project","description":"A test"}\' http://localhost:8000/api/projects',
+            'curl -H "X-API-Key: sk_admin_test_key_12345678901234567890123456789012" http://localhost:8000/api/v1/projects',
+            'curl -H "X-API-Key: sk_test_user_key_12345678901234567890123456789012" http://localhost:8000/api/v1/tasks',
+            'curl -X POST -H "Content-Type: application/json" -H "X-API-Key: YOUR_KEY" -d \'{"title":"Test Project","description":"A test"}\' http://localhost:8000/api/v1/projects',
         ]);
 
         $io->note([

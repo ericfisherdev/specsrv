@@ -34,6 +34,30 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
+     * Save a user entity.
+     */
+    public function save(User $user, bool $flush = false): void
+    {
+        $this->getEntityManager()->persist($user);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    /**
+     * Remove a user entity.
+     */
+    public function remove(User $user, bool $flush = false): void
+    {
+        $this->getEntityManager()->remove($user);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    /**
      * Find user by email address.
      */
     public function findByEmail(string $email): ?User

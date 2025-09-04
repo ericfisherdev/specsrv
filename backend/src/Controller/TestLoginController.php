@@ -23,7 +23,7 @@ class TestLoginController extends AbstractController
         $user = $em->getRepository(User::class)->findOneBy(['email' => 'admin@specsrv.dev']);
 
         if (! $user) {
-            return new Response('User not found', 404);
+            return $this->json(['error' => 'User not found'], 404);
         }
 
         // Manually create authentication token
@@ -34,8 +34,7 @@ class TestLoginController extends AbstractController
         $session->set('_security_main', serialize($token));
         $session->save();
 
-        return $this->render('dashboard/index.html.twig', [
-            'user' => $user,
-        ]);
+        // Redirect to frontend dashboard instead of rendering template
+        return $this->redirect('http://localhost:3000/dashboard');
     }
 }

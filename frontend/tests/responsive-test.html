@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Design Test - SpecSrv Frontend</title>
+    <link rel="stylesheet" href="../dist/main.de862f60ef69f46b3305.css">
+    
+    <!-- Theme preference script to prevent flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('specsrv-theme') || 'system';
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const effectiveTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+            
+            if (effectiveTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+            document.documentElement.setAttribute('data-theme', effectiveTheme);
+        })();
+    </script>
+    
+    <style>
+        .breakpoint-indicator {
+            position: fixed;
+            top: 4px;
+            right: 4px;
+            z-index: 9999;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        .dark .test-section {
+            border-color: #4b5563;
+        }
+    </style>
+</head>
+<body class="h-full bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    
+    <!-- Breakpoint Indicator -->
+    <div class="breakpoint-indicator">
+        <span class="xs:hidden sm:hidden md:hidden lg:hidden xl:hidden 2xl:hidden">XS (< 475px)</span>
+        <span class="hidden xs:inline sm:hidden md:hidden lg:hidden xl:hidden 2xl:hidden">XS (475px+)</span>
+        <span class="hidden sm:inline md:hidden lg:hidden xl:hidden 2xl:hidden">SM (640px+)</span>
+        <span class="hidden md:inline lg:hidden xl:hidden 2xl:hidden">MD (768px+)</span>
+        <span class="hidden lg:inline xl:hidden 2xl:hidden">LG (1024px+)</span>
+        <span class="hidden xl:inline 2xl:hidden">XL (1280px+)</span>
+        <span class="hidden 2xl:inline">2XL (1536px+)</span>
+    </div>
+
+    <div class="container mx-auto p-4 max-w-7xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                Responsive Design Test
+            </h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400">
+                Testing responsive breakpoints and dark mode functionality
+            </p>
+            
+            <!-- Theme Toggle Button -->
+            <button data-theme-toggle 
+                    class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                <span data-theme-icon="light" class="flex items-center">
+                    🌙 Switch to Dark Mode
+                </span>
+                <span data-theme-icon="dark" class="flex items-center" style="display: none;">
+                    ☀️ Switch to Light Mode
+                </span>
+            </button>
+        </header>
+
+        <!-- Grid System Test -->
+        <section class="test-section">
+            <h2 class="text-gray-900 dark:text-white">Grid System Test</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div class="bg-blue-200 dark:bg-blue-800 p-4 text-center rounded">Col 1</div>
+                <div class="bg-green-200 dark:bg-green-800 p-4 text-center rounded">Col 2</div>
+                <div class="bg-yellow-200 dark:bg-yellow-800 p-4 text-center rounded">Col 3</div>
+                <div class="bg-red-200 dark:bg-red-800 p-4 text-center rounded">Col 4</div>
+            </div>
+        </section>
+
+        <!-- Dashboard-style Stats Cards -->
+        <section class="test-section">
+            <h2 class="text-gray-900 dark:text-white">Dashboard Stats Cards</h2>
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                    📊
+                                </div>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                        Total Tasks
+                                    </dt>
+                                    <dd class="text-lg font-medium text-gray-900 dark:text-white">
+                                        42
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                    📁
+                                </div>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                        Projects
+                                    </dt>
+                                    <dd class="text-lg font-medium text-gray-900 dark:text-white">
+                                        8
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                                    ✅
+                                </div>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                        Completed
+                                    </dt>
+                                    <dd class="text-lg font-medium text-gray-900 dark:text-white">
+                                        28
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                    ⏳
+                                </div>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                        Pending
+                                    </dt>
+                                    <dd class="text-lg font-medium text-gray-900 dark:text-white">
+                                        14
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Kanban Cards Test -->
+        <section class="test-section">
+            <h2 class="text-gray-900 dark:text-white">Kanban Cards</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div class="kanban-column">
+                    <div class="kanban-column-header">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white">Backlog</h3>
+                        <span class="badge-low">2</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="kanban-card">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Sample Task 1</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">This is a sample task description</p>
+                            <div class="flex justify-between items-center">
+                                <span class="badge-medium">Medium</span>
+                                <span class="text-xs text-gray-500">Due: Today</span>
+                            </div>
+                        </div>
+                        <div class="kanban-card">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Sample Task 2</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Another sample task description</p>
+                            <div class="flex justify-between items-center">
+                                <span class="badge-high">High</span>
+                                <span class="text-xs text-gray-500">Due: Tomorrow</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="kanban-column">
+                    <div class="kanban-column-header">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white">In Progress</h3>
+                        <span class="badge-medium">1</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="kanban-card">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Active Task</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Currently being worked on</p>
+                            <div class="flex justify-between items-center">
+                                <span class="badge-critical">Critical</span>
+                                <span class="text-xs text-gray-500">Due: Urgent</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="kanban-column">
+                    <div class="kanban-column-header">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white">Review</h3>
+                        <span class="badge-low">1</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="kanban-card">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Review Task</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Waiting for review</p>
+                            <div class="flex justify-between items-center">
+                                <span class="badge-low">Low</span>
+                                <span class="text-xs text-gray-500">Due: Next week</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="kanban-column">
+                    <div class="kanban-column-header">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white">Done</h3>
+                        <span class="badge-low">3</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="kanban-card">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Completed Task</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">This task is done</p>
+                            <div class="flex justify-between items-center">
+                                <span class="badge-low">Low</span>
+                                <span class="text-xs text-gray-500">Completed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Form Elements Test -->
+        <section class="test-section">
+            <h2 class="text-gray-900 dark:text-white">Form Elements</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Sample Form</h3>
+                    </div>
+                    <div class="card-body">
+                        <form class="space-y-4">
+                            <div>
+                                <label class="form-label">Task Title</label>
+                                <input type="text" class="form-input" placeholder="Enter task title">
+                            </div>
+                            <div>
+                                <label class="form-label">Description</label>
+                                <textarea class="form-input" rows="3" placeholder="Enter description"></textarea>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="form-label">Priority</label>
+                                    <select class="form-input">
+                                        <option>Low</option>
+                                        <option>Medium</option>
+                                        <option>High</option>
+                                        <option>Critical</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Due Date</label>
+                                    <input type="date" class="form-input">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer">
+                        <div class="flex justify-end space-x-3">
+                            <button class="btn btn-secondary">Cancel</button>
+                            <button class="btn btn-primary">Save Task</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Button Variants</h3>
+                    </div>
+                    <div class="card-body space-y-4">
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn btn-primary">Primary</button>
+                            <button class="btn btn-secondary">Secondary</button>
+                            <button class="btn btn-success">Success</button>
+                            <button class="btn btn-warning">Warning</button>
+                            <button class="btn btn-danger">Danger</button>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn btn-sm btn-primary">Small</button>
+                            <button class="btn btn-primary">Regular</button>
+                            <button class="btn btn-lg btn-primary">Large</button>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn btn-outline">Outline</button>
+                            <button class="btn btn-ghost">Ghost</button>
+                            <button class="btn btn-primary" disabled>Disabled</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mobile Navigation Test -->
+        <section class="test-section">
+            <h2 class="text-gray-900 dark:text-white">Mobile Navigation Test</h2>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div class="flex items-center justify-between p-4">
+                    <div class="text-lg font-medium text-gray-900 dark:text-white">SpecSrv</div>
+                    
+                    <!-- Desktop Menu -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <a href="#" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Dashboard</a>
+                        <a href="#" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Projects</a>
+                        <a href="#" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Tasks</a>
+                        <a href="#" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Kanban</a>
+                    </div>
+                    
+                    <!-- Mobile Menu Button -->
+                    <div class="md:hidden">
+                        <button type="button" class="btn btn-secondary btn-sm">
+                            ☰ Menu
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Mobile Menu (would be toggleable in real implementation) -->
+                <div class="md:hidden border-t border-gray-200 dark:border-gray-700">
+                    <div class="px-4 py-2 space-y-1">
+                        <a href="#" class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Dashboard</a>
+                        <a href="#" class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Projects</a>
+                        <a href="#" class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Tasks</a>
+                        <a href="#" class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Kanban</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Responsive Typography -->
+        <section class="test-section">
+            <h2 class="text-gray-900 dark:text-white">Responsive Typography</h2>
+            <div class="space-y-4">
+                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
+                    Responsive Heading
+                </h1>
+                <p class="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400">
+                    This paragraph text scales with screen size using responsive typography classes. 
+                    The text gets larger on bigger screens to improve readability while staying compact on mobile devices.
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Load theme manager and other assets -->
+    <script src="../dist/vendors.beec93dabdb72eae58d3.js"></script>
+    <script src="../dist/main.8fa0ec136633dee64406.js"></script>
+</body>
+</html>

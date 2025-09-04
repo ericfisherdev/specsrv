@@ -113,8 +113,7 @@ RUN mkdir -p \
 COPY scripts/entrypoint-new.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Install Symfony bundle assets (if any)
-RUN php bin/console assets:install --env=prod
+# Install Symfony bundle assets (if any) - removed for API-only project
 
 # Note: Database initialization will be handled by entrypoint script at runtime
 

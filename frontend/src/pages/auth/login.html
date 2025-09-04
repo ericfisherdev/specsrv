@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SpecSrv</title>
+    
+    <!-- Theme preference script to prevent flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('specsrv-theme') || 'system';
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const effectiveTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+            
+            if (effectiveTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+            document.documentElement.setAttribute('data-theme', effectiveTheme);
+        })();
+    </script>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>📋</text></svg>">
+    
+    <link rel="stylesheet" href="/dist/app.css">
+</head>
+<body class="h-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div>
+                <div class="mx-auto h-12 w-12 text-4xl text-center">📋</div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                    Sign in to SpecSrv
+                </h2>
+                <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                    Task management made simple
+                </p>
+            </div>
+            
+            <!-- Error message container -->
+            <div id="error-message" class="hidden rounded-md bg-red-50 dark:bg-red-900 p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Authentication failed</h3>
+                        <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                            <p id="error-text">Invalid credentials. Please try again.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form class="mt-8 space-y-6" x-data="loginForm()" @submit.prevent="submitForm">
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <label for="email" class="sr-only">Email address</label>
+                        <input id="email" name="email" type="email" x-model="email" required 
+                               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm" 
+                               placeholder="Email address">
+                    </div>
+                    <div>
+                        <label for="password" class="sr-only">Password</label>
+                        <input id="password" name="password" type="password" x-model="password" required 
+                               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm" 
+                               placeholder="Password">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember" type="checkbox" x-model="remember"
+                               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                            Remember me
+                        </label>
+                    </div>
+
+                    <div class="text-sm">
+                        <a href="/forgot-password" class="font-medium text-primary-600 hover:text-primary-500">
+                            Forgot your password?
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" x-bind:disabled="loading" 
+                            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <svg class="h-5 w-5 text-primary-500 group-hover:text-primary-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <span x-text="loading ? 'Signing in...' : 'Sign in'"></span>
+                    </button>
+                </div>
+
+                <div class="text-center">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Don't have an account? </span>
+                    <a href="/register" class="font-medium text-primary-600 hover:text-primary-500">
+                        Sign up
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function loginForm() {
+        return {
+            email: '',
+            password: '',
+            remember: false,
+            loading: false,
+            
+            init() {
+                // Focus the email field on page load
+                setTimeout(() => {
+                    document.getElementById('email').focus();
+                }, 100);
+                
+                // Check if user is already logged in
+                this.checkAuthStatus();
+            },
+            
+            async checkAuthStatus() {
+                const token = localStorage.getItem('auth_token');
+                if (token) {
+                    try {
+                        const response = await fetch('/api/v1/auth/me', {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            window.location.href = '/dashboard';
+                        }
+                    } catch (error) {
+                        localStorage.removeItem('auth_token');
+                    }
+                }
+            },
+            
+            async submitForm() {
+                this.hideError();
+                
+                if (!this.email || !this.password) {
+                    this.showError('Please fill in all fields.');
+                    return;
+                }
+                
+                this.loading = true;
+                
+                try {
+                    const response = await fetch('/api/v1/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: this.email,
+                            password: this.password,
+                            remember: this.remember
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        // Store authentication token
+                        localStorage.setItem('auth_token', data.token);
+                        if (data.user) {
+                            localStorage.setItem('user_data', JSON.stringify(data.user));
+                        }
+                        
+                        // Redirect to dashboard
+                        window.location.href = '/dashboard';
+                    } else {
+                        this.showError(data.message || 'Invalid credentials. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    this.showError('Login failed. Please check your connection and try again.');
+                } finally {
+                    this.loading = false;
+                }
+            },
+            
+            showError(message) {
+                const errorDiv = document.getElementById('error-message');
+                const errorText = document.getElementById('error-text');
+                if (errorDiv && errorText) {
+                    errorText.textContent = message;
+                    errorDiv.classList.remove('hidden');
+                }
+            },
+            
+            hideError() {
+                const errorDiv = document.getElementById('error-message');
+                if (errorDiv) {
+                    errorDiv.classList.add('hidden');
+                }
+            }
+        }
+    }
+    </script>
+    
+    <script src="/dist/runtime.js"></script>
+    <script src="/dist/app.js"></script>
+</body>
+</html>

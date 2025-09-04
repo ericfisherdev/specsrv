@@ -106,8 +106,21 @@ class TaskController extends AbstractController
             $this->entityManager->flush();
         }
 
-        return $this->render('tasks/partials/task_card.html.twig', [
-            'task' => $task,
+        // DISABLED: Return JSON for API instead of HTML template
+        return $this->json([
+            'success' => true,
+            'task' => [
+                'id' => $task->getId(),
+                'title' => $task->getTitle(),
+                'description' => $task->getDescription(),
+                'priority' => $task->getPriority(),
+                'status' => $task->getStatus()?->value ?? 'unknown',
+                'created_at' => $task->getCreatedAt()?->format('Y-m-d H:i:s') ?? 'unknown',
+                'project' => [
+                    'id' => $project->getId(),
+                    'title' => $project->getTitle(),
+                ],
+            ],
         ]);
     }
 
@@ -132,9 +145,9 @@ class TaskController extends AbstractController
             throw $this->createAccessDeniedException('Access denied');
         }
 
-        return $this->render('tasks/detail.html.twig', [
-            'task' => $task,
-        ]);
+        // DISABLED for frontend migration: HTML-returning method
+        // Frontend will use API endpoints instead
+        throw $this->createNotFoundException('HTML view disabled. Use API endpoints instead.');
     }
 
     #[Route('/tasks/{id}/edit', name: 'app_task_edit', methods: ['GET', 'POST'])]
@@ -190,10 +203,9 @@ class TaskController extends AbstractController
             return $this->json(['success' => true]);
         }
 
-        return $this->render('tasks/edit.html.twig', [
-            'task' => $task,
-            'statusOptions' => $this->getStatusOptions(),
-        ]);
+        // DISABLED for frontend migration: HTML-returning method
+        // Frontend will use API endpoints instead
+        throw $this->createNotFoundException('HTML view disabled. Use API endpoints instead.');
     }
 
     #[Route('/tasks/{id}/delete', name: 'app_task_delete', methods: ['DELETE'])]
@@ -256,15 +268,5 @@ class TaskController extends AbstractController
         $this->entityManager->flush();
 
         return $this->json(['success' => true]);
-    }
-
-    private function getStatusOptions(): array
-    {
-        $options = [];
-        foreach (TaskStatusEnum::cases() as $status) {
-            $options[$status->value] = $status->getLabel();
-        }
-
-        return $options;
     }
 }

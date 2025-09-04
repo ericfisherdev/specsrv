@@ -1,0 +1,230 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controller\Api;
+
+use App\Entity\User;
+use App\Repository\UserRepository;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+#[Route('/api/v1/auth', name: 'api_v1_auth_')]
+class AuthApiController extends BaseApiController
+{
+    public function __construct(
+        private readonly UserRepository $userRepository,
+        private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly JWTTokenManagerInterface $jwtManager,
+        private readonly ValidatorInterface $validator
+    ) {
+    }
+
+    #[Route('/login', name: 'login', methods: ['POST'])]
+    public function login(Request $request): JsonResponse
+    {
+        try {
+            $data = $this->getJsonPayload($request);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse(
+                'Invalid JSON payload',
+                'INVALID_JSON',
+                null,
+                400
+            );
+        }
+
+        if (! isset($data['email']) || ! isset($data['password'])) {
+            return $this->errorResponse(
+                'Email and password are required',
+                'MISSING_CREDENTIALS',
+                null,
+                400
+            );
+        }
+
+        // Normalize and validate input
+        $email = strtolower(trim($data['email'] ?? ''));
+        $password = trim($data['password'] ?? '');
+
+        if (empty($email) || empty($password)) {
+            return $this->errorResponse(
+                'Email and password cannot be empty',
+                'MISSING_CREDENTIALS',
+                null,
+                400
+            );
+        }
+
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if (! $user || ! $this->passwordHasher->isPasswordValid($user, $password)) {
+            return $this->errorResponse(
+                'Invalid credentials',
+                'INVALID_CREDENTIALS',
+                null,
+                401
+            );
+        }
+
+        $token = $this->jwtManager->create($user);
+
+        return $this->successResponse([
+            'token' => $token,
+            'user' => $this->transformEntity($user),
+        ], 'Login successful');
+    }
+
+    #[Route('/refresh', name: 'refresh', methods: ['POST'])]
+    public function refresh(Request $request): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (! $user) {
+            return $this->errorResponse(
+                'Authentication required',
+                'AUTH_REQUIRED',
+                null,
+                401
+            );
+        }
+
+        $token = $this->jwtManager->create($user);
+
+        return $this->successResponse([
+            'token' => $token,
+            'user' => $this->transformEntity($user),
+        ], 'Token refreshed successfully');
+    }
+
+    #[Route('/logout', name: 'logout', methods: ['POST'])]
+    public function logout(): JsonResponse
+    {
+        // For JWT, logout is handled client-side by removing the token
+        // Server-side blacklisting could be implemented here if needed
+        return $this->successResponse(null, 'Logout successful');
+    }
+
+    #[Route('/register', name: 'register', methods: ['POST'])]
+    public function register(Request $request): JsonResponse
+    {
+        try {
+            $data = $this->getJsonPayload($request);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse(
+                'Invalid JSON payload',
+                'INVALID_JSON',
+                null,
+                400
+            );
+        }
+
+        if (! isset($data['email']) || ! isset($data['password'])) {
+            return $this->errorResponse(
+                'Email and password are required',
+                'MISSING_CREDENTIALS',
+                null,
+                400
+            );
+        }
+
+        // Normalize and validate input
+        $email = strtolower(trim($data['email'] ?? ''));
+        $password = trim($data['password'] ?? '');
+        $name = isset($data['name']) ? trim($data['name'] ?? '') : null;
+
+        if (empty($email) || empty($password)) {
+            return $this->errorResponse(
+                'Email and password cannot be empty',
+                'MISSING_CREDENTIALS',
+                null,
+                400
+            );
+        }
+
+        // Validate email format
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->errorResponse(
+                'Invalid email format',
+                'VALIDATION_ERROR',
+                ['email' => 'The email address is not valid.'],
+                400
+            );
+        }
+
+        // Validate password length
+        if (strlen($password) < 6) {
+            return $this->errorResponse(
+                'Password is too short',
+                'VALIDATION_ERROR',
+                ['password' => 'Password must be at least 6 characters long.'],
+                400
+            );
+        }
+
+        // Check if user already exists
+        if ($this->userRepository->findOneBy(['email' => $email])) {
+            return $this->errorResponse(
+                'User with this email already exists',
+                'USER_ALREADY_EXISTS',
+                null,
+                409
+            );
+        }
+
+        $user = new User();
+        $user->setEmail($email);
+        $user->setPassword($this->passwordHasher->hashPassword($user, $password));
+
+        if (!empty($name)) {
+            $user->setName($name);
+        }
+
+        // Validate the user entity
+        $violations = $this->validator->validate($user);
+        if (count($violations) > 0) {
+            return $this->validationErrorResponse($violations);
+        }
+
+        try {
+            $this->userRepository->save($user, true);
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Failed to create user',
+                'USER_CREATION_FAILED',
+                null,
+                500
+            );
+        }
+
+        $token = $this->jwtManager->create($user);
+
+        return $this->successResponse([
+            'token' => $token,
+            'user' => $this->transformEntity($user),
+        ], 'User registered successfully', 201);
+    }
+
+    #[Route('/me', name: 'me', methods: ['GET'])]
+    public function me(): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (! $user) {
+            return $this->errorResponse(
+                'Authentication required',
+                'AUTH_REQUIRED',
+                null,
+                401
+            );
+        }
+
+        return $this->successResponse([
+            'user' => $this->transformEntity($user),
+        ]);
+    }
+}

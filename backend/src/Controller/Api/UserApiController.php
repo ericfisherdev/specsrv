@@ -25,7 +25,7 @@ class UserApiController extends BaseApiController
     ) {
     }
 
-    #[Route('/api/auth/login', name: 'api_auth_login', methods: ['POST'])]
+    #[Route('/api/v1/auth/login', name: 'api_auth_login', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
         try {
@@ -41,17 +41,17 @@ class UserApiController extends BaseApiController
 
         // Find user by email
         $user = $this->userRepository->findOneBy(['email' => $data['username']]);
-        if (!$user) {
+        if (! $user) {
             return $this->errorResponse('Invalid credentials', 'AUTH_FAILED', null, 401);
         }
 
         // Verify password
-        if (!$this->passwordHasher->isPasswordValid($user, $data['password'])) {
+        if (! $this->passwordHasher->isPasswordValid($user, $data['password'])) {
             return $this->errorResponse('Invalid credentials', 'AUTH_FAILED', null, 401);
         }
 
         // Generate API key for this login session
-        $apiKeyData = $this->apiKeyService->generateApiKey($user, 'CLI Login - ' . date('Y-m-d H:i:s'));
+        $apiKeyData = $this->apiKeyService->generateApiKey($user, 'CLI Login - '.date('Y-m-d H:i:s'));
 
         return $this->successResponse([
             'token' => $apiKeyData['api_key'],
@@ -60,13 +60,30 @@ class UserApiController extends BaseApiController
         ]);
     }
 
-    #[Route('/api/auth/logout', name: 'api_auth_logout', methods: ['POST'])]
+    #[Route('/api/v1/auth/logout', name: 'api_auth_logout', methods: ['POST'])]
     public function logout(): JsonResponse
     {
         return $this->successResponse(null, 'Logout successful');
     }
 
-    #[Route('/api/auth/register', name: 'api_auth_register', methods: ['POST'])]
+    #[Route('/api/v1/auth/refresh', name: 'api_auth_refresh', methods: ['POST'])]
+    public function refresh(): JsonResponse
+    {
+        $this->requireAuth();
+        $user = $this->getUser();
+        assert($user instanceof User);
+
+        // Generate new API key for refresh
+        $apiKeyData = $this->apiKeyService->generateApiKey($user, 'CLI Refresh - '.date('Y-m-d H:i:s'));
+
+        return $this->successResponse([
+            'token' => $apiKeyData['api_key'],
+            'expires_at' => (new \DateTime('+1 year'))->format('c'),
+            'user' => $this->transformEntity($user),
+        ]);
+    }
+
+    #[Route('/api/v1/auth/register', name: 'api_auth_register', methods: ['POST'])]
     public function register(Request $request): JsonResponse
     {
         try {
@@ -110,7 +127,7 @@ class UserApiController extends BaseApiController
         );
     }
 
-    #[Route('/api/user/profile', name: 'api_user_profile', methods: ['GET'])]
+    #[Route('/api/v1/user/profile', name: 'api_user_profile', methods: ['GET'])]
     public function getProfile(): JsonResponse
     {
         $this->requireAuth();
@@ -120,7 +137,7 @@ class UserApiController extends BaseApiController
         return $this->successResponse($this->transformEntity($user));
     }
 
-    #[Route('/api/user/profile', name: 'api_user_profile_update', methods: ['PUT'])]
+    #[Route('/api/v1/user/profile', name: 'api_user_profile_update', methods: ['PUT'])]
     public function updateProfile(Request $request): JsonResponse
     {
         $this->requireAuth();
@@ -163,7 +180,7 @@ class UserApiController extends BaseApiController
         );
     }
 
-    #[Route('/api/user/api-keys', name: 'api_user_api_keys_create', methods: ['POST'])]
+    #[Route('/api/v1/user/api-keys', name: 'api_user_api_keys_create', methods: ['POST'])]
     public function createApiKey(Request $request): JsonResponse
     {
         $this->requireAuth();
@@ -194,7 +211,7 @@ class UserApiController extends BaseApiController
         }
     }
 
-    #[Route('/api/user/api-keys', name: 'api_user_api_keys_list', methods: ['GET'])]
+    #[Route('/api/v1/user/api-keys', name: 'api_user_api_keys_list', methods: ['GET'])]
     public function listApiKeys(): JsonResponse
     {
         $this->requireAuth();
@@ -220,7 +237,7 @@ class UserApiController extends BaseApiController
         ]);
     }
 
-    #[Route('/api/user/api-keys/{keyId}', name: 'api_user_api_keys_delete', methods: ['DELETE'])]
+    #[Route('/api/v1/user/api-keys/{keyId}', name: 'api_user_api_keys_delete', methods: ['DELETE'])]
     public function revokeApiKey(int $keyId): JsonResponse
     {
         $this->requireAuth();

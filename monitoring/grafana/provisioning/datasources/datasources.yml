@@ -1,0 +1,44 @@
+apiVersion: 1
+
+datasources:
+  # Prometheus datasource for metrics
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      queryTimeout: "60s"
+      httpMethod: POST
+
+  # Loki datasource for logs
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - datasourceName: Prometheus
+          matcherRegex: "trace_id=(\\w+)"
+          name: TraceID
+          url: '$${__value.raw}'
+
+  # PostgreSQL datasource (optional, for custom queries)
+  - name: PostgreSQL
+    type: postgres
+    url: specsrv-postgres:5432
+    database: specsrv
+    user: ${POSTGRES_USER}
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      sslmode: 'disable'
+      maxOpenConns: 0
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+      postgresVersion: 1500
+      timescaledb: false

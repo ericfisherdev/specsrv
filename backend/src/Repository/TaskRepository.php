@@ -119,6 +119,30 @@ class TaskRepository extends ServiceEntityRepository
     }
 
     /**
+     * Get status counts for a user in a single query.
+     * Returns an array with status as key and count as value.
+     */
+    public function getStatusCountsByUser(\App\Entity\User $user): array
+    {
+        $qb = $this->createQueryBuilder('t')
+            ->select('t.status', 'count(t.id) as task_count')
+            ->join('t.project', 'p')
+            ->andWhere('p.user = :user')
+            ->setParameter('user', $user)
+            ->groupBy('t.status');
+
+        $result = $qb->getQuery()->getResult();
+        
+        // Convert result to associative array
+        $counts = [];
+        foreach ($result as $row) {
+            $counts[$row['status']] = (int) $row['task_count'];
+        }
+
+        return $counts;
+    }
+
+    /**
      * @return Task[] Returns paginated tasks for a specific project
      */
     public function findPaginatedByProject(Project $project, int $limit, int $offset, ?string $status = null): array
@@ -169,8 +193,12 @@ class TaskRepository extends ServiceEntityRepository
 
         // Text search
         if (! empty($criteria['query'])) {
-            $qb->andWhere('(t.title LIKE :search OR t.description LIKE :search)')
-               ->setParameter('search', '%'.$criteria['query'].'%');
+            $normalizedQuery = strtolower($criteria['query']);
+            $escapedQuery = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $normalizedQuery);
+            $searchPattern = '%' . $escapedQuery . '%';
+            $qb->andWhere('(LOWER(t.title) LIKE :search ESCAPE :escape OR LOWER(t.description) LIKE :search ESCAPE :escape)')
+               ->setParameter('search', $searchPattern)
+               ->setParameter('escape', '\\');
         }
 
         // Project filter

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - SpecSrv</title>
+    
+    <!-- Theme preference script to prevent flash -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('specsrv-theme') || 'system';
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const effectiveTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+            
+            if (effectiveTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+            document.documentElement.setAttribute('data-theme', effectiveTheme);
+        })();
+    </script>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>📋</text></svg>">
+    
+    <link rel="stylesheet" href="/dist/app.css">
+</head>
+<body class="h-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200" x-data="registerForm()">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div>
+                <div class="mx-auto h-12 w-12 text-4xl text-center">📋</div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                    Create your SpecSrv account
+                </h2>
+                <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                    Start managing your tasks effectively
+                </p>
+            </div>
+            
+            <form class="mt-8 space-y-6" @submit.prevent="submitForm">
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <label for="email" class="sr-only">Email address</label>
+                        <input id="email" name="email" type="email" x-model="email" required 
+                               class="appearance-none rounded-none relative block w-full px-3 py-2 border placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-colors duration-200" 
+                               placeholder="Email address"
+                               :class="errors.email ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'">
+                        <div x-show="errors.email" x-text="errors.email" class="text-red-600 dark:text-red-400 text-xs mt-1"></div>
+                    </div>
+                    <div>
+                        <label for="password" class="sr-only">Password</label>
+                        <input id="password" name="password" type="password" x-model="password" required 
+                               class="appearance-none rounded-none relative block w-full px-3 py-2 border placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-colors duration-200" 
+                               placeholder="Password"
+                               :class="errors.password ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'">
+                        <div x-show="errors.password" x-text="errors.password" class="text-red-600 dark:text-red-400 text-xs mt-1"></div>
+                    </div>
+                    <div>
+                        <label for="password_confirm" class="sr-only">Confirm Password</label>
+                        <input id="password_confirm" name="password_confirm" type="password" x-model="passwordConfirm" required 
+                               class="appearance-none rounded-none relative block w-full px-3 py-2 border placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-colors duration-200" 
+                               placeholder="Confirm password"
+                               :class="errors.passwordConfirm ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'">
+                        <div x-show="errors.passwordConfirm" x-text="errors.passwordConfirm" class="text-red-600 dark:text-red-400 text-xs mt-1"></div>
+                    </div>
+                </div>
+
+                <div x-show="generalError" class="rounded-md bg-red-50 dark:bg-red-900 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800 dark:text-red-200" x-text="generalError"></h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="successMessage" class="rounded-md bg-green-50 dark:bg-green-900 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L7.53 10.53a.75.75 0 00-1.06 1.06l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-green-800 dark:text-green-200" x-text="successMessage"></h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" x-bind:disabled="loading" 
+                            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <svg class="h-5 w-5 text-primary-500 group-hover:text-primary-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <span x-text="loading ? 'Creating account...' : 'Create account'"></span>
+                    </button>
+                </div>
+
+                <div class="text-center">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Already have an account? </span>
+                    <a href="/login" class="font-medium text-primary-600 hover:text-primary-500">
+                        Sign in
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function registerForm() {
+        return {
+            email: '',
+            password: '',
+            passwordConfirm: '',
+            loading: false,
+            generalError: '',
+            successMessage: '',
+            errors: {},
+            
+            init() {
+                // Focus the email field on page load
+                setTimeout(() => {
+                    document.getElementById('email').focus();
+                }, 100);
+            },
+            
+            validateForm() {
+                this.errors = {};
+                
+                if (!this.email) {
+                    this.errors.email = 'Email is required';
+                } else if (!this.isValidEmail(this.email)) {
+                    this.errors.email = 'Please enter a valid email address';
+                }
+                
+                if (!this.password) {
+                    this.errors.password = 'Password is required';
+                } else if (this.password.length < 8) {
+                    this.errors.password = 'Password must be at least 8 characters long';
+                }
+                
+                if (!this.passwordConfirm) {
+                    this.errors.passwordConfirm = 'Please confirm your password';
+                } else if (this.password !== this.passwordConfirm) {
+                    this.errors.passwordConfirm = 'Passwords do not match';
+                }
+                
+                return Object.keys(this.errors).length === 0;
+            },
+            
+            isValidEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            },
+            
+            async submitForm() {
+                this.generalError = '';
+                this.successMessage = '';
+                
+                if (!this.validateForm()) {
+                    return;
+                }
+                
+                this.loading = true;
+                
+                try {
+                    const response = await fetch('/api/v1/auth/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: this.email,
+                            password: this.password
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        this.successMessage = 'Account created successfully! Redirecting to login...';
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                    } else {
+                        this.generalError = data.message || 'Registration failed. Please try again.';
+                    }
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    this.generalError = 'Registration failed. Please check your connection and try again.';
+                } finally {
+                    this.loading = false;
+                }
+            }
+        }
+    }
+    </script>
+    
+    <script src="/dist/runtime.js"></script>
+    <script src="/dist/app.js"></script>
+</body>
+</html>

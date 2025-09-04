@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - SpecSrv</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-50">
+    <div id="app" x-data="{ user: null }">
+        <!-- Navigation will be loaded here -->
+        <div id="navigation"></div>
+
+        <!-- Main Content -->
+        <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Profile Information</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                        Manage your account settings and preferences.
+                    </p>
+                </div>
+                
+                <!-- Profile Information -->
+                <div class="border-t border-gray-200 px-4 py-5 sm:p-0" x-data="profileForm()">
+                    <dl class="sm:divide-y sm:divide-gray-200">
+                        <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Email address</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                <div x-show="!editingEmail" class="flex items-center">
+                                    <span x-text="$store.user.email || 'Loading...'"></span>
+                                    <button @click="editingEmail = true; newEmail = $store.user.email" 
+                                            class="ml-4 bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                        Edit
+                                    </button>
+                                </div>
+                                <div x-show="editingEmail" class="flex items-center space-x-4">
+                                    <input type="email" x-model="newEmail" 
+                                           class="flex-1 block w-full min-w-0 rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
+                                    <button @click="updateEmail()" x-bind:disabled="emailLoading"
+                                            class="bg-primary-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50">
+                                        <span x-text="emailLoading ? 'Saving...' : 'Save'"></span>
+                                    </button>
+                                    <button @click="editingEmail = false; newEmail = ''" 
+                                            class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                        Cancel
+                                    </button>
+                                </div>
+                                <div x-show="emailError" x-text="emailError" class="text-red-600 text-sm mt-1"></div>
+                            </dd>
+                        </div>
+                        
+                        <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Account created</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                <span x-text="$store.user.createdAt ? new Date($store.user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown'"></span>
+                            </dd>
+                        </div>
+                        
+                        <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Last updated</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                <span x-text="$store.user.updatedAt ? new Date($store.user.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown'"></span>
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+                
+                <!-- Change Password Section -->
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6" x-data="passwordForm()">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Change Password</h3>
+                    
+                    <form @submit.prevent="updatePassword()" class="space-y-4 max-w-md">
+                        <div>
+                            <label for="current_password" class="block text-sm font-medium text-gray-700">Current Password</label>
+                            <input type="password" id="current_password" x-model="currentPassword" required 
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                   x-bind:class="{ 'border-red-300': errors.currentPassword }">
+                            <div x-show="errors.currentPassword" x-text="errors.currentPassword" class="text-red-600 text-sm mt-1"></div>
+                        </div>
+                        
+                        <div>
+                            <label for="new_password" class="block text-sm font-medium text-gray-700">New Password</label>
+                            <input type="password" id="new_password" x-model="newPassword" required 
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                   x-bind:class="{ 'border-red-300': errors.newPassword }">
+                            <div x-show="errors.newPassword" x-text="errors.newPassword" class="text-red-600 text-sm mt-1"></div>
+                        </div>
+                        
+                        <div>
+                            <label for="confirm_password" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                            <input type="password" id="confirm_password" x-model="confirmPassword" required 
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                   x-bind:class="{ 'border-red-300': errors.confirmPassword }">
+                            <div x-show="errors.confirmPassword" x-text="errors.confirmPassword" class="text-red-600 text-sm mt-1"></div>
+                        </div>
+                        
+                        <div x-show="generalError" class="rounded-md bg-red-50 p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-red-800" x-text="generalError"></h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div x-show="successMessage" class="rounded-md bg-green-50 p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L7.53 10.53a.75.75 0 00-1.06 1.06l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-green-800" x-text="successMessage"></h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <button type="submit" x-bind:disabled="loading" 
+                                    class="bg-primary-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50">
+                                <span x-text="loading ? 'Updating...' : 'Update Password'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- API Keys Section -->
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6" x-data="apiKeysManager()">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">API Keys</h3>
+                        <button @click="showCreateForm = true" 
+                                class="bg-primary-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            Create New API Key
+                        </button>
+                    </div>
+                    
+                    <!-- Create API Key Form -->
+                    <div x-show="showCreateForm" class="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <form @submit.prevent="createApiKey()" class="space-y-4 max-w-md">
+                            <div>
+                                <label for="api_key_name" class="block text-sm font-medium text-gray-700">API Key Name</label>
+                                <input type="text" id="api_key_name" x-model="newKeyName" required 
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                       placeholder="e.g., Development Key">
+                            </div>
+                            <div class="flex space-x-4">
+                                <button type="submit" x-bind:disabled="creating" 
+                                        class="bg-primary-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50">
+                                    <span x-text="creating ? 'Creating...' : 'Create'"></span>
+                                </button>
+                                <button type="button" @click="showCreateForm = false; newKeyName = ''" 
+                                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- API Keys List -->
+                    <div class="space-y-4">
+                        <template x-for="apiKey in apiKeys" :key="apiKey.id">
+                            <div class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg">
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-900" x-text="apiKey.name"></h4>
+                                    <p class="text-sm text-gray-500" x-text="apiKey.key_preview"></p>
+                                    <p class="text-xs text-gray-400">Created: <span x-text="new Date(apiKey.created_at).toLocaleDateString()"></span></p>
+                                </div>
+                                <button @click="revokeApiKey(apiKey.id)" 
+                                        class="text-red-600 hover:text-red-800 text-sm font-medium">
+                                    Revoke
+                                </button>
+                            </div>
+                        </template>
+                        
+                        <div x-show="apiKeys.length === 0" class="text-center py-8 text-gray-500">
+                            No API keys found. Create your first API key above.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { ApiService } from '../../services/ApiService.js';
+        import { loadNavigation } from '../../components/Navigation.js';
+        import { showNotification } from '../../utils/flashMessages.js';
+        
+        const api = new ApiService();
+        
+        // Load navigation
+        loadNavigation();
+        
+        // User store
+        Alpine.store('user', {
+            email: '',
+            createdAt: '',
+            updatedAt: '',
+            async load() {
+                try {
+                    const response = await api.get('/user/profile');
+                    if (response.success) {
+                        this.email = response.data.email;
+                        this.createdAt = response.data.created_at;
+                        this.updatedAt = response.data.updated_at;
+                    }
+                } catch (error) {
+                    console.error('Failed to load user profile:', error);
+                }
+            }
+        });
+        
+        // Load user data on page load
+        Alpine.store('user').load();
+        
+        // Profile form functionality
+        window.profileForm = function() {
+            return {
+                editingEmail: false,
+                newEmail: '',
+                emailLoading: false,
+                emailError: '',
+                
+                async updateEmail() {
+                    this.emailError = '';
+                    this.emailLoading = true;
+                    
+                    try {
+                        const response = await api.put('/user/profile', {
+                            email: this.newEmail
+                        });
+                        
+                        if (response.success) {
+                            Alpine.store('user').email = this.newEmail;
+                            this.editingEmail = false;
+                            showNotification('Email updated successfully', 'success');
+                        } else {
+                            this.emailError = response.message || 'Failed to update email';
+                        }
+                    } catch (error) {
+                        this.emailError = 'Failed to update email. Please try again.';
+                    } finally {
+                        this.emailLoading = false;
+                    }
+                }
+            }
+        };
+        
+        // Password form functionality
+        window.passwordForm = function() {
+            return {
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: '',
+                loading: false,
+                generalError: '',
+                successMessage: '',
+                errors: {},
+                
+                validateForm() {
+                    this.errors = {};
+                    
+                    if (!this.currentPassword) {
+                        this.errors.currentPassword = 'Current password is required';
+                    }
+                    
+                    if (!this.newPassword) {
+                        this.errors.newPassword = 'New password is required';
+                    } else if (this.newPassword.length < 8) {
+                        this.errors.newPassword = 'Password must be at least 8 characters long';
+                    }
+                    
+                    if (!this.confirmPassword) {
+                        this.errors.confirmPassword = 'Please confirm your new password';
+                    } else if (this.newPassword !== this.confirmPassword) {
+                        this.errors.confirmPassword = 'Passwords do not match';
+                    }
+                    
+                    return Object.keys(this.errors).length === 0;
+                },
+                
+                async updatePassword() {
+                    this.generalError = '';
+                    this.successMessage = '';
+                    
+                    if (!this.validateForm()) {
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    
+                    try {
+                        const response = await api.put('/user/profile', {
+                            current_password: this.currentPassword,
+                            new_password: this.newPassword
+                        });
+                        
+                        if (response.success) {
+                            this.successMessage = 'Password updated successfully!';
+                            this.currentPassword = '';
+                            this.newPassword = '';
+                            this.confirmPassword = '';
+                        } else {
+                            this.generalError = response.message || 'Failed to update password';
+                        }
+                    } catch (error) {
+                        this.generalError = 'Failed to update password. Please try again.';
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        };
+        
+        // API Keys Manager
+        window.apiKeysManager = function() {
+            return {
+                apiKeys: [],
+                showCreateForm: false,
+                newKeyName: '',
+                creating: false,
+                
+                async init() {
+                    await this.loadApiKeys();
+                },
+                
+                async loadApiKeys() {
+                    try {
+                        const response = await api.get('/user/api-keys');
+                        if (response.success) {
+                            this.apiKeys = response.data.api_keys || [];
+                        }
+                    } catch (error) {
+                        console.error('Failed to load API keys:', error);
+                    }
+                },
+                
+                async createApiKey() {
+                    if (!this.newKeyName.trim()) {
+                        return;
+                    }
+                    
+                    this.creating = true;
+                    
+                    try {
+                        const response = await api.post('/user/api-keys', {
+                            name: this.newKeyName.trim()
+                        });
+                        
+                        if (response.success) {
+                            await this.loadApiKeys();
+                            this.showCreateForm = false;
+                            this.newKeyName = '';
+                            
+                            // Show the API key in an alert since it's only shown once
+                            alert(`API Key created successfully!\n\nYour API Key: ${response.data.api_key.key}\n\nPlease save this key now as it won't be shown again.`);
+                        } else {
+                            alert('Failed to create API key: ' + (response.message || 'Unknown error'));
+                        }
+                    } catch (error) {
+                        alert('Failed to create API key. Please try again.');
+                    } finally {
+                        this.creating = false;
+                    }
+                },
+                
+                async revokeApiKey(keyId) {
+                    if (!confirm('Are you sure you want to revoke this API key? This action cannot be undone.')) {
+                        return;
+                    }
+                    
+                    try {
+                        const response = await api.delete(`/user/api-keys/${keyId}`);
+                        
+                        if (response.success) {
+                            await this.loadApiKeys();
+                            showNotification('API key revoked successfully', 'success');
+                        } else {
+                            alert('Failed to revoke API key');
+                        }
+                    } catch (error) {
+                        alert('Failed to revoke API key. Please try again.');
+                    }
+                }
+            }
+        };
+    </script>
+</body>
+</html>

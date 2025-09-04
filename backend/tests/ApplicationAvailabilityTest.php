@@ -6,7 +6,7 @@ class ApplicationAvailabilityTest extends AbstractWebTestCase
 {
     public function testApiCsrfTokenEndpointIsAvailable(): void
     {
-        $this->client->request('GET', '/api/csrf-token');
+        $this->client->request('GET', '/api/v1/csrf-token');
 
         $this->assertResponseIsSuccessful();
     }
